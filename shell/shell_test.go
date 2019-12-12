@@ -340,13 +340,9 @@ func TestPull(t *testing.T) {
 						Name:  "R2",
 						Image: "slankdev/frr",
 					},
-					Node{
-						Name:  "nginx01",
-						Image: "nginx",
-					},
 				},
 			},
-			want: []string{"docker pull slankdev/frr", "docker pull nginx"},
+			want: []string{"docker pull slankdev/frr"},
 		},
 	}
 	for _, tt := range tests {
