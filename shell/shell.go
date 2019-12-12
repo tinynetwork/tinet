@@ -105,7 +105,7 @@ func ExecConf(nodeType string, nodeConfig NodeConfig) []string {
 }
 
 // DeleteNode Delete docker and netns
-func DeleteNode(node Node) string {
+func DeleteNode(node Node) []string {
 	var deleteCmd string
 	if node.Type == "docker" {
 		deleteCmd = fmt.Sprintf("docker stop %s", node.Name)
@@ -116,10 +116,14 @@ func DeleteNode(node Node) string {
 	} else {
 		// err := fmt.Errorf("not supported node type...")
 		// log.Fatal(err)
-		return ""
+		return []string{""}
 	}
 
-	return deleteCmd
+	deleteNsCmd := fmt.Sprintf("rm -rf /var/run/netns/%s", node.Name)
+
+	deleteNodeCmds := []string{deleteCmd, deleteNsCmd}
+
+	return deleteNodeCmds
 }
 
 // DeleteSwitch Delete bridge

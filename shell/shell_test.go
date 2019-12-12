@@ -107,7 +107,7 @@ func TestDeleteNode(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want string
+		want []string
 	}{
 		{
 			name: "delete docker",
@@ -125,7 +125,7 @@ func TestDeleteNode(t *testing.T) {
 					},
 				},
 			},
-			want: "docker stop R1",
+			want: []string{"docker stop R1", "rm -rf /var/run/netns/R1"},
 		},
 		{
 			name: "delete netns",
@@ -142,7 +142,7 @@ func TestDeleteNode(t *testing.T) {
 					},
 				},
 			},
-			want: "ip netns del H1",
+			want: []string{"ip netns del H1", "rm -rf /var/run/netns/H1"},
 		},
 		{
 			name: "delete not support nodetype",
@@ -159,12 +159,12 @@ func TestDeleteNode(t *testing.T) {
 					},
 				},
 			},
-			want: "",
+			want: []string{""},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DeleteNode(tt.args.node); got != tt.want {
+			if got := DeleteNode(tt.args.node); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DeleteNode() = %v, want %v", got, tt.want)
 			}
 		})
