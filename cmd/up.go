@@ -27,8 +27,10 @@ var upCmd = &cobra.Command{
 			createNodeCmds := shell.CreateNode(node)
 			fmt.Println(strings.Join(createNodeCmds, "\n"))
 
-			mountDockerNetnsCmds := shell.Mount_docker_netns(node)
-			fmt.Println(strings.Join(mountDockerNetnsCmds, "\n"))
+			if node.Type != "netns" {
+				mountDockerNetnsCmds := shell.Mount_docker_netns(node)
+				fmt.Println(strings.Join(mountDockerNetnsCmds, "\n"))
+			}
 		}
 
 		if len(tnconfig.Switches) != 0 {
