@@ -1,4 +1,4 @@
-name: golang-ci
+name: golangci
 
 on: [push]
 
