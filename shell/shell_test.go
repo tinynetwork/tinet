@@ -55,7 +55,7 @@ func TestExecConf(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"docker exec -it R1 /usr/lib/frr/frr start", "docker exec -it R1 ip addr add 10.0.0.1/24 dev net0", "docker exec -it R1 vtysh -c 'conf t' -c 'router bgp 65001' -c 'bgp router-id 10.255.0.1' -c 'neighbor 10.0.0.2 remote-as 65002'"},
+			want: []string{"docker exec R1 /usr/lib/frr/frr start", "docker exec R1 ip addr add 10.0.0.1/24 dev net0", "docker exec R1 vtysh -c 'conf t' -c 'router bgp 65001' -c 'bgp router-id 10.255.0.1' -c 'neighbor 10.0.0.2 remote-as 65002'"},
 		},
 		{
 			name: "ip netns exec",

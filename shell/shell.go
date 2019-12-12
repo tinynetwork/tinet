@@ -87,11 +87,11 @@ func ExecConf(nodeType string, nodeConfig NodeConfig) []string {
 	for _, nodeConfigCmd := range nodeConfig.Cmds {
 		var execConfCmd string
 		if nodeType == "docker" {
-			execConfCmd = fmt.Sprintf("docker exec -it %s %s", nodeConfig.Name, nodeConfigCmd.Cmd)
+			execConfCmd = fmt.Sprintf("docker exec %s %s", nodeConfig.Name, nodeConfigCmd.Cmd)
 		} else if nodeType == "netns" {
 			execConfCmd = fmt.Sprintf("ip netns exec %s %s", nodeConfig.Name, nodeConfigCmd.Cmd)
 		} else if nodeType == "" {
-			execConfCmd = fmt.Sprintf("docker exec -it %s %s", nodeConfig.Name, nodeConfigCmd.Cmd)
+			execConfCmd = fmt.Sprintf("docker exec %s %s", nodeConfig.Name, nodeConfigCmd.Cmd)
 		} else {
 			// err := fmt.Errorf("not supported node type...")
 			// log.Fatal(err)
@@ -145,11 +145,11 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
 	}
 
 	if selectedNode.Type == "docker" {
-		execCommand = fmt.Sprintf("docker exec -it %s", nodeName)
+		execCommand = fmt.Sprintf("docker exec %s", nodeName)
 	} else if selectedNode.Type == "netns" {
 		execCommand = fmt.Sprintf("ip netns exec %s", nodeName)
 	} else if selectedNode.Type == "" {
-		execCommand = fmt.Sprintf("docker exec -it %s", nodeName)
+		execCommand = fmt.Sprintf("docker exec %s", nodeName)
 	} else {
 		err := fmt.Errorf("no such node type...\n")
 		log.Fatal(err)
