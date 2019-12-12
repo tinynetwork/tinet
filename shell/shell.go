@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/ak1ra24/tn/utils"
@@ -439,11 +438,8 @@ func Mount_docker_netns(node Node) []string {
 	var mountDockerNetnsCmds []string
 
 	netnsDir := "/var/run/netns"
-	if !utils.Exists(netnsDir) {
-		if err := os.Mkdir(netnsDir, 0766); err != nil {
-			log.Fatal(err)
-		}
-	}
+	mkdirCmd := fmt.Sprintf("mkdir -p %s", netnsDir)
+	mountDockerNetnsCmds = append(mountDockerNetnsCmds, mkdirCmd)
 	dockerPid := GetContainerPid(node.Name)
 	mountDockerNetnsCmds = append(mountDockerNetnsCmds, dockerPid)
 	mountDockerNetnsCmd := fmt.Sprintf("ln -s /proc/$PID/ns/net /var/run/netns/%s", node.Name)
