@@ -422,11 +422,13 @@ func S2nLink(nodeName string, inf Interface) []string {
 
 	nodeinf := inf.Name
 	peerBr := inf.Args
-	peerBr = fmt.Sprintf("%s-%s", peerBr, nodeName)
-	s2nLinkCmd := fmt.Sprintf("ip link add %s netns %s type veth peer name %s", nodeinf, nodeName, peerBr)
+	peerBrInf := fmt.Sprintf("%s-%s", peerBr, nodeName)
+	s2nLinkCmd := fmt.Sprintf("ip link add %s netns %s type veth peer name %s", nodeinf, nodeName, peerBrInf)
 	s2nLinkCmds = append(s2nLinkCmds, s2nLinkCmd)
 	s2nLinkCmds = append(s2nLinkCmds, NetnsLinkUp(nodeName, nodeinf))
-	s2nLinkCmds = append(s2nLinkCmds, HostLinkUp(peerBr))
+	s2nLinkCmds = append(s2nLinkCmds, HostLinkUp(peerBrInf))
+	setBrLinkCmd := fmt.Sprintf("ip link set dev %s master %s", peerBrInf, peerBr)
+	s2nLinkCmds = append(s2nLinkCmds, setBrLinkCmd)
 
 	return s2nLinkCmds
 }

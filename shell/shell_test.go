@@ -676,7 +676,7 @@ func TestS2nLink(t *testing.T) {
 					Args: "SW",
 				},
 			},
-			want: []string{"ip link add net0 netns R1 type veth peer name SW-R1", "ip netns exec R1 ip link set net0 up", "ip link set SW-R1 up"},
+			want: []string{"ip link add net0 netns R1 type veth peer name SW-R1", "ip netns exec R1 ip link set net0 up", "ip link set SW-R1 up", "ip link set dev SW-R1 master SW"},
 		},
 	}
 	for _, tt := range tests {
