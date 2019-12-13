@@ -664,7 +664,7 @@ func TestS2nLink(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want string
+		want []string
 	}{
 		{
 			name: "link connect between switch and container",
@@ -676,12 +676,12 @@ func TestS2nLink(t *testing.T) {
 					Args: "SW",
 				},
 			},
-			want: "ip link add net0 netns R1 type veth peer name SW-R1",
+			want: []string{"ip link add net0 netns R1 type veth peer name SW-R1", "ip netns exec R1 ip link set net0 up", "ip link set SW-R1 up"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := S2nLink(tt.args.nodeName, tt.args.inf); got != tt.want {
+			if got := S2nLink(tt.args.nodeName, tt.args.inf); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("S2nLink() = %v, want %v", got, tt.want)
 			}
 		})

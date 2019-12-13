@@ -401,11 +401,18 @@ func N2nLink(nodeName string, inf Interface) []string {
 }
 
 // S2nLink Connect links between nodes and switches
-func S2nLink(nodeName string, inf Interface) string {
+func S2nLink(nodeName string, inf Interface) []string {
+	var s2nLinkCmds []string
+
 	nodeinf := inf.Name
 	peerBr := inf.Args
-	s2nLinkCmd := fmt.Sprintf("ip link add %s netns %s type veth peer name %s-%s", nodeinf, nodeName, peerBr, nodeName)
-	return s2nLinkCmd
+	peerBr = fmt.Sprintf("%s-%s", peerBr, nodeName)
+	s2nLinkCmd := fmt.Sprintf("ip link add %s netns %s type veth peer name %s", nodeinf, nodeName, peerBr)
+	s2nLinkCmds = append(s2nLinkCmds, s2nLinkCmd)
+	s2nLinkCmds = append(s2nLinkCmds, NetnsLinkUp(nodeName, nodeinf))
+	s2nLinkCmds = append(s2nLinkCmds, HostLinkUp(peerBr))
+
+	return s2nLinkCmds
 }
 
 // V2cLink Connect links between veth and container
