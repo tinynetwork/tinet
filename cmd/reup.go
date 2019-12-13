@@ -38,12 +38,6 @@ var reupCmd = &cobra.Command{
 				fmt.Println(strings.Join(preExecInitCmds, "\n"))
 			}
 		}
-		if len(tnconfig.PostInit) != 0 {
-			for _, postInitCmds := range tnconfig.PostInit {
-				postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
-				fmt.Println(strings.Join(postExecInitCmds, "\n"))
-			}
-		}
 		for _, node := range tnconfig.Nodes {
 			createNodeCmds := shell.CreateNode(node)
 			fmt.Println(strings.Join(createNodeCmds, "\n"))
@@ -79,6 +73,13 @@ var reupCmd = &cobra.Command{
 					err := fmt.Errorf("not supported interface type: %s", inf.Type)
 					log.Fatal(err)
 				}
+			}
+		}
+
+		if len(tnconfig.PostInit) != 0 {
+			for _, postInitCmds := range tnconfig.PostInit {
+				postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
+				fmt.Println(strings.Join(postExecInitCmds, "\n"))
 			}
 		}
 	},
