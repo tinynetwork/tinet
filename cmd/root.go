@@ -102,8 +102,11 @@ func initConfig() {
 		fmt.Println("echo Using config file:", viper.ConfigFileUsed())
 	}
 
+	fmt.Println(viper.Get("precmd"))
+	fmt.Println(viper.Get("nodes"))
 	if err := viper.Unmarshal(&tnconfig); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
+		// fmt.Println(err)
+		// os.Exit(1)
 	}
 }

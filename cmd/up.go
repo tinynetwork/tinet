@@ -15,17 +15,23 @@ var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Create and start containers",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(tnconfig.PreCmd.Cmds) != 0 {
-			preCmds := shell.ExecCmd(tnconfig.PreCmd.Cmds)
-			fmt.Println(strings.Join(preCmds, "\n"))
+		if len(tnconfig.PreCmd) != 0 {
+			for _, preCmds := range tnconfig.PreCmd {
+				preExecCmds := shell.ExecCmd(preCmds.Cmds)
+				fmt.Println(strings.Join(preExecCmds, "\n"))
+			}
 		}
-		if len(tnconfig.PreInit.Cmds) != 0 {
-			preInitCmds := shell.ExecCmd(tnconfig.PreInit.Cmds)
-			fmt.Println(strings.Join(preInitCmds, "\n"))
+		if len(tnconfig.PreInit) != 0 {
+			for _, preInitCmds := range tnconfig.PreInit {
+				preExecInitCmds := shell.ExecCmd(preInitCmds.Cmds)
+				fmt.Println(strings.Join(preExecInitCmds, "\n"))
+			}
 		}
-		if len(tnconfig.PostInit.Cmds) != 0 {
-			postInitCmds := shell.ExecCmd(tnconfig.PostInit.Cmds)
-			fmt.Println(strings.Join(postInitCmds, "\n"))
+		if len(tnconfig.PostInit) != 0 {
+			for _, postInitCmds := range tnconfig.PostInit {
+				postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
+				fmt.Println(strings.Join(postExecInitCmds, "\n"))
+			}
 		}
 		for _, node := range tnconfig.Nodes {
 			createNodeCmds := shell.CreateNode(node)
