@@ -4,6 +4,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/ak1ra24/tn/shell"
 	"github.com/spf13/cobra"
@@ -17,7 +18,7 @@ var reupCmd = &cobra.Command{
 		// stop, remove
 		for _, node := range tnconfig.Nodes {
 			deleteNode := shell.DeleteNode(node)
-			fmt.Println(deleteNode)
+			fmt.Println(strings.Join(deleteNode, "\n"))
 		}
 		for _, br := range tnconfig.Switches {
 			delBrCmd := shell.DeleteSwitch(br)
@@ -25,33 +26,49 @@ var reupCmd = &cobra.Command{
 		}
 
 		// create, start
+		if len(tnconfig.PreCmd.Cmds) != 0 {
+			preCmds := shell.ExecCmd(tnconfig.PreCmd.Cmds)
+			fmt.Println(strings.Join(preCmds, "\n"))
+		}
 		if len(tnconfig.PreInit.Cmds) != 0 {
-			shell.ExecCmd(tnconfig.PreInit.Cmds)
+			preInitCmds := shell.ExecCmd(tnconfig.PreInit.Cmds)
+			fmt.Println(strings.Join(preInitCmds, "\n"))
 		}
 		if len(tnconfig.PostInit.Cmds) != 0 {
-			shell.ExecCmd(tnconfig.PostInit.Cmds)
+			postInitCmds := shell.ExecCmd(tnconfig.PostInit.Cmds)
+			fmt.Println(strings.Join(postInitCmds, "\n"))
 		}
 		for _, node := range tnconfig.Nodes {
-			shell.CreateNode(node)
-			shell.Mount_docker_netns(node)
+			createNodeCmds := shell.CreateNode(node)
+			fmt.Println(strings.Join(createNodeCmds, "\n"))
+
+			if node.Type != "netns" {
+				mountDockerNetnsCmds := shell.Mount_docker_netns(node)
+				fmt.Println(strings.Join(mountDockerNetnsCmds, "\n"))
+			}
 		}
 
 		if len(tnconfig.Switches) != 0 {
 			for _, bridge := range tnconfig.Switches {
-				shell.CreateSwitch(bridge)
+				createSwitchCmds := shell.CreateSwitch(bridge)
+				fmt.Println(strings.Join(createSwitchCmds, "\n"))
 			}
 		}
 
 		for _, node := range tnconfig.Nodes {
 			for _, inf := range node.Interfaces {
 				if inf.Type == "direct" {
-					shell.N2nLink(node.Name, inf)
+					n2nLinkCmds := shell.N2nLink(node.Name, inf)
+					fmt.Println(strings.Join(n2nLinkCmds, "\n"))
 				} else if inf.Type == "bridge" {
-					shell.S2nLink(node.Name, inf)
+					s2nLinkCmd := shell.S2nLink(node.Name, inf)
+					fmt.Println(strings.Join(s2nLinkCmd, "\n"))
 				} else if inf.Type == "veth" {
-					shell.V2cLink(node.Name, inf)
+					v2cLinkCmds := shell.V2cLink(node.Name, inf)
+					fmt.Println(strings.Join(v2cLinkCmds, "\n"))
 				} else if inf.Type == "phys" {
-					shell.P2cLink(node.Name, inf)
+					p2cLinkCmds := shell.P2cLink(node.Name, inf)
+					fmt.Println(strings.Join(p2cLinkCmds, "\n"))
 				} else {
 					err := fmt.Errorf("not supported interface type: %s", inf.Type)
 					log.Fatal(err)

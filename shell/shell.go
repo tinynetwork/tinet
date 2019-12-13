@@ -12,6 +12,7 @@ import (
 
 // Tn tinet config
 type Tn struct {
+	PreCmd      PreCmd       `yaml:"precmd"`
 	PreInit     PreInit      `yaml:"preinit"`
 	PostInit    PostInit     `yaml:"postinit"`
 	PostFini    PostFini     `yaml:"postfini"`
@@ -19,6 +20,11 @@ type Tn struct {
 	Switches    []Switch     `yaml:"switches" mapstructure:"switches"`
 	NodeConfigs []NodeConfig `yaml:"node_configs" mapstructure:"node_configs"`
 	Test        []Test       `yaml:"test"`
+}
+
+// PreCmd
+type PreCmd struct {
+	Cmds []Cmd `yaml:"cmds" mapstructure:"cmds"`
 }
 
 // PreInit
@@ -170,6 +176,14 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
 
 // GenerateFile Generate tinet template config file
 func (tnconfig *Tn) GenerateFile(cfgFile string) error {
+	precmd := PreCmd{
+		Cmds: []Cmd{
+			Cmd{
+				Cmd: "",
+			},
+		},
+	}
+
 	preinit := PreInit{
 		Cmds: []Cmd{
 			Cmd{
@@ -236,6 +250,7 @@ func (tnconfig *Tn) GenerateFile(cfgFile string) error {
 	}
 
 	tnconfig = &Tn{
+		PreCmd:      precmd,
 		PreInit:     preinit,
 		PostInit:    postinit,
 		PostFini:    postfini,

@@ -15,6 +15,10 @@ var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Create and start containers",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(tnconfig.PreCmd.Cmds) != 0 {
+			preCmds := shell.ExecCmd(tnconfig.PreCmd.Cmds)
+			fmt.Println(strings.Join(preCmds, "\n"))
+		}
 		if len(tnconfig.PreInit.Cmds) != 0 {
 			preInitCmds := shell.ExecCmd(tnconfig.PreInit.Cmds)
 			fmt.Println(strings.Join(preInitCmds, "\n"))
