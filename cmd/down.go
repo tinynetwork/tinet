@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ak1ra24/tn/shell"
 	"github.com/spf13/cobra"
@@ -15,7 +16,7 @@ var downCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, node := range tnconfig.Nodes {
 			deleteNode := shell.DeleteNode(node)
-			fmt.Println(deleteNode)
+			fmt.Println(strings.Join(deleteNode, "\n"))
 		}
 		for _, br := range tnconfig.Switches {
 			delBrCmd := shell.DeleteSwitch(br)

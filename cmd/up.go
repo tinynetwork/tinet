@@ -47,7 +47,7 @@ var upCmd = &cobra.Command{
 					fmt.Println(strings.Join(n2nLinkCmds, "\n"))
 				} else if inf.Type == "bridge" {
 					s2nLinkCmd := shell.S2nLink(node.Name, inf)
-					fmt.Println(s2nLinkCmd)
+					fmt.Println(strings.Join(s2nLinkCmd, "\n"))
 				} else if inf.Type == "veth" {
 					v2cLinkCmds := shell.V2cLink(node.Name, inf)
 					fmt.Println(strings.Join(v2cLinkCmds, "\n"))
