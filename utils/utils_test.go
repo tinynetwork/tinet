@@ -63,9 +63,9 @@ func TestRemoveDuplicatesString(t *testing.T) {
 		{
 			name: "delete duplicate string slice",
 			args: args{
-				elements: []string{"test", "test", "test2"},
+				elements: []string{"test", "test"},
 			},
-			want: []string{"test", "test2"},
+			want: []string{"test"},
 		},
 	}
 	for _, tt := range tests {
