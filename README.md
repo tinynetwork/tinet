@@ -6,3 +6,37 @@
 Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
 :warning: Operation check is still
+
+## Setup
+ToDo
+
+## Usage
+
+```
+Usage:
+  tn [command]
+
+Available Commands:
+  build       Generate a Docker bundle from the spec file
+  completion  Generates shell completion scripts
+  conf        Execute config-cmd in a running container
+  down        Stop and remove containers
+  exec        Execute a command in a running container
+  help        Help about any command
+  init        Generate template spec file
+  print       print tinet config file
+  ps          List services
+  pull        Pull Service images
+  reconf      Stop, remove, create, start and config
+  reup        Stop, remove, create and start
+  test        Execute tests
+  up          Create and start containers
+  upconf      Create, start and config
+  version     show the tinet version
+
+Flags:
+  -h, --help   help for tn
+
+Use "tn [command] --help" for more information about a command.
+
+```
