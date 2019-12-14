@@ -50,6 +50,7 @@ type Node struct {
 	NetBase    string      `yaml:"net_base"`
 	Image      string      `yaml:"image"`
 	Interfaces []Interface `yaml:"interfaces" mapstructure:"interfaces"`
+	Sysctls    []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
 }
 
 // Interface
@@ -57,6 +58,11 @@ type Interface struct {
 	Name string `yaml:"name"`
 	Type string `yaml:"type"`
 	Args string `yaml:"args"`
+}
+
+// Sysctl
+type Sysctl struct {
+	Sysctl string `yaml:"string"`
 }
 
 // Switch
@@ -352,13 +358,23 @@ func CreateNode(node Node) []string {
 		node.NetBase = "none"
 	}
 	if node.Type == "docker" {
-		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged %s", node.Name, node.NetBase, node.Name, node.Image)
-
+		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged ", node.Name, node.NetBase, node.Name)
+		if len(node.Sysctls) != 0 {
+			for _, sysctl := range node.Sysctls {
+				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
+			}
+		}
+		createNodeCmd += node.Image
 	} else if node.Type == "netns" {
 		createNodeCmd = fmt.Sprintf("ip netns add %s", node.Name)
 	} else if node.Type == "" {
-		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged %s", node.Name, node.NetBase, node.Name, node.Image)
-
+		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged ", node.Name, node.NetBase, node.Name)
+		if len(node.Sysctls) != 0 {
+			for _, sysctl := range node.Sysctls {
+				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
+			}
+		}
+		createNodeCmd += node.Image
 	} else {
 		// err := fmt.Errorf("unknown nodetype %s", node.Type)
 		// log.Fatal(err)
@@ -368,6 +384,12 @@ func CreateNode(node Node) []string {
 	createNodeCmds = append(createNodeCmds, createNodeCmd)
 
 	if node.Type == "netns" {
+		if len(node.Sysctls) != 0 {
+			for _, sysctl := range node.Sysctls {
+				sysctlNsCmd := fmt.Sprintf("ip netns exec %s sysctl -w %s", node.Name, sysctl.Sysctl)
+				createNodeCmds = append(createNodeCmds, sysctlNsCmd)
+			}
+		}
 		infloUpCmd := fmt.Sprintf("ip netns exec %s ip link set lo up", node.Name)
 		createNodeCmds = append(createNodeCmds, infloUpCmd)
 	}

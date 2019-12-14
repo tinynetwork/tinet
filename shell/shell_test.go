@@ -467,6 +467,31 @@ func TestCreateNode(t *testing.T) {
 			want: []string{"docker run -td --hostname R1 --net none --name R1 --rm --privileged slankdev/frr"},
 		},
 		{
+			name: "create docker node net None with sysctls",
+			args: args{
+				node: Node{
+					Name:  "R1",
+					Image: "slankdev/frr",
+					Interfaces: []Interface{
+						Interface{
+							Name: "net0",
+							Type: "direct",
+							Args: "C1#net0",
+						},
+					},
+					Sysctls: []Sysctl{
+						Sysctl{
+							Sysctl: "net.ipv4.ip_forward=1",
+						},
+						Sysctl{
+							Sysctl: "net.ipv6.conf.all.forwarding=1",
+						},
+					},
+				},
+			},
+			want: []string{"docker run -td --hostname R1 --net none --name R1 --rm --privileged --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 slankdev/frr"},
+		},
+		{
 			name: "create docker node net bridge",
 			args: args{
 				node: Node{
@@ -501,6 +526,32 @@ func TestCreateNode(t *testing.T) {
 				},
 			},
 			want: []string{"ip netns add C1", "ip netns exec C1 ip link set lo up"},
+		},
+		{
+			name: "create netns node with sysctls",
+			args: args{
+				node: Node{
+					Name:  "C1",
+					Type:  "netns",
+					Image: "",
+					Interfaces: []Interface{
+						Interface{
+							Name: "net0",
+							Type: "direct",
+							Args: "R1#net0",
+						},
+					},
+					Sysctls: []Sysctl{
+						Sysctl{
+							Sysctl: "net.ipv4.ip_forward=1",
+						},
+						Sysctl{
+							Sysctl: "net.ipv6.conf.all.forwarding=1",
+						},
+					},
+				},
+			},
+			want: []string{"ip netns add C1", "ip netns exec C1 sysctl -w net.ipv4.ip_forward=1", "ip netns exec C1 sysctl -w net.ipv6.conf.all.forwarding=1", "ip netns exec C1 ip link set lo up"},
 		},
 		{
 			name: "create not support node",
