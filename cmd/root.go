@@ -42,6 +42,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	checkCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	confCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	downCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	execCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")

@@ -697,6 +697,19 @@ func TestN2nLink(t *testing.T) {
 			},
 			want: []string{"ip link add net0 netns R1 type veth peer name net0 netns R2", "ip netns exec R1 ip link set net0 up", "ip netns exec R2 ip link set net0 up"},
 		},
+		{
+			name: "peer between containers and set macaddress",
+			args: args{
+				nodeName: "R1",
+				inf: Interface{
+					Name: "net0",
+					Type: "direct",
+					Args: "R2#net0",
+					Addr: "52:54:00:11:11:11",
+				},
+			},
+			want: []string{"ip link add net0 netns R1 type veth peer name net0 netns R2", "ip netns exec R1 ip link set net0 up", "ip netns exec R2 ip link set net0 up", "ip netns exec R1 ip link set net0 address 52:54:00:11:11:11"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

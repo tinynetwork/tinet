@@ -3,12 +3,15 @@ package shell
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
+
+	l "github.com/sirupsen/logrus"
 
 	"github.com/ak1ra24/tn/utils"
 	"gopkg.in/yaml.v2"
 )
+
+var log = l.New()
 
 // Tn tinet config
 type Tn struct {
@@ -58,6 +61,7 @@ type Interface struct {
 	Name string `yaml:"name"`
 	Type string `yaml:"type"`
 	Args string `yaml:"args"`
+	Addr string `yaml:"addr"`
 }
 
 // Sysctl
@@ -90,7 +94,6 @@ type Test struct {
 
 // BuildCmd
 func BuildCmd(nodes []Node) string {
-	// log.Println("sorry not implement...")
 	return "sorry not implement..."
 }
 
@@ -158,7 +161,7 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
 
 	if selectedNode == nil {
 		err := fmt.Errorf("no such node...\n")
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	if selectedNode.Type == "docker" {
@@ -169,7 +172,7 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
 		execCommand = fmt.Sprintf("docker exec %s", nodeName)
 	} else {
 		err := fmt.Errorf("no such node type...\n")
-		log.Fatal(err)
+		log.Error(err)
 	}
 
 	var cmdStr string
@@ -434,6 +437,11 @@ func N2nLink(nodeName string, inf Interface) []string {
 	n2nLinkCmds = append(n2nLinkCmds, n2nlinkCmd)
 	n2nLinkCmds = append(n2nLinkCmds, NetnsLinkUp(nodeName, nodeinf))
 	n2nLinkCmds = append(n2nLinkCmds, NetnsLinkUp(peerNode, peerinf))
+
+	if len(inf.Addr) != 0 {
+		addrSetCmd := fmt.Sprintf("ip netns exec %s ip link set %s address %s", nodeName, inf.Name, inf.Addr)
+		n2nLinkCmds = append(n2nLinkCmds, addrSetCmd)
+	}
 
 	return n2nLinkCmds
 }
