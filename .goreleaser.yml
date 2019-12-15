@@ -1,0 +1,16 @@
+builds:
+  - binary: tn
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - 386
+archive:
+  format: zip
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+  files:
+    - README.md
+release:
+  github:
+    owner: ak1ra24
+    name: tinet-go
