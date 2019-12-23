@@ -376,7 +376,7 @@ func TestTnTestCmdExec(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"echo Test Start", "echo slankdev", "echo Test Done"},
+			want: []string{"echo slankdev"},
 		},
 		{
 			name: "test name set",
@@ -395,7 +395,7 @@ func TestTnTestCmdExec(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"echo p2p Test Start", "docker exec R1 echo hello", "docker exec R2 echo world", "echo p2p Test Done"},
+			want: []string{"docker exec R1 echo hello", "docker exec R2 echo world"},
 		},
 	}
 	for _, tt := range tests {

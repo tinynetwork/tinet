@@ -47,6 +47,7 @@ func init() {
 	downCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	execCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	initCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
+	imgCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	printCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	psCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	pullCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
@@ -99,8 +100,6 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
-	} else {
-		fmt.Println("echo Using config file:", viper.ConfigFileUsed())
 	}
 
 	if err := viper.Unmarshal(&tnconfig); err != nil {

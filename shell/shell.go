@@ -319,24 +319,24 @@ func Pull(nodes []Node) []string {
 
 // TnTestCmdExec Execute test cmds
 func TnTestCmdExec(tests []Test) []string {
-	var startMessage, doneMessage string
+	// var startMessage, doneMessage string
 	var tnTestCmds []string
 	for _, test := range tests {
-		if test.Name != "" {
-			startMessage = fmt.Sprintf("echo %s Test Start", test.Name)
-			doneMessage = fmt.Sprintf("echo %s Test Done", test.Name)
-		} else {
-			startMessage = "echo Test Start"
-			doneMessage = "echo Test Done"
-		}
+		// if test.Name != "" {
+		// 	startMessage = fmt.Sprintf("echo %s Test Start", test.Name)
+		// 	doneMessage = fmt.Sprintf("echo %s Test Done", test.Name)
+		// } else {
+		// 	startMessage = "echo Test Start"
+		// 	doneMessage = "echo Test Done"
+		// }
 
-		tnTestCmds = append(tnTestCmds, startMessage)
+		// tnTestCmds = append(tnTestCmds, startMessage)
 
 		for _, testCmd := range test.Cmds {
 			tnTestCmds = append(tnTestCmds, testCmd.Cmd)
 		}
 
-		tnTestCmds = append(tnTestCmds, doneMessage)
+		// tnTestCmds = append(tnTestCmds, doneMessage)
 	}
 
 	return tnTestCmds
