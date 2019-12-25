@@ -28,12 +28,6 @@ var upconfCmd = &cobra.Command{
 				fmt.Println(strings.Join(preExecInitCmds, "\n"))
 			}
 		}
-		if len(tnconfig.PostInit) != 0 {
-			for _, postInitCmds := range tnconfig.PostInit {
-				postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
-				fmt.Println(strings.Join(postExecInitCmds, "\n"))
-			}
-		}
 		for _, node := range tnconfig.Nodes {
 			createNodeCmds := shell.CreateNode(node)
 			fmt.Println(strings.Join(createNodeCmds, "\n"))
@@ -72,6 +66,12 @@ var upconfCmd = &cobra.Command{
 			}
 		}
 
+		if len(tnconfig.PostInit) != 0 {
+			for _, postInitCmds := range tnconfig.PostInit {
+				postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
+				fmt.Println(strings.Join(postExecInitCmds, "\n"))
+			}
+		}
 		// conf
 		nodeinfo := map[string]string{}
 		for _, node := range tnconfig.Nodes {
