@@ -8,7 +8,7 @@ Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
 ## Setup
 ```
-wgethttps://github.com/ak1ra24/tinet-go/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
+wget https://github.com/ak1ra24/tinet-go/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
 tar zxvf /tmp/tinet-go_linux_amd64.tar.gz -C /usr/local/bin
 ```
 
