@@ -3,6 +3,7 @@ module github.com/ak1ra24/tn
 go 1.12
 
 require (
+	github.com/emicklei/dot v0.10.1
 	github.com/go-playground/locales v0.13.0
 	github.com/heetch/confita v0.9.0
 	github.com/k0kubun/pp v3.0.1+incompatible

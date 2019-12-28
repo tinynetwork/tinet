@@ -8,7 +8,9 @@ Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 :warning: Operation check is still
 
 ## Setup
-ToDo
+```
+curl https://github.com/ak1ra24/tinet-go/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz | tar zx -C /usr/local/bin
+```
 
 ## Usage
 
