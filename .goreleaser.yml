@@ -6,10 +6,8 @@ builds:
       - amd64
       - 386
 archive:
-  format: zip
+  format: tar.gz
   name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-  files:
-    - README.md
 release:
   github:
     owner: ak1ra24
