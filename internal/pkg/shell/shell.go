@@ -7,7 +7,7 @@ import (
 
 	l "github.com/sirupsen/logrus"
 
-	"github.com/ak1ra24/tn/utils"
+	"github.com/ak1ra24/tn/internal/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 

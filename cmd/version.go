@@ -12,7 +12,8 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "show the tinet version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Tinet version 0.0.1")
+		version := "v0.0.0"
+		fmt.Printf("Tinet version %s\n", version)
 	},
 }
 

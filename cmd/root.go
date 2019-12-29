@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ak1ra24/tn/shell"
-	"github.com/ak1ra24/tn/utils"
+	"github.com/ak1ra24/tn/internal/pkg/shell"
+	"github.com/ak1ra24/tn/internal/pkg/utils"
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"

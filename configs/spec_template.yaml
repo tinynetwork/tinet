@@ -1,0 +1,38 @@
+precmd:
+- cmds:
+  - cmd: ""
+preinit:
+- cmds:
+  - cmd: ""
+postinit:
+- cmds:
+  - cmd: ""
+postfini:
+- cmds:
+  - cmd: ""
+nodes:
+- name: ""
+  type: ""
+  net_base: ""
+  image: ""
+  interfaces:
+  - name: ""
+    type: ""
+    args: ""
+    addr: ""
+  sysctls: []
+switches:
+- name: ""
+  interfaces:
+  - name: ""
+    type: ""
+    args: ""
+    addr: ""
+node_configs:
+- name: ""
+  cmds:
+  - cmd: ""
+test:
+- name: ""
+  cmds:
+  - cmd: ""
