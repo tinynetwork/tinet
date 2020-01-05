@@ -238,35 +238,6 @@ func TestTn_Exec(t *testing.T) {
 	}
 }
 
-func TestTn_GenerateFile(t *testing.T) {
-	type args struct {
-		cfgFile string
-	}
-	tests := []struct {
-		name     string
-		tnconfig *Tn
-		args     args
-		wantErr  bool
-	}{
-		// TODO: Add test cases.
-		// {
-		// 	name:     "tinet config template generate",
-		// 	tnconfig: &Tn{},
-		// 	args: args{
-		// 		cfgFile: "spec.yaml",
-		// 	},
-		// 	wantErr: true,
-		// },
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.tnconfig.GenerateFile(tt.args.cfgFile); (err != nil) != tt.wantErr {
-				t.Errorf("Tn.GenerateFile() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func TestDockerPs(t *testing.T) {
 	type args struct {
 		all bool
@@ -874,6 +845,28 @@ func TestGetContainerPid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetContainerPid(tt.args.nodename); got != tt.want {
 				t.Errorf("GetContainerPid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGenerateFile(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GenerateFile()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GenerateFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GenerateFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}

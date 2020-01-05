@@ -2,13 +2,12 @@ package shell
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
 
 	l "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/ak1ra24/tn/internal/pkg/utils"
-	"gopkg.in/yaml.v2"
 )
 
 var log = l.New()
@@ -185,7 +184,7 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
 }
 
 // GenerateFile Generate tinet template config file
-func (tnconfig *Tn) GenerateFile(cfgFile string) error {
+func GenerateFile() (string, error) {
 	precmd := PreCmd{
 		Cmds: []Cmd{
 			Cmd{
@@ -259,7 +258,7 @@ func (tnconfig *Tn) GenerateFile(cfgFile string) error {
 		},
 	}
 
-	tnconfig = &Tn{
+	tnconfig := &Tn{
 		PreCmd:      []PreCmd{precmd},
 		PreInit:     []PreInit{preinit},
 		PostInit:    []PostInit{postinit},
@@ -272,15 +271,16 @@ func (tnconfig *Tn) GenerateFile(cfgFile string) error {
 
 	data, err := yaml.Marshal(tnconfig)
 	if err != nil {
-		return err
+		return "", err
 	}
+	//
+	// err = ioutil.WriteFile(cfgFile, data, 0644)
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = ioutil.WriteFile(cfgFile, data, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	// return nil
+	return string(data), nil
 }
 
 // DockerPs Show docker ps

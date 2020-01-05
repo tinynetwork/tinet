@@ -67,24 +67,23 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		if !utils.Exists(cfgFile) {
-			confirmMessage := fmt.Sprintf("Do you create %s file", cfgFile)
-			isConfirmed := utils.Ask4confirm(confirmMessage)
-			if isConfirmed {
-				file, err := os.OpenFile(cfgFile, os.O_RDWR|os.O_CREATE, 0644)
-				if err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-				if err := file.Close(); err != nil {
-					fmt.Println(err)
-					os.Exit(1)
-				}
-			} else {
-				err := fmt.Errorf("%s is not Found", cfgFile)
-				fmt.Println(err)
-				os.Exit(1)
-			}
-
+			// confirmMessage := fmt.Sprintf("Do you create %s file", cfgFile)
+			// isConfirmed := utils.Ask4confirm(confirmMessage)
+			// if isConfirmed {
+			// 	file, err := os.OpenFile(cfgFile, os.O_RDWR|os.O_CREATE, 0644)
+			// 	if err != nil {
+			// 		fmt.Println(err)
+			// 		os.Exit(1)
+			// 	}
+			// 	if err := file.Close(); err != nil {
+			// 		fmt.Println(err)
+			// 		os.Exit(1)
+			// 	}
+			// } else {
+			err := fmt.Errorf("%s is not Found", cfgFile)
+			fmt.Println(err)
+			os.Exit(1)
+			// }
 		}
 
 		viper.SetConfigFile(cfgFile)

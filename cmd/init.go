@@ -2,8 +2,10 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
+	"github.com/ak1ra24/tn/internal/pkg/shell"
 	"github.com/spf13/cobra"
 )
 
@@ -12,9 +14,11 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Generate template spec file",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := tnconfig.GenerateFile(cfgFile); err != nil {
+		tnConf, err := shell.GenerateFile()
+		if err != nil {
 			log.Fatal(err)
 		}
+		fmt.Println(tnConf)
 	},
 }
 
