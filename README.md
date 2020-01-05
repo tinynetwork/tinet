@@ -4,15 +4,20 @@
 
 Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
-:warning: Operation check is still
+## Requirements
 
-## Setup
+- docker
+- graphviz (if you want to use `tn img`)
+
+## Install
+
 ```
 wget https://github.com/ak1ra24/tinet-go/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
 tar zxvf /tmp/tinet-go_linux_amd64.tar.gz -C /usr/local/bin
 ```
 
 ## Usage
+
 ```
 tn up -c spec.yaml | sudo sh -x
 tn conf -c spec.yaml | sudo sh -x
@@ -23,7 +28,7 @@ tn down -c spec.yaml | sudo sh -x
 ## Command Options
 
 ```
-➜ tn                                                         
+➜ tn
 tinet is network simultulator created by docker
 
 Usage:
@@ -55,3 +60,7 @@ Flags:
 Use "tn [command] --help" for more information about a command.
 
 ```
+
+## Links
+
+- [Command Line Usage Example](docs/command-line-usage-example.md)
