@@ -53,6 +53,7 @@ type Node struct {
 	Image      string      `yaml:"image"`
 	Interfaces []Interface `yaml:"interfaces" mapstructure:"interfaces"`
 	Sysctls    []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
+	Mounts     []string    `yaml:"mounts,flow"`
 }
 
 // Interface
@@ -367,6 +368,13 @@ func CreateNode(node Node) []string {
 				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
 			}
 		}
+
+		if len(node.Mounts) != 0 {
+			for _, mount := range node.Mounts {
+				createNodeCmd += fmt.Sprintf("-v %s ", mount)
+			}
+		}
+
 		createNodeCmd += node.Image
 	} else if node.Type == "netns" {
 		createNodeCmd = fmt.Sprintf("ip netns add %s", node.Name)
@@ -377,6 +385,13 @@ func CreateNode(node Node) []string {
 				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
 			}
 		}
+
+		if len(node.Mounts) != 0 {
+			for _, mount := range node.Mounts {
+				createNodeCmd += fmt.Sprintf("-v %s ", mount)
+			}
+		}
+
 		createNodeCmd += node.Image
 	} else {
 		// err := fmt.Errorf("unknown nodetype %s", node.Type)
