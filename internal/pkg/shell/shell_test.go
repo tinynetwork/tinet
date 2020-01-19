@@ -542,6 +542,27 @@ func TestCreateNode(t *testing.T) {
 			},
 			want: []string{"unknown nodetype hoge"},
 		},
+		{
+			name: "create node with mounts",
+			args: args{
+				node: Node{
+					Name:  "T1",
+					Image: "slankdev/frr",
+					Interfaces: []Interface{
+						Interface{
+							Name: "net0",
+							Type: "direct",
+							Args: "T2#net0",
+						},
+					},
+					Mounts: []string{
+						"`pwd`:/mnt/test",
+						"/usr/share/vim:/mnt/vim",
+					},
+				},
+			},
+			want: []string{"docker run -td --hostname T1 --net none --name T1 --rm --privileged -v `pwd`:/mnt/test -v /usr/share/vim:/mnt/vim slankdev/frr"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
