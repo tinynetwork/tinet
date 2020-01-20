@@ -61,6 +61,10 @@ Use "tn [command] --help" for more information about a command.
 
 ```
 
+## Contribute
+Simply fork and create a pull-request. We'll try to respond in a timely fashion.
+
 ## Links
 
 - [Command Line Usage Example](docs/command-line-usage-example.md)
+- [YAML Format](docs/specification_yml.md)
