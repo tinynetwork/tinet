@@ -1,3 +1,4 @@
+// Package shell generate shell script
 package shell
 
 import (
