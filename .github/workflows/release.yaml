@@ -31,5 +31,5 @@ jobs:
         echo "DEBUG:" $TAGNAME
         export CHANGELOG=$($GOPATH/bin/ghch -F markdown --latest)
         echo "DEBUG:" $CHANGELOG
-        $GOPATH/bin/goxz -pv ${TAGNAME} -os=linux -arch=amd64 -d ./dist/v${TAGNAME}
-        $GOPATH/bin/ghr -n ${TAGNAME} -b ${CHANGELOG} -draft ${TAGNAME} goxz/
+        $GOPATH/bin/goxz -pv v${TAGNAME} -os=linux -arch=amd64 -d ./dist/v${TAGNAME}
+        $GOPATH/bin/ghr -n v${TAGNAME} -b ${CHANGELOG} -draft v${TAGNAME} ./dist/v${TAGNAME}
