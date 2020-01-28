@@ -4,7 +4,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/ak1ra24/tn/internal/pkg/shell"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,7 @@ var confCmd = &cobra.Command{
 		}
 
 		for _, nodeConfig := range tnconfig.NodeConfigs {
-			execConfCmds := shell.ExecConf(nodeinfo[nodeConfig.Name], nodeConfig)
+			execConfCmds := nodeConfig.ExecConf(nodeinfo[nodeConfig.Name])
 			for _, execConfCmd := range execConfCmds {
 				fmt.Println(execConfCmd)
 			}

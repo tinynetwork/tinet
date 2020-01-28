@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ak1ra24/tn/internal/pkg/shell"
 	"github.com/spf13/cobra"
 )
 
@@ -15,11 +14,11 @@ var downCmd = &cobra.Command{
 	Short: "Stop and remove containers",
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, node := range tnconfig.Nodes {
-			deleteNode := shell.DeleteNode(node)
+			deleteNode := node.DeleteNode()
 			fmt.Println(strings.Join(deleteNode, "\n"))
 		}
 		for _, br := range tnconfig.Switches {
-			delBrCmd := shell.DeleteSwitch(br)
+			delBrCmd := br.DeleteSwitch()
 			fmt.Println(delBrCmd)
 		}
 	},

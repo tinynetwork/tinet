@@ -98,7 +98,7 @@ func BuildCmd(nodes []Node) string {
 }
 
 // ExecConf Execute NodeConfig command
-func ExecConf(nodeType string, nodeConfig NodeConfig) []string {
+func (nodeConfig *NodeConfig) ExecConf(nodeType string) []string {
 	var execConfCmds []string
 	for _, nodeConfigCmd := range nodeConfig.Cmds {
 		var execConfCmd string
@@ -121,7 +121,7 @@ func ExecConf(nodeType string, nodeConfig NodeConfig) []string {
 }
 
 // DeleteNode Delete docker and netns
-func DeleteNode(node Node) []string {
+func (node *Node) DeleteNode() []string {
 	var deleteCmd string
 	if node.Type == "docker" {
 		deleteCmd = fmt.Sprintf("docker stop %s", node.Name)
@@ -143,7 +143,7 @@ func DeleteNode(node Node) []string {
 }
 
 // DeleteSwitch Delete bridge
-func DeleteSwitch(br Switch) string {
+func (br *Switch) DeleteSwitch() string {
 	deleteBrCmd := fmt.Sprintf("ip link delete %s", br.Name)
 	return deleteBrCmd
 }
@@ -301,7 +301,7 @@ func NetnsPs() string {
 	return netnsListCmd
 }
 
-// Pull Pull Docker Image
+// Pull pull Docker Image
 func Pull(nodes []Node) []string {
 	var images []string
 	for _, node := range nodes {
@@ -320,24 +320,13 @@ func Pull(nodes []Node) []string {
 
 // TnTestCmdExec Execute test cmds
 func TnTestCmdExec(tests []Test) []string {
-	// var startMessage, doneMessage string
 	var tnTestCmds []string
 	for _, test := range tests {
-		// if test.Name != "" {
-		// 	startMessage = fmt.Sprintf("echo %s Test Start", test.Name)
-		// 	doneMessage = fmt.Sprintf("echo %s Test Done", test.Name)
-		// } else {
-		// 	startMessage = "echo Test Start"
-		// 	doneMessage = "echo Test Done"
-		// }
-
-		// tnTestCmds = append(tnTestCmds, startMessage)
 
 		for _, testCmd := range test.Cmds {
 			tnTestCmds = append(tnTestCmds, testCmd.Cmd)
 		}
 
-		// tnTestCmds = append(tnTestCmds, doneMessage)
 	}
 
 	return tnTestCmds
@@ -354,7 +343,7 @@ func ExecCmd(cmds []Cmd) []string {
 }
 
 // CreateNode Create nodes set in config
-func CreateNode(node Node) []string {
+func (node *Node) CreateNode() []string {
 	var createNodeCmds []string
 
 	var createNodeCmd string
@@ -428,7 +417,7 @@ func NetnsLinkUp(netnsName string, linkName string) string {
 }
 
 // CreateSwitch Create bridge set in config
-func CreateSwitch(bridge Switch) []string {
+func (bridge *Switch) CreateSwitch() []string {
 	var createSwitchCmds []string
 
 	addSwitchCmd := fmt.Sprintf("ip link add %s type bridge", bridge.Name)
@@ -441,7 +430,7 @@ func CreateSwitch(bridge Switch) []string {
 }
 
 // N2nLink Connect links between nodes
-func N2nLink(nodeName string, inf Interface) []string {
+func (inf *Interface) N2nLink(nodeName string) []string {
 	var n2nLinkCmds []string
 
 	nodeinf := inf.Name
@@ -462,7 +451,7 @@ func N2nLink(nodeName string, inf Interface) []string {
 }
 
 // S2nLink Connect links between nodes and switches
-func S2nLink(nodeName string, inf Interface) []string {
+func (inf *Interface) S2nLink(nodeName string) []string {
 	var s2nLinkCmds []string
 
 	nodeinf := inf.Name
@@ -479,21 +468,21 @@ func S2nLink(nodeName string, inf Interface) []string {
 }
 
 // V2cLink Connect links between veth and container
-func V2cLink(nodeName string, inf Interface) []string {
+func (inf *Interface) V2cLink(nodeName string) []string {
 	var v2cLinkCmds []string
 	nodeinf := inf.Name
 	peerName := inf.Args
 	v2cLinkCmd := fmt.Sprintf("ip link add %s type veth peer name %s", nodeinf, peerName)
 	v2cLinkCmds = append(v2cLinkCmds, v2cLinkCmd)
 
-	v2cLinkCmds = append(v2cLinkCmds, P2cLink(nodeName, inf)...)
+	v2cLinkCmds = append(v2cLinkCmds, inf.P2cLink(nodeName)...)
 	v2cLinkCmds = append(v2cLinkCmds, HostLinkUp(peerName))
 
 	return v2cLinkCmds
 }
 
 // P2cLink Connect links between phys-eth and container
-func P2cLink(nodeName string, inf Interface) []string {
+func (inf *Interface) P2cLink(nodeName string) []string {
 	var p2cLinkCmds []string
 
 	physInf := inf.Name
@@ -508,7 +497,7 @@ func P2cLink(nodeName string, inf Interface) []string {
 }
 
 // Mount_docker_netns Mount docker netns to ip netns
-func Mount_docker_netns(node Node) []string {
+func (node *Node) Mount_docker_netns() []string {
 	var mountDockerNetnsCmds []string
 
 	netnsDir := "/var/run/netns"

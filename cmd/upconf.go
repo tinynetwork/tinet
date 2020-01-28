@@ -29,18 +29,18 @@ var upconfCmd = &cobra.Command{
 			}
 		}
 		for _, node := range tnconfig.Nodes {
-			createNodeCmds := shell.CreateNode(node)
+			createNodeCmds := node.CreateNode()
 			fmt.Println(strings.Join(createNodeCmds, "\n"))
 
 			if node.Type != "netns" {
-				mountDockerNetnsCmds := shell.Mount_docker_netns(node)
+				mountDockerNetnsCmds := node.Mount_docker_netns()
 				fmt.Println(strings.Join(mountDockerNetnsCmds, "\n"))
 			}
 		}
 
 		if len(tnconfig.Switches) != 0 {
 			for _, bridge := range tnconfig.Switches {
-				createSwitchCmds := shell.CreateSwitch(bridge)
+				createSwitchCmds := bridge.CreateSwitch()
 				fmt.Println(strings.Join(createSwitchCmds, "\n"))
 			}
 		}
@@ -48,16 +48,16 @@ var upconfCmd = &cobra.Command{
 		for _, node := range tnconfig.Nodes {
 			for _, inf := range node.Interfaces {
 				if inf.Type == "direct" {
-					n2nLinkCmds := shell.N2nLink(node.Name, inf)
+					n2nLinkCmds := inf.N2nLink(node.Name)
 					fmt.Println(strings.Join(n2nLinkCmds, "\n"))
 				} else if inf.Type == "bridge" {
-					s2nLinkCmd := shell.S2nLink(node.Name, inf)
+					s2nLinkCmd := inf.S2nLink(node.Name)
 					fmt.Println(strings.Join(s2nLinkCmd, "\n"))
 				} else if inf.Type == "veth" {
-					v2cLinkCmds := shell.V2cLink(node.Name, inf)
+					v2cLinkCmds := inf.V2cLink(node.Name)
 					fmt.Println(strings.Join(v2cLinkCmds, "\n"))
 				} else if inf.Type == "phys" {
-					p2cLinkCmds := shell.P2cLink(node.Name, inf)
+					p2cLinkCmds := inf.P2cLink(node.Name)
 					fmt.Println(strings.Join(p2cLinkCmds, "\n"))
 				} else {
 					err := fmt.Errorf("not supported interface type: %s", inf.Type)
@@ -72,6 +72,7 @@ var upconfCmd = &cobra.Command{
 				fmt.Println(strings.Join(postExecInitCmds, "\n"))
 			}
 		}
+
 		// conf
 		nodeinfo := map[string]string{}
 		for _, node := range tnconfig.Nodes {
@@ -79,7 +80,7 @@ var upconfCmd = &cobra.Command{
 		}
 
 		for _, nodeConfig := range tnconfig.NodeConfigs {
-			execConfCmds := shell.ExecConf(nodeinfo[nodeConfig.Name], nodeConfig)
+			execConfCmds := nodeConfig.ExecConf(nodeinfo[nodeConfig.Name])
 			for _, execConfCmd := range execConfCmds {
 				fmt.Println(execConfCmd)
 			}

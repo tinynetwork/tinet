@@ -1,6 +1,10 @@
-name: golangci
+name: test
 
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+    - "**"
+  pull_request: {}
 
 jobs:
   build:
@@ -9,7 +13,7 @@ jobs:
     strategy:
         matrix:
             go:
-            - 1.12.9
+            - 1.13
     steps:
       - name: checkout
         uses: actions/checkout@v1

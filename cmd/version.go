@@ -7,13 +7,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const version = "0.0.0"
+
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "show the tinet version",
 	Run: func(cmd *cobra.Command, args []string) {
-		version := "v0.0.0"
-		fmt.Printf("Tinet version %s\n", version)
+		fmt.Printf("Tinet version v%s\n", version)
 	},
 }
 

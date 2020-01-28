@@ -25,103 +25,114 @@ func TestBuildCmd(t *testing.T) {
 	}
 }
 
-func TestExecConf(t *testing.T) {
+func TestNodeConfig_ExecConf(t *testing.T) {
+	type fields struct {
+		Name string
+		Cmds []Cmd
+	}
 	type args struct {
-		nodeType   string
-		nodeConfig NodeConfig
+		nodeType string
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		args   args
+		want   []string
 	}{
 		{
 			name: "docker exec",
-			args: args{
-				// nodeType: "docker",
-				nodeType: "",
-				nodeConfig: NodeConfig{
-					Name: "R1",
-					Cmds: []Cmd{
-						Cmd{
-							Cmd: "/usr/lib/frr/frr start",
-						},
-						Cmd{
-							Cmd: "ip addr add 10.0.0.1/24 dev net0",
-						},
-						Cmd{
-							Cmd: "vtysh -c 'conf t' -c 'router bgp 65001' -c 'bgp router-id 10.255.0.1' -c 'neighbor 10.0.0.2 remote-as 65002'",
-						},
+			fields: fields{
+				Name: "R1",
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "/usr/lib/frr/frr start",
+					},
+					Cmd{
+						Cmd: "ip addr add 10.0.0.1/24 dev net0",
+					},
+					Cmd{
+						Cmd: "vtysh -c 'conf t' -c 'router bgp 65001' -c 'bgp router-id 10.255.0.1' -c 'neighbor 10.0.0.2 remote-as 65002'",
 					},
 				},
+			},
+			args: args{
+				nodeType: "",
 			},
 			want: []string{"docker exec R1 /usr/lib/frr/frr start", "docker exec R1 ip addr add 10.0.0.1/24 dev net0", "docker exec R1 vtysh -c 'conf t' -c 'router bgp 65001' -c 'bgp router-id 10.255.0.1' -c 'neighbor 10.0.0.2 remote-as 65002'"},
 		},
 		{
 			name: "ip netns exec",
-			args: args{
-				nodeType: "netns",
-				nodeConfig: NodeConfig{
-					Name: "H0",
-					Cmds: []Cmd{
-						Cmd{
-							Cmd: "ip addr add 10.0.0.1/24 dev net0",
-						},
-						Cmd{
-							Cmd: "ip addr add 10.1.0.1/24 dev net1",
-						},
+			fields: fields{
+				Name: "H0",
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "ip addr add 10.0.0.1/24 dev net0",
+					},
+					Cmd{
+						Cmd: "ip addr add 10.1.0.1/24 dev net1",
 					},
 				},
+			},
+			args: args{
+				nodeType: "netns",
 			},
 			want: []string{"ip netns exec H0 ip addr add 10.0.0.1/24 dev net0", "ip netns exec H0 ip addr add 10.1.0.1/24 dev net1"},
 		},
 		{
 			name: "not support node",
-			args: args{
-				nodeType: "hoge",
-				nodeConfig: NodeConfig{
-					Name: "R0",
-					Cmds: []Cmd{
-						Cmd{
-							Cmd: "ip addr add 10.0.0.1/24 dev net0",
-						},
+			fields: fields{
+				Name: "R0",
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "ip addr add 10.0.0.1/24 dev net0",
 					},
 				},
+			},
+			args: args{
+				nodeType: "hoge",
 			},
 			want: []string{""},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExecConf(tt.args.nodeType, tt.args.nodeConfig); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ExecConf() = %v, want %v", got, tt.want)
+			nodeConfig := &NodeConfig{
+				Name: tt.fields.Name,
+				Cmds: tt.fields.Cmds,
+			}
+			if got := nodeConfig.ExecConf(tt.args.nodeType); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NodeConfig.ExecConf() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestDeleteNode(t *testing.T) {
-	type args struct {
-		node Node
+func TestNode_DeleteNode(t *testing.T) {
+	type fields struct {
+		Name       string
+		Type       string
+		NetBase    string
+		Image      string
+		Interfaces []Interface
+		Sysctls    []Sysctl
+		Mounts     []string
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		want   []string
 	}{
 		{
 			name: "delete docker",
-			args: args{
-				node: Node{
-					Name:  "R1",
-					Image: "slankdev/frr",
-					Type:  "docker",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "R2#net0",
-						},
+			fields: fields{
+				Name:  "R1",
+				Image: "slankdev/frr",
+				Type:  "docker",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "R2#net0",
 					},
 				},
 			},
@@ -129,16 +140,14 @@ func TestDeleteNode(t *testing.T) {
 		},
 		{
 			name: "delete netns",
-			args: args{
-				node: Node{
-					Name: "H1",
-					Type: "netns",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "H2#net0",
-						},
+			fields: fields{
+				Name: "H1",
+				Type: "netns",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "H2#net0",
 					},
 				},
 			},
@@ -146,16 +155,14 @@ func TestDeleteNode(t *testing.T) {
 		},
 		{
 			name: "delete not support nodetype",
-			args: args{
-				node: Node{
-					Name: "U1",
-					Type: "hoge",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "U2#net0",
-						},
+			fields: fields{
+				Name: "U1",
+				Type: "hoge",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "U2#net0",
 					},
 				},
 			},
@@ -164,43 +171,51 @@ func TestDeleteNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DeleteNode(tt.args.node); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DeleteNode() = %v, want %v", got, tt.want)
+			node := &Node{
+				Name:       tt.fields.Name,
+				Type:       tt.fields.Type,
+				NetBase:    tt.fields.NetBase,
+				Image:      tt.fields.Image,
+				Interfaces: tt.fields.Interfaces,
+				Sysctls:    tt.fields.Sysctls,
+				Mounts:     tt.fields.Mounts,
+			}
+			if got := node.DeleteNode(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Node.DeleteNode() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestDeleteSwitch(t *testing.T) {
-	type args struct {
-		br Switch
+func TestSwitch_DeleteSwitch(t *testing.T) {
+	type fields struct {
+		Name       string
+		Interfaces []Interface
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name   string
+		fields fields
+		want   string
 	}{
 		{
 			name: "delete bridge",
-			args: args{
-				br: Switch{
-					Name: "SW",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net2",
-							Type: "docker",
-							Args: "R1",
-						},
-						Interface{
-							Name: "net0",
-							Type: "docker",
-							Args: "R2",
-						},
-						Interface{
-							Name: "net0",
-							Type: "docker",
-							Args: "R3",
-						},
+			fields: fields{
+				Name: "SW",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net2",
+						Type: "docker",
+						Args: "R1",
+					},
+					Interface{
+						Name: "net0",
+						Type: "docker",
+						Args: "R2",
+					},
+					Interface{
+						Name: "net0",
+						Type: "docker",
+						Args: "R3",
 					},
 				},
 			},
@@ -209,30 +224,76 @@ func TestDeleteSwitch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := DeleteSwitch(tt.args.br); got != tt.want {
-				t.Errorf("DeleteSwitch() = %v, want %v", got, tt.want)
+			br := &Switch{
+				Name:       tt.fields.Name,
+				Interfaces: tt.fields.Interfaces,
+			}
+			if got := br.DeleteSwitch(); got != tt.want {
+				t.Errorf("Switch.DeleteSwitch() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
 func TestTn_Exec(t *testing.T) {
+	type fields struct {
+		PreCmd      []PreCmd
+		PreInit     []PreInit
+		PostInit    []PostInit
+		PostFini    []PostFini
+		Nodes       []Node
+		Switches    []Switch
+		NodeConfigs []NodeConfig
+		Test        []Test
+	}
 	type args struct {
 		nodeName string
 		Cmds     []string
 	}
 	tests := []struct {
-		name     string
-		tnconfig *Tn
-		args     args
-		want     string
+		name   string
+		fields fields
+		args   args
+		want   string
 	}{
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.tnconfig.Exec(tt.args.nodeName, tt.args.Cmds); got != tt.want {
+			tnconfig := &Tn{
+				PreCmd:      tt.fields.PreCmd,
+				PreInit:     tt.fields.PreInit,
+				PostInit:    tt.fields.PostInit,
+				PostFini:    tt.fields.PostFini,
+				Nodes:       tt.fields.Nodes,
+				Switches:    tt.fields.Switches,
+				NodeConfigs: tt.fields.NodeConfigs,
+				Test:        tt.fields.Test,
+			}
+			if got := tnconfig.Exec(tt.args.nodeName, tt.args.Cmds); got != tt.want {
 				t.Errorf("Tn.Exec() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGenerateFile(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GenerateFile()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GenerateFile() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("GenerateFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -411,27 +472,31 @@ func TestExecCmd(t *testing.T) {
 	}
 }
 
-func TestCreateNode(t *testing.T) {
-	type args struct {
-		node Node
+func TestNode_CreateNode(t *testing.T) {
+	type fields struct {
+		Name       string
+		Type       string
+		NetBase    string
+		Image      string
+		Interfaces []Interface
+		Sysctls    []Sysctl
+		Mounts     []string
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		want   []string
 	}{
 		{
 			name: "create docker node net None",
-			args: args{
-				node: Node{
-					Name:  "R1",
-					Image: "slankdev/frr",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "C1#net0",
-						},
+			fields: fields{
+				Name:  "R1",
+				Image: "slankdev/frr",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "C1#net0",
 					},
 				},
 			},
@@ -439,24 +504,22 @@ func TestCreateNode(t *testing.T) {
 		},
 		{
 			name: "create docker node net None with sysctls",
-			args: args{
-				node: Node{
-					Name:  "R1",
-					Image: "slankdev/frr",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "C1#net0",
-						},
+			fields: fields{
+				Name:  "R1",
+				Image: "slankdev/frr",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "C1#net0",
 					},
-					Sysctls: []Sysctl{
-						Sysctl{
-							Sysctl: "net.ipv4.ip_forward=1",
-						},
-						Sysctl{
-							Sysctl: "net.ipv6.conf.all.forwarding=1",
-						},
+				},
+				Sysctls: []Sysctl{
+					Sysctl{
+						Sysctl: "net.ipv4.ip_forward=1",
+					},
+					Sysctl{
+						Sysctl: "net.ipv6.conf.all.forwarding=1",
 					},
 				},
 			},
@@ -464,17 +527,15 @@ func TestCreateNode(t *testing.T) {
 		},
 		{
 			name: "create docker node net bridge",
-			args: args{
-				node: Node{
-					Name:    "R1",
-					Image:   "slankdev/frr",
-					NetBase: "bridge",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "C1#net0",
-						},
+			fields: fields{
+				Name:    "R1",
+				Image:   "slankdev/frr",
+				NetBase: "bridge",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "C1#net0",
 					},
 				},
 			},
@@ -482,17 +543,15 @@ func TestCreateNode(t *testing.T) {
 		},
 		{
 			name: "create netns node",
-			args: args{
-				node: Node{
-					Name:  "C1",
-					Type:  "netns",
-					Image: "",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "R1#net0",
-						},
+			fields: fields{
+				Name:  "C1",
+				Type:  "netns",
+				Image: "",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "R1#net0",
 					},
 				},
 			},
@@ -500,25 +559,23 @@ func TestCreateNode(t *testing.T) {
 		},
 		{
 			name: "create netns node with sysctls",
-			args: args{
-				node: Node{
-					Name:  "C1",
-					Type:  "netns",
-					Image: "",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "R1#net0",
-						},
+			fields: fields{
+				Name:  "C1",
+				Type:  "netns",
+				Image: "",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "R1#net0",
 					},
-					Sysctls: []Sysctl{
-						Sysctl{
-							Sysctl: "net.ipv4.ip_forward=1",
-						},
-						Sysctl{
-							Sysctl: "net.ipv6.conf.all.forwarding=1",
-						},
+				},
+				Sysctls: []Sysctl{
+					Sysctl{
+						Sysctl: "net.ipv4.ip_forward=1",
+					},
+					Sysctl{
+						Sysctl: "net.ipv6.conf.all.forwarding=1",
 					},
 				},
 			},
@@ -526,17 +583,15 @@ func TestCreateNode(t *testing.T) {
 		},
 		{
 			name: "create not support node",
-			args: args{
-				node: Node{
-					Name:  "U1",
-					Type:  "hoge",
-					Image: "",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "U2#net0",
-						},
+			fields: fields{
+				Name:  "U1",
+				Type:  "hoge",
+				Image: "",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "U2#net0",
 					},
 				},
 			},
@@ -544,21 +599,19 @@ func TestCreateNode(t *testing.T) {
 		},
 		{
 			name: "create node with mounts",
-			args: args{
-				node: Node{
-					Name:  "T1",
-					Image: "slankdev/frr",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "T2#net0",
-						},
+			fields: fields{
+				Name:  "T1",
+				Image: "slankdev/frr",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "T2#net0",
 					},
-					Mounts: []string{
-						"`pwd`:/mnt/test",
-						"/usr/share/vim:/mnt/vim",
-					},
+				},
+				Mounts: []string{
+					"`pwd`:/mnt/test",
+					"/usr/share/vim:/mnt/vim",
 				},
 			},
 			want: []string{"docker run -td --hostname T1 --net none --name T1 --rm --privileged -v `pwd`:/mnt/test -v /usr/share/vim:/mnt/vim slankdev/frr"},
@@ -566,8 +619,17 @@ func TestCreateNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CreateNode(tt.args.node); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateNode() = %v, want %v", got, tt.want)
+			node := &Node{
+				Name:       tt.fields.Name,
+				Type:       tt.fields.Type,
+				NetBase:    tt.fields.NetBase,
+				Image:      tt.fields.Image,
+				Interfaces: tt.fields.Interfaces,
+				Sysctls:    tt.fields.Sysctls,
+				Mounts:     tt.fields.Mounts,
+			}
+			if got := node.CreateNode(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Node.CreateNode() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -627,31 +689,30 @@ func TestNetnsLinkUp(t *testing.T) {
 	}
 }
 
-func TestCreateSwitch(t *testing.T) {
-	type args struct {
-		bridge Switch
+func TestSwitch_CreateSwitch(t *testing.T) {
+	type fields struct {
+		Name       string
+		Interfaces []Interface
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		want   []string
 	}{
 		{
 			name: "create switch shell",
-			args: args{
-				bridge: Switch{
-					Name: "SW",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "docker",
-							Args: "R1",
-						},
-						Interface{
-							Name: "net0",
-							Type: "docker",
-							Args: "R2",
-						},
+			fields: fields{
+				Name: "SW",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "docker",
+						Args: "R1",
+					},
+					Interface{
+						Name: "net0",
+						Type: "docker",
+						Args: "R2",
 					},
 				},
 			},
@@ -660,176 +721,232 @@ func TestCreateSwitch(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := CreateSwitch(tt.args.bridge); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateSwitch() = %v, want %v", got, tt.want)
+			bridge := &Switch{
+				Name:       tt.fields.Name,
+				Interfaces: tt.fields.Interfaces,
+			}
+			if got := bridge.CreateSwitch(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Switch.CreateSwitch() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestN2nLink(t *testing.T) {
+func TestInterface_N2nLink(t *testing.T) {
+	type fields struct {
+		Name string
+		Type string
+		Args string
+		Addr string
+	}
 	type args struct {
 		nodeName string
-		inf      Interface
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		args   args
+		want   []string
 	}{
 		{
 			name: "peer between containers",
+			fields: fields{
+				Name: "net0",
+				Type: "direct",
+				Args: "R2#net0",
+			},
 			args: args{
 				nodeName: "R1",
-				inf: Interface{
-					Name: "net0",
-					Type: "direct",
-					Args: "R2#net0",
-				},
 			},
 			want: []string{"ip link add net0 netns R1 type veth peer name net0 netns R2", "ip netns exec R1 ip link set net0 up", "ip netns exec R2 ip link set net0 up"},
 		},
 		{
 			name: "peer between containers and set macaddress",
+			fields: fields{
+				Name: "net0",
+				Type: "direct",
+				Args: "R2#net0",
+				Addr: "52:54:00:11:11:11",
+			},
 			args: args{
 				nodeName: "R1",
-				inf: Interface{
-					Name: "net0",
-					Type: "direct",
-					Args: "R2#net0",
-					Addr: "52:54:00:11:11:11",
-				},
 			},
 			want: []string{"ip link add net0 netns R1 type veth peer name net0 netns R2", "ip netns exec R1 ip link set net0 up", "ip netns exec R2 ip link set net0 up", "ip netns exec R1 ip link set net0 address 52:54:00:11:11:11"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := N2nLink(tt.args.nodeName, tt.args.inf); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("N2nLink() = %v, want %v", got, tt.want)
+			inf := &Interface{
+				Name: tt.fields.Name,
+				Type: tt.fields.Type,
+				Args: tt.fields.Args,
+				Addr: tt.fields.Addr,
+			}
+			if got := inf.N2nLink(tt.args.nodeName); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Interface.N2nLink() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestS2nLink(t *testing.T) {
+func TestInterface_S2nLink(t *testing.T) {
+	type fields struct {
+		Name string
+		Type string
+		Args string
+		Addr string
+	}
 	type args struct {
 		nodeName string
-		inf      Interface
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		args   args
+		want   []string
 	}{
 		{
 			name: "link connect between switch and container",
+			fields: fields{
+				Name: "net0",
+				Type: "bridge",
+				Args: "SW",
+			},
 			args: args{
 				nodeName: "R1",
-				inf: Interface{
-					Name: "net0",
-					Type: "bridge",
-					Args: "SW",
-				},
 			},
 			want: []string{"ip link add net0 netns R1 type veth peer name SW-R1", "ip netns exec R1 ip link set net0 up", "ip link set SW-R1 up", "ip link set dev SW-R1 master SW"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := S2nLink(tt.args.nodeName, tt.args.inf); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("S2nLink() = %v, want %v", got, tt.want)
+			inf := &Interface{
+				Name: tt.fields.Name,
+				Type: tt.fields.Type,
+				Args: tt.fields.Args,
+				Addr: tt.fields.Addr,
+			}
+			if got := inf.S2nLink(tt.args.nodeName); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Interface.S2nLink() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestV2cLink(t *testing.T) {
+func TestInterface_V2cLink(t *testing.T) {
+	type fields struct {
+		Name string
+		Type string
+		Args string
+		Addr string
+	}
 	type args struct {
 		nodeName string
-		inf      Interface
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		args   args
+		want   []string
 	}{
 		{
 			name: "link connect between veth and container",
+			fields: fields{
+				Name: "port-0-6-0",
+				Type: "veth",
+				Args: "pp6",
+			},
 			args: args{
 				nodeName: "R1",
-				inf: Interface{
-					Name: "port-0-6-0",
-					Type: "veth",
-					Args: "pp6",
-				},
 			},
 			want: []string{"ip link add port-0-6-0 type veth peer name pp6", "ip link set dev port-0-6-0 netns R1", "ip netns exec R1 ip link set port-0-6-0 up", "ip netns del R1", "ip link set pp6 up"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := V2cLink(tt.args.nodeName, tt.args.inf); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("V2cLink() = %v, want %v", got, tt.want)
+			inf := &Interface{
+				Name: tt.fields.Name,
+				Type: tt.fields.Type,
+				Args: tt.fields.Args,
+				Addr: tt.fields.Addr,
+			}
+			if got := inf.V2cLink(tt.args.nodeName); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Interface.V2cLink() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestP2cLink(t *testing.T) {
+func TestInterface_P2cLink(t *testing.T) {
+	type fields struct {
+		Name string
+		Type string
+		Args string
+		Addr string
+	}
 	type args struct {
 		nodeName string
-		inf      Interface
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		args   args
+		want   []string
 	}{
 		{
 			name: "Link connect between phys ethernet and Container",
+			fields: fields{
+				Name: "ens20f1",
+				Type: "phys",
+				Args: "",
+			},
 			args: args{
 				nodeName: "R1",
-				inf: Interface{
-					Name: "ens20f1",
-					Type: "phys",
-					Args: "",
-				},
 			},
 			want: []string{"ip link set dev ens20f1 netns R1", "ip netns exec R1 ip link set ens20f1 up", "ip netns del R1"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := P2cLink(tt.args.nodeName, tt.args.inf); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("P2cLink() = %v, want %v", got, tt.want)
+			inf := &Interface{
+				Name: tt.fields.Name,
+				Type: tt.fields.Type,
+				Args: tt.fields.Args,
+				Addr: tt.fields.Addr,
+			}
+			if got := inf.P2cLink(tt.args.nodeName); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Interface.P2cLink() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestMount_docker_netns(t *testing.T) {
-	type args struct {
-		node Node
+func TestNode_Mount_docker_netns(t *testing.T) {
+	type fields struct {
+		Name       string
+		Type       string
+		NetBase    string
+		Image      string
+		Interfaces []Interface
+		Sysctls    []Sysctl
+		Mounts     []string
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		want   []string
 	}{
 		{
 			name: "docker mount netns",
-			args: args{
-				node: Node{
-					Name:  "R1",
-					Image: "slankdev/frr",
-					Type:  "docker",
-					Interfaces: []Interface{
-						Interface{
-							Name: "net0",
-							Type: "direct",
-							Args: "R2#net0",
-						},
+			fields: fields{
+				Name:  "R1",
+				Image: "slankdev/frr",
+				Type:  "docker",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "R2#net0",
 					},
 				},
 			},
@@ -838,8 +955,17 @@ func TestMount_docker_netns(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Mount_docker_netns(tt.args.node); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Mount_docker_netns() = %v, want %v", got, tt.want)
+			node := &Node{
+				Name:       tt.fields.Name,
+				Type:       tt.fields.Type,
+				NetBase:    tt.fields.NetBase,
+				Image:      tt.fields.Image,
+				Interfaces: tt.fields.Interfaces,
+				Sysctls:    tt.fields.Sysctls,
+				Mounts:     tt.fields.Mounts,
+			}
+			if got := node.Mount_docker_netns(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Node.Mount_docker_netns() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -866,28 +992,6 @@ func TestGetContainerPid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetContainerPid(tt.args.nodename); got != tt.want {
 				t.Errorf("GetContainerPid() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestGenerateFile(t *testing.T) {
-	tests := []struct {
-		name    string
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenerateFile()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GenerateFile() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("GenerateFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}
