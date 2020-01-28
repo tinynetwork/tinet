@@ -39,11 +39,10 @@ jobs:
       - name: Running golangci-lint
         env:
           GO111MODULE: on
+          GOPATH: /home/runner/work/
         run: |
             go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-
-      - name: lint
-        run: $GOPATH/bin/golangci-lint run
+            ${GOPATH}/bin/golangci-lint run
 
       - name: test
         run: go test ./... -v
