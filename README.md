@@ -1,6 +1,6 @@
 # tinet-go
 
-![](https://github.com/ak1ra24/tinet-go/workflows/test/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/ak1ra24/tinet-go)](https://goreportcard.com/report/github.com/ak1ra24/tinet-go)
+![test](https://github.com/ak1ra24/tinet-go/workflows/test/badge.svg) ![release](https://github.com/ak1ra24/tinet-go/workflows/release/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/ak1ra24/tinet-go)](https://goreportcard.com/report/github.com/ak1ra24/tinet-go)
 
 Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
@@ -62,6 +62,7 @@ Use "tn [command] --help" for more information about a command.
 ```
 
 ## Contribute
+
 Simply fork and create a pull-request. We'll try to respond in a timely fashion.
 
 ## Links
