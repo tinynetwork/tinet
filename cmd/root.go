@@ -19,7 +19,7 @@ var tnconfig shell.Tn
 var rootCmd = &cobra.Command{
 	Use:   "tn",
 	Short: "tn: tinet",
-	Long:  `tinet is network simultulator created by docker`,
+	Long:  `tinet is network emulator created by docker`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
