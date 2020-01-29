@@ -1,6 +1,6 @@
 # tinet-go
 
-![test](https://github.com/ak1ra24/tinet-go/workflows/test/badge.svg) ![release](https://github.com/ak1ra24/tinet-go/workflows/release/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/ak1ra24/tinet-go)](https://goreportcard.com/report/github.com/ak1ra24/tinet-go)
+![test](https://github.com/tinynetwork/tinet/workflows/test/badge.svg) ![release](https://github.com/tinynetwork/tinet/workflows/release/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/tinynetwork/tinet)](https://goreportcard.com/report/github.com/tinynetwork/tinet)
 
 Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
@@ -12,7 +12,7 @@ Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 ## Install
 
 ```
-wget https://github.com/ak1ra24/tinet-go/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
+wget https://github.com/tinynetwork/tinet/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
 tar zxvf /tmp/tinet-go_linux_amd64.tar.gz -C /usr/local/bin
 ```
 
