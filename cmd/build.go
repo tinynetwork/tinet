@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/tinynetwork/tinet/internal/pkg/shell"
+	"github.com/tinynetwork/tn/internal/pkg/shell"
 )
 
 // buildCmd represents the build command

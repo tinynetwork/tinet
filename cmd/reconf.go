@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tinynetwork/tinet/internal/pkg/shell"
+	"github.com/tinynetwork/tn/internal/pkg/shell"
 )
 
 // reconfCmd represents the reconf command
