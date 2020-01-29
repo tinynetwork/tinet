@@ -29,7 +29,5 @@ jobs:
         go get -u github.com/Songmu/goxz/cmd/goxz
         export TAGNAME=$($GOPATH/bin/gobump show -r cmd/)
         echo "DEBUG:" $TAGNAME
-        export CHANGELOG=$($GOPATH/bin/ghch -F markdown --latest)
-        echo "DEBUG:" $CHANGELOG
-        $GOPATH/bin/goxz -pv v$TAGNAME -os=linux -arch=amd64 -d ./dist/v$TAGNAME
-        $GOPATH/bin/ghr -n v$TAGNAME -b $CHANGELOG -draft v$TAGNAME ./dist/v$TAGNAME
+        $GOPATH/bin/goxz -pv $TAGNAME -os=linux -arch=amd64 -d ./dist/v$TAGNAME
+        $GOPATH/bin/ghr -n=v$TAGNAME -b="$($GOPATH/bin/ghch -F markdown --latest)" -draft v$TAGNAME ./dist/v$TAGNAME
