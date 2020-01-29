@@ -8,7 +8,7 @@ import (
 	l "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/ak1ra24/tn/internal/pkg/utils"
+	"github.com/tinynetwork/tinet/internal/pkg/utils"
 )
 
 var log = l.New()

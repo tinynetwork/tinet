@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ak1ra24/tn/internal/pkg/shell"
-	"github.com/ak1ra24/tn/internal/pkg/utils"
 	"github.com/spf13/cobra"
+	"github.com/tinynetwork/tinet/internal/pkg/shell"
+	"github.com/tinynetwork/tinet/internal/pkg/utils"
 
 	"github.com/spf13/viper"
 )

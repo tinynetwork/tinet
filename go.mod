@@ -1,4 +1,4 @@
-module github.com/ak1ra24/tn
+module github.com/tinynetwork/tinet
 
 go 1.13
 

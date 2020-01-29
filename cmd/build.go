@@ -4,8 +4,8 @@ package cmd
 import (
 	"log"
 
-	"github.com/ak1ra24/tn/internal/pkg/shell"
 	"github.com/spf13/cobra"
+	"github.com/tinynetwork/tinet/internal/pkg/shell"
 )
 
 // buildCmd represents the build command

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/ak1ra24/tn/internal/pkg/shell"
 	"github.com/spf13/cobra"
+	"github.com/tinynetwork/tinet/internal/pkg/shell"
 )
 
 // psCmd represents the ps command
