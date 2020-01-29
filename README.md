@@ -29,7 +29,7 @@ tn down -c spec.yaml | sudo sh -x
 
 ```
 ➜ tn
-tinet is network simultulator created by docker
+tinet is network emulator created by docker
 
 Usage:
   tn [command]
