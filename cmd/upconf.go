@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tinynetwork/tn/internal/pkg/shell"
-	"github.com/tinynetwork/tn/internal/pkg/utils"
+	"github.com/tinynetwork/tinet/internal/pkg/shell"
+	"github.com/tinynetwork/tinet/internal/pkg/utils"
 )
 
 // upconfCmd represents the upconf command

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/tinynetwork/tn/internal/pkg/utils"
+	"github.com/tinynetwork/tinet/internal/pkg/utils"
 )
 
 // confCmd represents the conf command
