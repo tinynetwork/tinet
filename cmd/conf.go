@@ -2,9 +2,10 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tinynetwork/tn/internal/pkg/utils"
 )
 
 // confCmd represents the conf command
@@ -20,7 +21,7 @@ var confCmd = &cobra.Command{
 		for _, nodeConfig := range tnconfig.NodeConfigs {
 			execConfCmds := nodeConfig.ExecConf(nodeinfo[nodeConfig.Name])
 			for _, execConfCmd := range execConfCmds {
-				fmt.Println(execConfCmd)
+				utils.PrintCmd(os.Stdout, execConfCmd, verbose)
 			}
 		}
 	},

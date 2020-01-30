@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"reflect"
 	"testing"
 )
@@ -72,6 +73,44 @@ func TestRemoveDuplicatesString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := RemoveDuplicatesString(tt.args.elements); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("RemoveDuplicatesString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPrintCmd(t *testing.T) {
+	type args struct {
+		cmd     string
+		verbose bool
+	}
+	tests := []struct {
+		name  string
+		args  args
+		wantW string
+	}{
+		{
+			name: "cmd output verbose",
+			args: args{
+				cmd:     "test output",
+				verbose: true,
+			},
+			wantW: "test output\n",
+		},
+		{
+			name: "cmd output no verbose",
+			args: args{
+				cmd:     "test output > /dev/null",
+				verbose: true,
+			},
+			wantW: "test output > /dev/null\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := &bytes.Buffer{}
+			PrintCmd(w, tt.args.cmd, tt.args.verbose)
+			if gotW := w.String(); gotW != tt.wantW {
+				t.Errorf("PrintCmd() = %v, want %v", gotW, tt.wantW)
 			}
 		})
 	}

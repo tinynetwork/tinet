@@ -4,10 +4,12 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tinynetwork/tn/internal/pkg/shell"
+	"github.com/tinynetwork/tn/internal/pkg/utils"
 )
 
 // reconfCmd represents the reconf command
@@ -18,40 +20,40 @@ var reconfCmd = &cobra.Command{
 		// stop, remove
 		for _, node := range tnconfig.Nodes {
 			deleteNode := node.DeleteNode()
-			fmt.Println(strings.Join(deleteNode, "\n"))
+			utils.PrintCmd(os.Stdout, strings.Join(deleteNode, "\n"), verbose)
 		}
 		for _, br := range tnconfig.Switches {
 			delBrCmd := br.DeleteSwitch()
-			fmt.Println(delBrCmd)
+			utils.PrintCmd(os.Stdout, delBrCmd, verbose)
 		}
 
 		// create, start and config
 		if len(tnconfig.PreCmd) != 0 {
 			for _, preCmds := range tnconfig.PreCmd {
 				preExecCmds := shell.ExecCmd(preCmds.Cmds)
-				fmt.Println(strings.Join(preExecCmds, "\n"))
+				utils.PrintCmd(os.Stdout, strings.Join(preExecCmds, "\n"), verbose)
 			}
 		}
 		if len(tnconfig.PreInit) != 0 {
 			for _, preInitCmds := range tnconfig.PreInit {
 				preExecInitCmds := shell.ExecCmd(preInitCmds.Cmds)
-				fmt.Println(strings.Join(preExecInitCmds, "\n"))
+				utils.PrintCmd(os.Stdout, strings.Join(preExecInitCmds, "\n"), verbose)
 			}
 		}
 		for _, node := range tnconfig.Nodes {
 			createNodeCmds := node.CreateNode()
-			fmt.Println(strings.Join(createNodeCmds, "\n"))
+			utils.PrintCmd(os.Stdout, strings.Join(createNodeCmds, "\n"), verbose)
 
 			if node.Type != "netns" {
 				mountDockerNetnsCmds := node.Mount_docker_netns()
-				fmt.Println(strings.Join(mountDockerNetnsCmds, "\n"))
+				utils.PrintCmd(os.Stdout, strings.Join(mountDockerNetnsCmds, "\n"), verbose)
 			}
 		}
 
 		if len(tnconfig.Switches) != 0 {
 			for _, bridge := range tnconfig.Switches {
 				createSwitchCmds := bridge.CreateSwitch()
-				fmt.Println(strings.Join(createSwitchCmds, "\n"))
+				utils.PrintCmd(os.Stdout, strings.Join(createSwitchCmds, "\n"), verbose)
 			}
 		}
 
@@ -59,16 +61,16 @@ var reconfCmd = &cobra.Command{
 			for _, inf := range node.Interfaces {
 				if inf.Type == "direct" {
 					n2nLinkCmds := inf.N2nLink(node.Name)
-					fmt.Println(strings.Join(n2nLinkCmds, "\n"))
+					utils.PrintCmd(os.Stdout, strings.Join(n2nLinkCmds, "\n"), verbose)
 				} else if inf.Type == "bridge" {
-					s2nLinkCmd := inf.S2nLink(node.Name)
-					fmt.Println(strings.Join(s2nLinkCmd, "\n"))
+					s2nLinkCmds := inf.S2nLink(node.Name)
+					utils.PrintCmd(os.Stdout, strings.Join(s2nLinkCmds, "\n"), verbose)
 				} else if inf.Type == "veth" {
 					v2cLinkCmds := inf.V2cLink(node.Name)
-					fmt.Println(strings.Join(v2cLinkCmds, "\n"))
+					utils.PrintCmd(os.Stdout, strings.Join(v2cLinkCmds, "\n"), verbose)
 				} else if inf.Type == "phys" {
 					p2cLinkCmds := inf.P2cLink(node.Name)
-					fmt.Println(strings.Join(p2cLinkCmds, "\n"))
+					utils.PrintCmd(os.Stdout, strings.Join(p2cLinkCmds, "\n"), verbose)
 				} else {
 					err := fmt.Errorf("not supported interface type: %s", inf.Type)
 					log.Fatal(err)
@@ -79,10 +81,11 @@ var reconfCmd = &cobra.Command{
 		if len(tnconfig.PostInit) != 0 {
 			for _, postInitCmds := range tnconfig.PostInit {
 				postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
-				fmt.Println(strings.Join(postExecInitCmds, "\n"))
+				utils.PrintCmd(os.Stdout, strings.Join(postExecInitCmds, "\n"), verbose)
 			}
 		}
 
+		// conf
 		nodeinfo := map[string]string{}
 		for _, node := range tnconfig.Nodes {
 			nodeinfo[node.Name] = node.Type
@@ -91,7 +94,7 @@ var reconfCmd = &cobra.Command{
 		for _, nodeConfig := range tnconfig.NodeConfigs {
 			execConfCmds := nodeConfig.ExecConf(nodeinfo[nodeConfig.Name])
 			for _, execConfCmd := range execConfCmds {
-				fmt.Println(execConfCmd)
+				utils.PrintCmd(os.Stdout, execConfCmd, verbose)
 			}
 		}
 	},

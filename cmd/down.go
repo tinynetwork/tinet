@@ -2,10 +2,11 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tinynetwork/tn/internal/pkg/utils"
 )
 
 // downCmd represents the down command
@@ -15,11 +16,11 @@ var downCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, node := range tnconfig.Nodes {
 			deleteNode := node.DeleteNode()
-			fmt.Println(strings.Join(deleteNode, "\n"))
+			utils.PrintCmd(os.Stdout, strings.Join(deleteNode, "\n"), verbose)
 		}
 		for _, br := range tnconfig.Switches {
 			delBrCmd := br.DeleteSwitch()
-			fmt.Println(delBrCmd)
+			utils.PrintCmd(os.Stdout, delBrCmd, verbose)
 		}
 	},
 }

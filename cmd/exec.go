@@ -2,9 +2,10 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tinynetwork/tn/internal/pkg/utils"
 )
 
 // execCmd represents the exec command
@@ -14,7 +15,7 @@ var execCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		execCmdArgs := cmd.Flags().Args()
 		execCommand := tnconfig.Exec(execCmdArgs[0], execCmdArgs[1:])
-		fmt.Println(execCommand)
+		utils.PrintCmd(os.Stdout, execCommand, verbose)
 	},
 }
 
