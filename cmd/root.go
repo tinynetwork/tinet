@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/tinynetwork/tn/internal/pkg/shell"
-	"github.com/tinynetwork/tn/internal/pkg/utils"
+	"github.com/tinynetwork/tinet/internal/pkg/shell"
+	"github.com/tinynetwork/tinet/internal/pkg/utils"
 
 	"github.com/spf13/viper"
 )
@@ -17,7 +17,7 @@ var tnconfig shell.Tn
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "tn",
+	Use:   "tinet",
 	Short: "tn: tinet",
 	Long:  `tinet is network emulator created by docker`,
 	// Uncomment the following line if your bare application

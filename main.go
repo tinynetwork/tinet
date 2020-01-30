@@ -16,7 +16,7 @@ limitations under the License.
 
 package main
 
-import "github.com/tinynetwork/tn/cmd"
+import "github.com/tinynetwork/tinet/cmd"
 
 func main() {
 	cmd.Execute()
