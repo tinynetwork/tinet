@@ -18,7 +18,7 @@ var verbose bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "tn",
+	Use:   "tinet",
 	Short: "tn: tinet",
 	Long:  `tinet is network emulator created by docker`,
 	// Uncomment the following line if your bare application
