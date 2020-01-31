@@ -14,6 +14,7 @@ import (
 
 var cfgFile string
 var tnconfig shell.Tn
+var verbose bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -56,6 +57,16 @@ func init() {
 	testCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	upCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
 	upconfCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
+
+	// verbose option
+	confCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	upconfCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	upCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	reupCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	reconfCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	execCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	downCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
+	testCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
