@@ -124,12 +124,10 @@ func (nodeConfig *NodeConfig) ExecConf(nodeType string) []string {
 // DeleteNode Delete docker and netns
 func (node *Node) DeleteNode() []string {
 	var deleteCmd string
-	if node.Type == "docker" {
-		deleteCmd = fmt.Sprintf("docker stop %s", node.Name)
+	if node.Type == "docker" || node.Type == "" {
+		deleteCmd = fmt.Sprintf("docker rm -f %s", node.Name)
 	} else if node.Type == "netns" {
 		deleteCmd = fmt.Sprintf("ip netns del %s", node.Name)
-	} else if node.Type == "" {
-		deleteCmd = fmt.Sprintf("docker stop %s", node.Name)
 	} else {
 		// err := fmt.Errorf("not supported node type...")
 		// log.Fatal(err)
