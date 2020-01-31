@@ -136,7 +136,7 @@ func TestNode_DeleteNode(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"docker stop R1", "rm -rf /var/run/netns/R1"},
+			want: []string{"docker rm -f R1", "rm -rf /var/run/netns/R1"},
 		},
 		{
 			name: "delete netns",
