@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+var defaultCfgFile string = "spec.yaml"
 var cfgFile string
 var tnconfig shell.Tn
 var verbose bool
@@ -43,20 +44,20 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	checkCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	confCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	downCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	execCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	initCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	imgCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	printCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	psCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	pullCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	reconfCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	reupCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	testCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	upCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
-	upconfCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default is ./spec.yaml)")
+	checkCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	confCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	downCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	execCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	initCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	imgCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	printCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	psCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	pullCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	reconfCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	reupCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	testCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	upCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
+	upconfCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", defaultCfgFile, "config file (default is ./spec.yaml)")
 
 	// verbose option
 	confCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose (default: false)")
@@ -75,36 +76,13 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		if !utils.Exists(cfgFile) {
-			// confirmMessage := fmt.Sprintf("Do you create %s file", cfgFile)
-			// isConfirmed := utils.Ask4confirm(confirmMessage)
-			// if isConfirmed {
-			// 	file, err := os.OpenFile(cfgFile, os.O_RDWR|os.O_CREATE, 0644)
-			// 	if err != nil {
-			// 		fmt.Println(err)
-			// 		os.Exit(1)
-			// 	}
-			// 	if err := file.Close(); err != nil {
-			// 		fmt.Println(err)
-			// 		os.Exit(1)
-			// 	}
-			// } else {
-			err := fmt.Errorf("%s is not Found", cfgFile)
-			fmt.Println(err)
-			os.Exit(1)
-			// }
-		}
-
-		viper.SetConfigFile(cfgFile)
-
-	} else {
-		// viper.AddConfigPath(".")
-		// viper.SetConfigName("spec")
-		return
+	if !utils.Exists(cfgFile) {
+		err := fmt.Errorf("%s is not Found", cfgFile)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
+	viper.SetConfigFile(cfgFile)
 	viper.SetConfigType("yaml")
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -114,7 +92,5 @@ func initConfig() {
 
 	if err := viper.Unmarshal(&tnconfig); err != nil {
 		panic(err)
-		// fmt.Println(err)
-		// os.Exit(1)
 	}
 }
