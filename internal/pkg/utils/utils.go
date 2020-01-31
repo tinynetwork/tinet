@@ -5,33 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
-
-	"github.com/logrusorgru/aurora"
 )
-
-// Ask4confirm confirm yes or no
-func Ask4confirm(confirmMessage string) bool {
-
-	au := aurora.NewAurora(true)
-
-	var s string
-
-	message := fmt.Sprintf("%s (y/N): ", confirmMessage)
-	fmt.Printf("%s", au.Bold(au.Cyan(message)))
-	_, err := fmt.Scan(&s)
-	if err != nil {
-		panic(err)
-	}
-
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-
-	if s == "y" || s == "yes" {
-		return true
-	}
-	return false
-}
 
 // Exists check if the directory exist
 func Exists(name string) bool {
@@ -63,5 +37,18 @@ func PrintCmd(w io.Writer, cmd string, verbose bool) {
 	} else {
 		cmd = cmd + " > /dev/null"
 		fmt.Fprintln(w, cmd)
+	}
+}
+
+func PrintCmds(w io.Writer, cmds []string, verbose bool) {
+	if verbose {
+		for _, cmd := range cmds {
+			fmt.Fprintln(w, cmd)
+		}
+	} else {
+		for _, cmd := range cmds {
+			cmd = cmd + " > /dev/null"
+			fmt.Fprintln(w, cmd)
+		}
 	}
 }
