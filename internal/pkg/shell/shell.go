@@ -48,13 +48,13 @@ type PostFini struct {
 
 // Node
 type Node struct {
-	Name       string      `yaml:"name"`
-	Type       string      `yaml:"type"`
-	NetBase    string      `yaml:"net_base"`
-	Image      string      `yaml:"image"`
+	Name       string      `yaml:"name" mapstructure:"name"`
+	Type       string      `yaml:"type" mapstructure:"type"`
+	NetBase    string      `yaml:"net_base" mapstructure:"net_base"`
+	Image      string      `yaml:"image" mapstructure:"image"`
 	Interfaces []Interface `yaml:"interfaces" mapstructure:"interfaces"`
 	Sysctls    []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
-	Mounts     []string    `yaml:"mounts,flow"`
+	Mounts     []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
 }
 
 // Interface
@@ -349,7 +349,7 @@ func (node *Node) CreateNode() []string {
 	if node.NetBase == "" {
 		node.NetBase = "none"
 	}
-	if node.Type == "docker" {
+	if node.Type == "docker" || node.Type == "" {
 		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged ", node.Name, node.NetBase, node.Name)
 		if len(node.Sysctls) != 0 {
 			for _, sysctl := range node.Sysctls {
@@ -366,21 +366,6 @@ func (node *Node) CreateNode() []string {
 		createNodeCmd += node.Image
 	} else if node.Type == "netns" {
 		createNodeCmd = fmt.Sprintf("ip netns add %s", node.Name)
-	} else if node.Type == "" {
-		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged ", node.Name, node.NetBase, node.Name)
-		if len(node.Sysctls) != 0 {
-			for _, sysctl := range node.Sysctls {
-				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
-			}
-		}
-
-		if len(node.Mounts) != 0 {
-			for _, mount := range node.Mounts {
-				createNodeCmd += fmt.Sprintf("-v %s ", mount)
-			}
-		}
-
-		createNodeCmd += node.Image
 	} else {
 		// err := fmt.Errorf("unknown nodetype %s", node.Type)
 		// log.Fatal(err)
