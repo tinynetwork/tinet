@@ -3,6 +3,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -53,4 +54,14 @@ func RemoveDuplicatesString(elements []string) []string {
 		result = append(result, key)
 	}
 	return result
+}
+
+// PrintCmd cmd output
+func PrintCmd(w io.Writer, cmd string, verbose bool) {
+	if verbose {
+		fmt.Fprintln(w, cmd)
+	} else {
+		cmd = cmd + " > /dev/null"
+		fmt.Fprintln(w, cmd)
+	}
 }

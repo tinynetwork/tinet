@@ -2,11 +2,12 @@
 package cmd
 
 import (
-	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tinynetwork/tinet/internal/pkg/shell"
+	"github.com/tinynetwork/tinet/internal/pkg/utils"
 )
 
 // testCmd represents the test command
@@ -15,8 +16,7 @@ var testCmd = &cobra.Command{
 	Short: "Execute tests",
 	Run: func(cmd *cobra.Command, args []string) {
 		tnTestCmds := shell.TnTestCmdExec(tnconfig.Test)
-		fmt.Println(strings.Join(tnTestCmds, "\n"))
-
+		utils.PrintCmd(os.Stdout, strings.Join(tnTestCmds, "\n"), verbose)
 	},
 }
 
