@@ -219,7 +219,7 @@ func TestSwitch_DeleteSwitch(t *testing.T) {
 					},
 				},
 			},
-			want: "ip link delete SW",
+			want: "ovs-vsctl del-br SW",
 		},
 	}
 	for _, tt := range tests {
@@ -716,7 +716,7 @@ func TestSwitch_CreateSwitch(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"ip link add SW type bridge", "ip link set SW up"},
+			want: []string{"ovs-vsctl add-br SW", "ip link set SW up"},
 		},
 	}
 	for _, tt := range tests {
@@ -815,7 +815,7 @@ func TestInterface_S2nLink(t *testing.T) {
 			args: args{
 				nodeName: "R1",
 			},
-			want: []string{"ip link add net0 netns R1 type veth peer name SW-R1", "ip netns exec R1 ip link set net0 up", "ip link set SW-R1 up", "ip link set dev SW-R1 master SW"},
+			want: []string{"ip link add net0 netns R1 type veth peer name SW-R1", "ip netns exec R1 ip link set net0 up", "ip link set SW-R1 up", "ovs-vsctl add-port SW SW-R1"},
 		},
 	}
 	for _, tt := range tests {

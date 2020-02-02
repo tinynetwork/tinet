@@ -143,7 +143,7 @@ func (node *Node) DeleteNode() []string {
 
 // DeleteSwitch Delete bridge
 func (br *Switch) DeleteSwitch() string {
-	deleteBrCmd := fmt.Sprintf("ip link delete %s", br.Name)
+	deleteBrCmd := fmt.Sprintf("ovs-vsctl del-br %s", br.Name)
 	return deleteBrCmd
 }
 
@@ -452,7 +452,7 @@ func NetnsLinkUp(netnsName string, linkName string) string {
 func (bridge *Switch) CreateSwitch() []string {
 	var createSwitchCmds []string
 
-	addSwitchCmd := fmt.Sprintf("ip link add %s type bridge", bridge.Name)
+	addSwitchCmd := fmt.Sprintf("ovs-vsctl add-br %s", bridge.Name)
 	createSwitchCmds = append(createSwitchCmds, addSwitchCmd)
 
 	bridgeUpCmd := HostLinkUp(bridge.Name)
@@ -493,7 +493,7 @@ func (inf *Interface) S2nLink(nodeName string) []string {
 	s2nLinkCmds = append(s2nLinkCmds, s2nLinkCmd)
 	s2nLinkCmds = append(s2nLinkCmds, NetnsLinkUp(nodeName, nodeinf))
 	s2nLinkCmds = append(s2nLinkCmds, HostLinkUp(peerBrInf))
-	setBrLinkCmd := fmt.Sprintf("ip link set dev %s master %s", peerBrInf, peerBr)
+	setBrLinkCmd := fmt.Sprintf("ovs-vsctl add-port %s %s", peerBr, peerBrInf)
 	s2nLinkCmds = append(s2nLinkCmds, setBrLinkCmd)
 
 	return s2nLinkCmds
