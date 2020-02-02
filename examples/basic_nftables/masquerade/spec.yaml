@@ -1,0 +1,41 @@
+
+postinit:
+  - cmds:
+      - cmd: docker cp ../../../tools/http_server.py R3:/usr/bin
+      - cmd: docker cp ../../../tools/echo_server.py R3:/usr/bin
+
+nodes:
+  - name: R1
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R3
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+
+  - name: R2
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip addr add 20.0.0.1/24 dev net1
+      - cmd: nft create table ip nat
+      - cmd: nft create chain ip nat prerouting { type nat hook prerouting priority 0 \;}
+      - cmd: nft create chain ip nat postrouting { type nat hook postrouting priority 0 \;}
+      - cmd: nft add rule nat postrouting ip saddr 10.0.0.0/24 oif net1 masquerade
+
+  - name: R3
+    cmds:
+      - cmd: ip addr add 20.0.0.2/24 dev net0
+      - cmd: nohup http_server.py &
+

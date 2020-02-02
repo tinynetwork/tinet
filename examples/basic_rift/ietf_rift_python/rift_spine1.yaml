@@ -1,0 +1,13 @@
+shards:
+  - id: 0
+    nodes:
+      - name: Spine1
+        level: 1
+        systemid: 101
+        interfaces:
+          - name: net0 # spine1:net0 -> leaf1:net0
+          - name: net1 # spine1:net1 -> leaf2:net0
+        v4prefixes:
+          - address: 88.1.1.1
+            mask: 32
+            metric: 1

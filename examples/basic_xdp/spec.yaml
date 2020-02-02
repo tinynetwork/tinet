@@ -1,0 +1,38 @@
+# http://www.asciiflow.com
+
+preinit:
+  - cmds:
+    - cmd: docker build -t xdptmp .
+
+nodes:
+  - name: C0
+    image: xdptmp
+    interfaces:
+      - { name: net0, type: direct, args: C1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+  - name: C1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: C0#net0 }
+  - name: C2
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: C0#net1 }
+
+preconf:
+  - cmds:
+    - cmd: docker cp filter.c C0:/root/filter.c
+
+node_configs:
+  - name: C0
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: clang -O2 -Wall -target bpf -c /root/filter.c
+      - cmd: ip link set net0 xdp obj filter.o
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+
+test:
+  - cmds:
+    - cmd: docker exec C0 ping -c2 10.0.0.2

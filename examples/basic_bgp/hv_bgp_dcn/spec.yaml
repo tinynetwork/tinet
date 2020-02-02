@@ -1,0 +1,98 @@
+
+nodes:
+  - name: TOR
+    image: slankdev/frr
+    interfaces:
+      - { name: dn1, type: direct, args: HV1#up1 }
+  - name: HV1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: TOR#dn1 }
+      - { name: dn1, type: direct, args: VM1#net0 }
+      - { name: dn2, type: direct, args: VM2#net0 }
+      - { name: dn3, type: direct, args: VM3#net0 }
+  - name: VM1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: HV1#dn1 }
+  - name: VM2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: HV1#dn2 }
+  - name: VM3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: HV1#dn3 }
+
+node_configs:
+  - name: TOR
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: ip addr add 1.1.1.1/32 dev lo
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface dn1'
+          -c ' ipv6 nd ra-interval 3'
+          -c ' no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65099'
+          -c ' bgp router-id 10.255.0.99'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor dn1 interface peer-group PEER'
+          -c '!'
+          -c ' address-family ipv4 unicast'
+          -c '  neighbor dn1 activate'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+
+  - name: HV1
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: ip addr add 10.0.0.1/24 dev dn1
+      - cmd: ip addr add 10.0.0.1/24 dev dn2
+      - cmd: ip addr add 10.0.0.1/24 dev dn3
+      - cmd: ip route add 10.0.0.11 dev dn1
+      - cmd: ip route add 10.0.0.12 dev dn2
+      - cmd: ip route add 10.0.0.13 dev dn3
+      - cmd: sysctl -w net.ipv4.conf.dn1.proxy_arp=1
+      - cmd: sysctl -w net.ipv4.conf.dn2.proxy_arp=1
+      - cmd: sysctl -w net.ipv4.conf.dn3.proxy_arp=1
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface up1'
+          -c ' ipv6 nd ra-interval 3'
+          -c ' no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65001'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor up1 interface peer-group PEER'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  redistribute kernel route-map TO_TOR'
+          -c '  neighbor up1 route-map TO_TOR out'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'route-map TO_TOR permit 1'
+          -c 'match ip address prefix-len 32'
+          -c 'exit'
+
+  - name: VM1
+    cmds:
+      - cmd: ip addr add 10.0.0.11/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+  - name: VM2
+    cmds:
+      - cmd: ip addr add 10.0.0.12/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+  - name: VM3
+    cmds:
+      - cmd: ip addr add 10.0.0.13/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+

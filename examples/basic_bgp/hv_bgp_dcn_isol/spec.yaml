@@ -1,0 +1,126 @@
+
+nodes:
+  - name: TOR
+    # image: slankdev/frr-dev:latest
+    image: slankdev/frr-dev:draft-ietf-bess-srv6-services
+    interfaces:
+      - { name: dn1, type: direct, args: HV1#up1 }
+  - name: HV1
+    # image: slankdev/frr-dev:latest
+    image: slankdev/frr-dev:draft-ietf-bess-srv6-services
+    interfaces:
+      - { name: up1, type: direct, args: TOR#dn1 }
+      - { name: dn1, type: direct, args: VM1#net0 }
+      - { name: dn2, type: direct, args: VM2#net0 }
+      - { name: dn3, type: direct, args: VM3#net0 }
+  - name: VM1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: HV1#dn1 }
+  - name: VM2
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: HV1#dn2 }
+  - name: VM3
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: HV1#dn3 }
+
+node_configs:
+  - name: TOR
+    cmds:
+      - cmd: sh -c "echo > /etc/frr/frr.conf"
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: ip addr add 1.1.1.1/32 dev lo
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface dn1'
+          -c ' ipv6 nd ra-interval 3'
+          -c ' no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65099'
+          -c ' bgp router-id 10.255.0.99'
+          -c ' no bgp default ipv4-unicast'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor dn1 interface peer-group PEER'
+          -c '!'
+          -c ' address-family ipv4 vpn'
+          -c '  neighbor PEER activate'
+          -c ' exit-address-family'
+
+  - name: HV1
+    cmds:
+      - cmd: sh -c "echo > /etc/frr/frr.conf"
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: ip link add vrf1 type vrf table 10
+      - cmd: ip link set vrf1 up
+      - cmd: ip link set dn1 vrf vrf1
+      - cmd: ip link set dn2 vrf vrf1
+      - cmd: ip link set dn3 vrf vrf1
+      - cmd: ip addr add 10.0.0.1/24 dev dn1
+      - cmd: ip addr add 10.0.0.1/24 dev dn2
+      - cmd: ip addr add 10.0.0.1/24 dev dn3
+      - cmd: ip route add 10.0.0.11 dev dn1 vrf vrf1
+      - cmd: ip route add 10.0.0.12 dev dn2 vrf vrf1
+      - cmd: ip route add 10.0.0.13 dev dn3 vrf vrf1
+      - cmd: sysctl -w net.ipv4.conf.dn1.proxy_arp=1
+      - cmd: sysctl -w net.ipv4.conf.dn2.proxy_arp=1
+      - cmd: sysctl -w net.ipv4.conf.dn3.proxy_arp=1
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface up1'
+          -c ' ipv6 nd ra-interval 3'
+          -c ' no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65001'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' no bgp default ipv4-unicast'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor up1 interface peer-group PEER'
+          -c ' !'
+          -c ' address-family ipv4 vpn'
+          -c '  neighbor PEER activate'
+          -c '  segment-routing-ipv6'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65001 vrf vrf1'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  redistribute kernel'
+          -c '  sid vpn export locator default'
+          -c '  rd vpn export 65001:1'
+          -c '  rt vpn both 100:1'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'segment-routing-ipv6'
+          -c ' encapsulation source-address 2001:1::'
+          -c ' locator prefix 2001:1::/64'
+          -c ' exit'
+          -c '!'
+          -c 'route-map TO_TOR permit 1'
+          -c ' match ip address prefix-len 32'
+          -c ' exit'
+
+  - name: VM1
+    cmds:
+      - cmd: ip addr add 10.0.0.11/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+  - name: VM2
+    cmds:
+      - cmd: ip addr add 10.0.0.12/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+  - name: VM3
+    cmds:
+      - cmd: ip addr add 10.0.0.13/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+

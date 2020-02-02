@@ -1,0 +1,45 @@
+
+precmd:
+  - cmds:
+      - cmd: export IMAGE=slankdev/frr
+      - cmd: export IMAGE=slankdev/gobgp
+      - cmd: export IMAGE=slankdev/ubuntu:18.04
+
+nodes:
+  - name: R1
+    image: $IMAGE
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R2#net1 }
+  - name: R2
+    image: $IMAGE
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R1#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip link add bond0 type bond miimon 100 mode active-backup
+      - cmd: ip link set bond0 up
+      - cmd: ip link set net0 down
+      - cmd: ip link set net1 down
+      - cmd: ip link set net0 master bond0
+      - cmd: ip link set net1 master bond0
+      - cmd: ip addr add 10.0.0.1/24 dev bond0
+  - name: R2
+    cmds:
+      - cmd: ip link add bond0 type bond miimon 100 mode active-backup
+      - cmd: ip link set bond0 up
+      - cmd: ip link set net0 down
+      - cmd: ip link set net1 down
+      - cmd: ip link set net0 master bond0
+      - cmd: ip link set net1 master bond0
+      - cmd: ip addr add 10.0.0.2/24 dev bond0
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: echo slankdev slankdev
+    - cmd: echo slankdev slankdev
+

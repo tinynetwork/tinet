@@ -1,0 +1,56 @@
+diff --git a/examples/basic_ecmp/spec.yaml b/examples/basic_ecmp/spec.yaml
+index c2c0bd2..79ab538 100644
+--- a/examples/basic_ecmp/spec.yaml
++++ b/examples/basic_ecmp/spec.yaml
+@@ -38,6 +38,16 @@ nodes:
+     interfaces:
+       - { name: net0, type: direct, args: R3#net1 }
+ 
++  - name: R4
++    image: slankdev/frr
++    interfaces:
++      - { name: net0, type: bridge, args: B0 }
++      - { name: net1, type: direct, args: S4#net0 }
++  - name: S4
++    image: tmp
++    interfaces:
++      - { name: net0, type: direct, args: R4#net1 }
++
+ switches:
+   - name: B0
+     interfaces:
+@@ -45,6 +55,7 @@ switches:
+       - { name: net0, type: container, args: R1 }
+       - { name: net0, type: container, args: R2 }
+       - { name: net0, type: container, args: R3 }
++      - { name: net0, type: container, args: R4 }
+ 
+ node_configs:
+   - name: S0
+@@ -123,6 +134,26 @@ node_configs:
+       - cmd: sh -c "echo S3 > index.html"
+       - cmd: nohup python3 -m http.server 80 &
+ 
++  - name: R4
++    cmds:
++      - cmd: /usr/lib/frr/frr start
++      - cmd: ip addr add 10.255.0.40/32 dev lo
++      - cmd: ip addr add 10.0.0.40/24 dev net0
++      - cmd: ip addr add 192.168.0.1/24 dev net1
++      - cmd: ip route replace default via 10.0.0.1
++      - cmd: >-
++          vtysh -c 'conf t'
++          -c 'router bgp 100'
++          -c ' bgp router-id 10.255.0.40'
++          -c ' neighbor 10.0.0.1 remote-as 100'
++          -c ' network 192.168.0.2/32'
++  - name: S4
++    cmds:
++      - cmd: ip addr add 192.168.0.2/24 dev net0
++      - cmd: ip route replace default via 192.168.0.1
++      - cmd: sh -c "echo S4 > index.html"
++      - cmd: nohup python3 -m http.server 80 &
++
+ test:
+   - cmds:
+     # local link

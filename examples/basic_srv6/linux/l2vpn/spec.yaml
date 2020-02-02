@@ -1,0 +1,108 @@
+
+# postinit:
+#   - cmds:
+#     - cmd: make -C /home/vagrant/git/srdump install_container2
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+  - name: C1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+  - name: C2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+
+  - name: R1
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+
+      - cmd: ip -6 addr add fc00:1::1/64 dev lo
+      - cmd: ip -6 addr add 2001:12::1/64 dev net0
+      - cmd: ip addr add 10.0.0.1/24 dev net1
+      - cmd: ip sr tunsrc set fc00:1::1
+      - cmd: ip route add fc00:2::/64 via 2001:12::2
+
+      - cmd: ip route replace 10.0.0.0/24 encap seg6 mode l2encap segs fc00:2::10 dev net0
+      - cmd: ip -6 route add fc00:1::10/128 encap seg6local action End.DX2 oif net1 dev net0
+      - cmd: ip link set net1 down
+      - cmd: ip link set net1 address 52:54:00:22:22:22
+      - cmd: ip link set net1 up
+      - cmd: sysctl -w net.ipv4.conf.net1.proxy_arp=1
+
+  - name: R2
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+
+      - cmd: ip -6 addr add fc00:2::1/64 dev lo
+      - cmd: ip -6 addr add 2001:12::2/64 dev net0
+      - cmd: ip addr add 10.0.0.2/24 dev net1
+      - cmd: ip sr tunsrc set fc00:2::1
+      - cmd: ip route add fc00:1::/64 via 2001:12::1
+
+      - cmd: ip route replace 10.0.0.0/24 encap seg6 mode l2encap segs fc00:1::10 dev net0
+      - cmd: ip -6 route add fc00:2::10/128 encap seg6local action End.DX2 oif net1 dev net0
+      - cmd: ip link set net1 down
+      - cmd: ip link set net1 address 52:54:00:11:11:11
+      - cmd: ip link set net1 up
+      - cmd: sysctl -w net.ipv4.conf.net1.proxy_arp=1
+
+  - name: C1
+    cmds:
+      - cmd: ip link set net0 down
+      - cmd: ip link set net0 address 52:54:00:11:11:11
+      - cmd: ip link set net0 up
+      - cmd: ip addr add 10.0.0.10/24 dev net0
+      - cmd: ip route replace default via 10.0.0.1
+
+  - name: C2
+    cmds:
+      - cmd: ip link set net0 down
+      - cmd: ip link set net0 address 52:54:00:22:22:22
+      - cmd: ip link set net0 up
+      - cmd: ip addr add 10.0.0.20/24 dev net0
+      - cmd: ip route replace default via 10.0.0.2
+
+test:
+  - name: l2vpn
+    cmds:
+      - cmd: docker exec C1 ping -c2 10.0.0.20
+      - cmd: docker exec C2 ping -c2 10.0.0.10
+
+

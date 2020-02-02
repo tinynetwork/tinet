@@ -1,0 +1,300 @@
+
+nodes:
+  - name: Ext1
+    image: slankdev/frr
+    interfaces:
+      # - { name: net0, type: direct, args: Internet#net0 }
+      - { name: net1, type: direct, args: Spine1#dn1 }
+      - { name: net2, type: direct, args: Spine2#dn1 }
+  - name: Spine1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Ext1#net1 }
+      - { name: dn1, type: direct, args: Leaf1#up1 }
+      - { name: dn2, type: direct, args: Leaf2#up1 }
+      - { name: dn3, type: direct, args: Leaf3#up1 }
+      - { name: dn4, type: direct, args: Leaf4#up1 }
+  - name: Spine2
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Ext1#net2 }
+      - { name: dn1, type: direct, args: Leaf1#up2 }
+      - { name: dn2, type: direct, args: Leaf2#up2 }
+      - { name: dn3, type: direct, args: Leaf3#up2 }
+      - { name: dn4, type: direct, args: Leaf4#up2 }
+  - name: Leaf1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn1 }
+      - { name: up2, type: direct, args: Spine2#dn1 }
+      - { name: dn1, type: direct, args: Serv1#net0 }
+      - { name: dn2, type: direct, args: Serv2#net0 }
+  - name: Leaf2
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn2 }
+      - { name: up2, type: direct, args: Spine2#dn2 }
+      - { name: dn1, type: direct, args: Serv3#net0 }
+      - { name: dn2, type: direct, args: Serv4#net0 }
+  - name: Leaf3
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn3 }
+      - { name: up2, type: direct, args: Spine2#dn3 }
+      - { name: dn1, type: direct, args: Serv3#net0 }
+      - { name: dn2, type: direct, args: Serv4#net0 }
+  - name: Leaf4
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn4 }
+      - { name: up2, type: direct, args: Spine2#dn4 }
+      - { name: dn1, type: direct, args: Serv3#net0 }
+      - { name: dn2, type: direct, args: Serv4#net0 }
+  - name: Serv1
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf1#dn1 } ]
+  - name: Serv2
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf1#dn2 } ]
+  - name: Serv3
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf2#dn1 } ]
+  - name: Serv4
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf2#dn2 } ]
+  - name: Serv5
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf3#dn1 } ]
+  - name: Serv6
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf3#dn2 } ]
+  - name: Serv7
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf4#dn1 } ]
+  - name: Serv8
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Leaf4#dn2 } ]
+
+node_configs:
+  - name: Ext1
+    cmds:
+      - cmd: echo slankdev slankdev
+  - name: Spine1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.1/32"
+          -c "int dn1" -c "ip addr 10.0.0.1/30"
+          -c "int dn2" -c "ip addr 10.0.0.5/30"
+          -c "int dn3" -c "ip addr 10.0.0.9/30"
+          -c "int dn4" -c "ip addr 10.0.0.13/30"
+          -c "router bgp 65001"
+          -c " bgp router-id 10.255.0.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 10.0.0.2 remote-as 65011"
+          -c " neighbor 10.0.0.6 remote-as 65012"
+          -c " neighbor 10.0.0.10 remote-as 65013"
+          -c " neighbor 10.0.0.14 remote-as 65014"
+  - name: Spine2
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.2/32"
+          -c "int dn1" -c "ip addr 10.0.0.17/30"
+          -c "int dn2" -c "ip addr 10.0.0.21/30"
+          -c "int dn3" -c "ip addr 10.0.0.25/30"
+          -c "int dn4" -c "ip addr 10.0.0.29/30"
+          -c "router bgp 65002"
+          -c " bgp router-id 10.255.0.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 10.0.0.18 remote-as 65011"
+          -c " neighbor 10.0.0.22 remote-as 65012"
+          -c " neighbor 10.0.0.26 remote-as 65013"
+          -c " neighbor 10.0.0.30 remote-as 65014"
+  - name: Leaf1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.11/32"
+          -c "int up1" -c "ip addr 10.0.0.2/30"
+          -c "int up2" -c "ip addr 10.0.0.18/30"
+          -c "int dn1" -c "ip addr 20.0.0.1/30"
+          -c "int dn2" -c "ip addr 20.0.0.5/30"
+          -c "router bgp 65011"
+          -c " bgp router-id 10.255.0.11"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 10.0.0.1 remote-as 65001"
+          -c " neighbor 10.0.0.17 remote-as 65002"
+          -c " neighbor 20.0.0.2 remote-as 65021"
+          -c " neighbor 20.0.0.6 remote-as 65022"
+  - name: Leaf2
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.12/32"
+          -c "int up1" -c "ip addr 10.0.0.6/30"
+          -c "int up2" -c "ip addr 10.0.0.22/30"
+          -c "int dn1" -c "ip addr 20.0.0.9/30"
+          -c "int dn2" -c "ip addr 20.0.0.13/30"
+          -c "router bgp 65012"
+          -c " bgp router-id 10.255.0.12"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 10.0.0.5 remote-as 65001"
+          -c " neighbor 10.0.0.21 remote-as 65002"
+          -c " neighbor 20.0.0.10 remote-as 65023"
+          -c " neighbor 20.0.0.14 remote-as 65024"
+  - name: Leaf3
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.13/32"
+          -c "int up1" -c "ip addr 10.0.0.10/30"
+          -c "int up2" -c "ip addr 10.0.0.26/30"
+          -c "int dn1" -c "ip addr 20.0.0.17/30"
+          -c "int dn2" -c "ip addr 20.0.0.21/30"
+          -c "router bgp 65013"
+          -c " bgp router-id 10.255.0.13"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 10.0.0.9 remote-as 65001"
+          -c " neighbor 10.0.0.25 remote-as 65002"
+          -c " neighbor 20.0.0.18 remote-as 65025"
+          -c " neighbor 20.0.0.22 remote-as 65026"
+  - name: Leaf4
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.14/32"
+          -c "int up1" -c "ip addr 10.0.0.14/30"
+          -c "int up2" -c "ip addr 10.0.0.30/30"
+          -c "int dn1" -c "ip addr 20.0.0.25/30"
+          -c "int dn2" -c "ip addr 20.0.0.29/30"
+          -c "router bgp 65014"
+          -c " bgp router-id 10.255.0.14"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 10.0.0.13 remote-as 65001"
+          -c " neighbor 10.0.0.29 remote-as 65002"
+          -c " neighbor 20.0.0.26 remote-as 65027"
+          -c " neighbor 20.0.0.30 remote-as 65028"
+  - name: Serv1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.21/32"
+          -c "int net0" -c "ip addr 20.0.0.2/30"
+          -c "router bgp 65021"
+          -c " bgp router-id 10.255.0.21"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.1 remote-as external"
+          -c " network 20.0.0.2/30"
+  - name: Serv2
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.22/32"
+          -c "int net0" -c "ip addr 20.0.0.6/30"
+          -c "router bgp 65022"
+          -c " bgp router-id 10.255.0.22"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.5 remote-as external"
+          -c " network 20.0.0.6/30"
+  - name: Serv3
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.23/32"
+          -c "int net0" -c "ip addr 20.0.0.10/30"
+          -c "router bgp 65023"
+          -c " bgp router-id 10.255.0.23"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.9 remote-as external"
+          -c " network 20.0.0.10/30"
+  - name: Serv4
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.24/32"
+          -c "int net0" -c "ip addr 20.0.0.14/30"
+          -c "router bgp 65024"
+          -c " bgp router-id 10.255.0.24"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.13 remote-as external"
+          -c " network 20.0.0.14/30"
+  - name: Serv5
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.25/32"
+          -c "int net0" -c "ip addr 20.0.0.18/30"
+          -c "router bgp 65025"
+          -c " bgp router-id 10.255.0.25"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.17 remote-as external"
+          -c " network 20.0.0.18/30"
+  - name: Serv6
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.26/32"
+          -c "int net0" -c "ip addr 20.0.0.22/30"
+          -c "router bgp 65026"
+          -c " bgp router-id 10.255.0.26"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.21 remote-as external"
+          -c " network 20.0.0.22/30"
+  - name: Serv7
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.27/32"
+          -c "int net0" -c "ip addr 20.0.0.26/30"
+          -c "router bgp 65027"
+          -c " bgp router-id 10.255.0.27"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.25 remote-as external"
+          -c " network 20.0.0.26/30"
+  - name: Serv8
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.28/32"
+          -c "int net0" -c "ip addr 20.0.0.30/30"
+          -c "router bgp 65028"
+          -c " bgp router-id 10.255.0.28"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor 20.0.0.29 remote-as external"
+          -c " network 20.0.0.30/30"
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: docker exec Ext1 echo slank
+    - cmd: echo slankdev slankdev
+

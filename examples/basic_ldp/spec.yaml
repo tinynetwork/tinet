@@ -1,0 +1,70 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sh -c 'enable_seg6_router.py | sh'
+      - cmd: sh -c 'echo 100000 > /proc/sys/net/mpls/platform_labels'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net0/input'
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf te'
+          -c 'int lo'
+          -c ' ip address 10.255.0.1/32'
+          -c '!'
+          -c 'int net0'
+          -c ' ip address 10.0.0.1/24'
+          -c ' ipv6 address 2001::1/64'
+          -c '!'
+          -c 'mpls ldp'
+          -c ' router-id 10.255.0.1'
+          -c ' neighbor 10.255.0.2 password slank'
+          -c ' !'
+          -c ' address-family ipv4'
+          -c '  discovery transport-address 10.255.0.1'
+          -c '  label local advertise explicit-null'
+          -c '  interface net0'
+          -c '!'
+          -c 'ip route 10.255.0.2 10.0.0.2 net0'
+
+  - name: R2
+    cmds:
+      - cmd: sh -c 'enable_seg6_router.py | sh'
+      - cmd: sh -c 'echo 100000 > /proc/sys/net/mpls/platform_labels'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net0/input'
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf te'
+          -c 'int lo'
+          -c ' ip address 10.255.0.2/32'
+          -c '!'
+          -c 'int net0'
+          -c ' ip address 10.0.0.2/24'
+          -c ' ipv6 address 2001::2/64'
+          -c '!'
+          -c 'mpls ldp'
+          -c ' router-id 10.255.0.2'
+          -c ' neighbor 10.255.0.1 password slank'
+          -c ' !'
+          -c ' address-family ipv4'
+          -c '  discovery transport-address 10.255.0.2'
+          -c '  label local advertise explicit-null'
+          -c '  interface net0'
+          -c '!'
+          -c 'ip route 10.255.0.1 10.0.0.1 net0'
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: echo slankdev slankdev
+    - cmd: echo slankdev slankdev
+

@@ -1,0 +1,66 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c ' ip address 10.255.0.1/32'
+          -c '!'
+          -c 'interface net0'
+          -c ' ipv6 nd ra-interval 3'
+          -c ' no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65001'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor net0 interface peer-group PEER'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  redistribute connected route-map redis_lo'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'route-map redis_lo permit 10'
+          -c ' match interface lo'
+
+  - name: R2
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c ' ip address 10.255.0.2/32'
+          -c '!'
+          -c 'interface net0'
+          -c ' ipv6 nd ra-interval 3'
+          -c ' no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65002'
+          -c ' bgp router-id 10.255.0.2'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor net0 interface peer-group PEER'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  redistribute connected route-map redis_lo'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'route-map redis_lo permit 10'
+          -c ' match interface lo'
+

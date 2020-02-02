@@ -1,0 +1,56 @@
+
+precmd:
+  - cmds:
+    - cmd: export IMAGE=slankdev/frr:centos-7-stable-7.0
+
+nodes:
+  - name: R0
+    image: $IMAGE
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+  - name: R1
+    image: $IMAGE
+    interfaces:
+      - { name: net0, type: direct, args: R0#net0 }
+
+node_configs:
+  - name: R0
+    cmds:
+      - cmd: sh -c 'enable_seg6_router.py | sh'
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 1"
+          -c " bgp router-id 1.1.1.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c "  redistribute kernel"
+          -c " exit-address-family"
+
+  - name: R1
+    cmds:
+      - cmd: sh -c 'enable_seg6_router.py | sh'
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 2"
+          -c " bgp router-id 2.2.2.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c "  redistribute kernel"
+          -c " exit-address-family"
+

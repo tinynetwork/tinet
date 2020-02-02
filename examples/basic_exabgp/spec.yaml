@@ -1,0 +1,28 @@
+
+postinit:
+  - cmds:
+    - cmd: docker cp daemons.R1 R1:/etc/frr/daemons
+    - cmd: docker cp frr.conf.R1 R1:/etc/frr/frr.conf
+    - cmd: docker cp exabgp.conf.R2 R2:/root/exabgp.conf
+
+nodes:
+  - name: R1
+    # image: slankdev/centos-frr-dev:7
+    image: slankdev/frr:centos-7-latest
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/exabgp
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: /usr/lib/frr/frrinit.sh start
+  - name: R2
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+

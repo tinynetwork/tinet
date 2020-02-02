@@ -1,0 +1,67 @@
+
+postinit:
+  - cmds:
+    - cmd: make -C /home/vagrant/git/srdump install_docker
+
+nodes:
+  - name: R1
+    image: slankdev/vpp:19.08
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/vpp:19.08
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+  - name: R3
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+  - name: R4
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sh -c "echo create host-interface name net0 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo create host-interface name net1 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int state host-net0 up >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int state host-net1 up >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net0 cafe::1/64 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net0 10.10.0.1/24 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net1 10.11.0.1/24 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo ip route add f2::/64 via cafe::2 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr localsid address f1::10 behavior end >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr localsid address f1::11 behavior end.dx4 host-net1 10.11.0.2 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set sr encaps source addr f1::0 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr policy add bsid 1::0 next f2::10 next f2::11 encap >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr steer l3 10.12.0.0/24 via bsid 1::0 >> /etc/vpp/exec.vpp"
+      - cmd: nohup vpp -c /etc/vpp/startup.conf &
+  - name: R2
+    cmds:
+      - cmd: sh -c "echo create host-interface name net0 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo create host-interface name net1 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int state host-net0 up >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int state host-net1 up >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net0 cafe::2/64 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net0 10.10.0.2/24 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net1 10.12.0.1/24 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo ip route add f1::/64 via cafe::1 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr localsid address f2::10 behavior end >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr localsid address f2::11 behavior end.dx4 host-net1 10.12.0.2 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set sr encaps source addr f2::0 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr policy add bsid 1::0 next f1::10 next f1::11 encap >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo sr steer l3 10.11.0.0/24 via bsid 1::0 >> /etc/vpp/exec.vpp"
+      - cmd: nohup vpp -c /etc/vpp/startup.conf &
+  - name: R3
+    cmds:
+      - cmd: ip addr add 10.11.0.2/24 dev net0
+      - cmd: ip route add default via 10.11.0.1
+  - name: R4
+    cmds:
+      - cmd: ip addr add 10.12.0.2/24 dev net0
+      - cmd: ip route add default via 10.12.0.1
+

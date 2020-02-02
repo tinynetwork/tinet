@@ -1,0 +1,42 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr-dev:latest
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr-dev:latest
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip link add red type vrf table 10
+      - cmd: ip link add blu type vrf table 20
+      - cmd: ip link add grn type vrf table 30
+      - cmd: ip link set red up
+      - cmd: ip link set blu up
+      - cmd: ip link set grn up
+      - cmd: ip link set net0 vrf red
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'int net0' -c 'ip addr 10.0.0.1/24' -c 'exit'
+          -c 'router bgp 1 vrf red'
+          -c ' bgp router-id 1.1.1.1'
+          -c ' address-family ipv4 unicast'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c 'router bgp 2 vrf blu'
+          -c ' bgp router-id 2.2.2.2'
+          -c ' address-family ipv4 unicast'
+          -c '  import vrf red'
+          -c ' exit-address-family'
+          -c 'router bgp 3 vrf grn'
+          -c ' bgp router-id 3.3.3.3'
+          -c ' address-family ipv4 unicast'
+          -c '  import vrf blu'
+          -c ' exit-address-family'
+

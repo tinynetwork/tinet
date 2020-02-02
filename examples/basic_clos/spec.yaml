@@ -1,0 +1,1304 @@
+
+nodes:
+  - name: Ext1
+    image: slankdev/frr
+    interfaces:
+      # - { name: net0, type: direct, args: Internet#net0 }
+      - { name: dn1, type: direct, args: Spine1#up1 }
+      - { name: dn2, type: direct, args: Spine2#up1 }
+  - name: Spine1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Ext1#dn1 }
+      - { name: dn1, type: direct, args: Leaf1#up1 }
+      - { name: dn2, type: direct, args: Leaf2#up1 }
+      - { name: dn3, type: direct, args: Leaf3#up1 }
+      - { name: dn4, type: direct, args: Leaf4#up1 }
+  - name: Spine2
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Ext1#dn2 }
+      - { name: dn1, type: direct, args: Leaf1#up2 }
+      - { name: dn2, type: direct, args: Leaf2#up2 }
+      - { name: dn3, type: direct, args: Leaf3#up2 }
+      - { name: dn4, type: direct, args: Leaf4#up2 }
+  - name: Leaf1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn1 }
+      - { name: up2, type: direct, args: Spine2#dn1 }
+      - { name: dn1, type: direct, args: Tor1#up1 }
+      - { name: dn2, type: direct, args: Tor2#up1 }
+      - { name: dn3, type: direct, args: Tor3#up1 }
+      - { name: dn4, type: direct, args: Tor4#up1 }
+      - { name: dn5, type: direct, args: Tor5#up1 }
+      - { name: dn6, type: direct, args: Tor6#up1 }
+      - { name: dn7, type: direct, args: Tor7#up1 }
+      - { name: dn8, type: direct, args: Tor8#up1 }
+  - name: Leaf2
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn2 }
+      - { name: up2, type: direct, args: Spine2#dn2 }
+      - { name: dn1, type: direct, args: Tor1#up2 }
+      - { name: dn2, type: direct, args: Tor2#up2 }
+      - { name: dn3, type: direct, args: Tor3#up2 }
+      - { name: dn4, type: direct, args: Tor4#up2 }
+      - { name: dn5, type: direct, args: Tor5#up2 }
+      - { name: dn6, type: direct, args: Tor6#up2 }
+      - { name: dn7, type: direct, args: Tor7#up2 }
+      - { name: dn8, type: direct, args: Tor8#up2 }
+  - name: Leaf3
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn3 }
+      - { name: up2, type: direct, args: Spine2#dn3 }
+      - { name: dn1, type: direct, args: Tor1#up3 }
+      - { name: dn2, type: direct, args: Tor2#up3 }
+      - { name: dn3, type: direct, args: Tor3#up3 }
+      - { name: dn4, type: direct, args: Tor4#up3 }
+      - { name: dn5, type: direct, args: Tor5#up3 }
+      - { name: dn6, type: direct, args: Tor6#up3 }
+      - { name: dn7, type: direct, args: Tor7#up3 }
+      - { name: dn8, type: direct, args: Tor8#up3 }
+  - name: Leaf4
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Spine1#dn4 }
+      - { name: up2, type: direct, args: Spine2#dn4 }
+      - { name: dn1, type: direct, args: Tor1#up4 }
+      - { name: dn2, type: direct, args: Tor2#up4 }
+      - { name: dn3, type: direct, args: Tor3#up4 }
+      - { name: dn4, type: direct, args: Tor4#up4 }
+      - { name: dn5, type: direct, args: Tor5#up4 }
+      - { name: dn6, type: direct, args: Tor6#up4 }
+      - { name: dn7, type: direct, args: Tor7#up4 }
+      - { name: dn8, type: direct, args: Tor8#up4 }
+
+  - name: Tor1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn1 }
+      - { name: up2, type: direct, args: Leaf2#dn1 }
+      - { name: up3, type: direct, args: Leaf3#dn1 }
+      - { name: up4, type: direct, args: Leaf4#dn1 }
+      - { name: dn1, type: direct, args: Serv1#up1 }
+      - { name: dn2, type: direct, args: Serv2#up1 }
+      - { name: dn3, type: direct, args: Serv3#up1 }
+      - { name: dn4, type: direct, args: Serv4#up1 }
+  - name: Tor2
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn2 }
+      - { name: up2, type: direct, args: Leaf2#dn2 }
+      - { name: up3, type: direct, args: Leaf3#dn2 }
+      - { name: up4, type: direct, args: Leaf4#dn2 }
+      - { name: dn1, type: direct, args: Serv1#up2 }
+      - { name: dn2, type: direct, args: Serv2#up2 }
+      - { name: dn3, type: direct, args: Serv3#up2 }
+      - { name: dn4, type: direct, args: Serv4#up2 }
+  - name: Tor3
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn3 }
+      - { name: up2, type: direct, args: Leaf2#dn3 }
+      - { name: up3, type: direct, args: Leaf3#dn3 }
+      - { name: up4, type: direct, args: Leaf4#dn3 }
+      - { name: dn1, type: direct, args: Serv5#up1 }
+      - { name: dn2, type: direct, args: Serv6#up1 }
+      - { name: dn3, type: direct, args: Serv7#up1 }
+      - { name: dn4, type: direct, args: Serv8#up1 }
+  - name: Tor4
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn4 }
+      - { name: up2, type: direct, args: Leaf2#dn4 }
+      - { name: up3, type: direct, args: Leaf3#dn4 }
+      - { name: up4, type: direct, args: Leaf4#dn4 }
+      - { name: dn1, type: direct, args: Serv5#up2 }
+      - { name: dn2, type: direct, args: Serv6#up2 }
+      - { name: dn3, type: direct, args: Serv7#up2 }
+      - { name: dn4, type: direct, args: Serv8#up2 }
+  - name: Tor5
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn5 }
+      - { name: up2, type: direct, args: Leaf2#dn5 }
+      - { name: up3, type: direct, args: Leaf3#dn5 }
+      - { name: up4, type: direct, args: Leaf4#dn5 }
+      - { name: dn1, type: direct, args: Serv9#up1 }
+      - { name: dn2, type: direct, args: Serv10#up1 }
+      - { name: dn3, type: direct, args: Serv11#up1 }
+      - { name: dn4, type: direct, args: Serv12#up1 }
+  - name: Tor6
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn6 }
+      - { name: up2, type: direct, args: Leaf2#dn6 }
+      - { name: up3, type: direct, args: Leaf3#dn6 }
+      - { name: up4, type: direct, args: Leaf4#dn6 }
+      - { name: dn1, type: direct, args: Serv9#up2 }
+      - { name: dn2, type: direct, args: Serv10#up2 }
+      - { name: dn3, type: direct, args: Serv11#up2 }
+      - { name: dn4, type: direct, args: Serv12#up2 }
+  - name: Tor7
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn7 }
+      - { name: up2, type: direct, args: Leaf2#dn7 }
+      - { name: up3, type: direct, args: Leaf3#dn7 }
+      - { name: up4, type: direct, args: Leaf4#dn7 }
+      - { name: dn1, type: direct, args: Serv13#up1 }
+      - { name: dn2, type: direct, args: Serv14#up1 }
+      - { name: dn3, type: direct, args: Serv15#up1 }
+      - { name: dn4, type: direct, args: Serv16#up1 }
+  - name: Tor8
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Leaf1#dn8 }
+      - { name: up2, type: direct, args: Leaf2#dn8 }
+      - { name: up3, type: direct, args: Leaf3#dn8 }
+      - { name: up4, type: direct, args: Leaf4#dn8 }
+      - { name: dn1, type: direct, args: Serv13#up2 }
+      - { name: dn2, type: direct, args: Serv14#up2 }
+      - { name: dn3, type: direct, args: Serv15#up2 }
+      - { name: dn4, type: direct, args: Serv16#up2 }
+
+  - name: Serv1
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor1#dn1 }
+      - { name: up2, type: direct, args: Tor2#dn1 }
+      - { name: dn1, type: direct, args: Vm1a#net0 }
+      - { name: dn2, type: direct, args: Vm1b#net0 }
+  - name: Serv2
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor1#dn2 }
+      - { name: up2, type: direct, args: Tor2#dn2 }
+      - { name: dn1, type: direct, args: Vm2a#net0 }
+      - { name: dn2, type: direct, args: Vm2b#net0 }
+  - name: Serv3
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor1#dn3 }
+      - { name: up2, type: direct, args: Tor2#dn3 }
+      - { name: dn1, type: direct, args: Vm3a#net0 }
+      - { name: dn2, type: direct, args: Vm3b#net0 }
+  - name: Serv4
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor1#dn4 }
+      - { name: up2, type: direct, args: Tor2#dn4 }
+      - { name: dn1, type: direct, args: Vm4a#net0 }
+      - { name: dn2, type: direct, args: Vm4b#net0 }
+  - name: Serv5
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor3#dn1 }
+      - { name: up2, type: direct, args: Tor4#dn1 }
+      - { name: dn1, type: direct, args: Vm5a#net0 }
+      - { name: dn2, type: direct, args: Vm5b#net0 }
+  - name: Serv6
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor3#dn2 }
+      - { name: up2, type: direct, args: Tor4#dn2 }
+      - { name: dn1, type: direct, args: Vm6a#net0 }
+      - { name: dn2, type: direct, args: Vm6b#net0 }
+  - name: Serv7
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor3#dn3 }
+      - { name: up2, type: direct, args: Tor4#dn3 }
+      - { name: dn1, type: direct, args: Vm7a#net0 }
+      - { name: dn2, type: direct, args: Vm7b#net0 }
+  - name: Serv8
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor3#dn4 }
+      - { name: up2, type: direct, args: Tor4#dn4 }
+      - { name: dn1, type: direct, args: Vm8a#net0 }
+      - { name: dn2, type: direct, args: Vm8b#net0 }
+  - name: Serv9
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor5#dn1 }
+      - { name: up2, type: direct, args: Tor6#dn1 }
+      - { name: dn1, type: direct, args: Vm9a#net0 }
+      - { name: dn2, type: direct, args: Vm9b#net0 }
+  - name: Serv10
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor5#dn2 }
+      - { name: up2, type: direct, args: Tor6#dn2 }
+      - { name: dn1, type: direct, args: Vm10a#net0 }
+      - { name: dn2, type: direct, args: Vm10b#net0 }
+  - name: Serv11
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor5#dn3 }
+      - { name: up2, type: direct, args: Tor6#dn3 }
+      - { name: dn1, type: direct, args: Vm11a#net0 }
+      - { name: dn2, type: direct, args: Vm11b#net0 }
+  - name: Serv12
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor5#dn4 }
+      - { name: up2, type: direct, args: Tor6#dn4 }
+      - { name: dn1, type: direct, args: Vm12a#net0 }
+      - { name: dn2, type: direct, args: Vm12b#net0 }
+  - name: Serv13
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor7#dn1 }
+      - { name: up2, type: direct, args: Tor8#dn1 }
+      - { name: dn1, type: direct, args: Vm13a#net0 }
+      - { name: dn2, type: direct, args: Vm13b#net0 }
+  - name: Serv14
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor7#dn2 }
+      - { name: up2, type: direct, args: Tor8#dn2 }
+      - { name: dn1, type: direct, args: Vm14a#net0 }
+      - { name: dn2, type: direct, args: Vm14b#net0 }
+  - name: Serv15
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor7#dn3 }
+      - { name: up2, type: direct, args: Tor8#dn3 }
+      - { name: dn1, type: direct, args: Vm15b#net0 }
+      - { name: dn2, type: direct, args: Vm15b#net0 }
+  - name: Serv16
+    image: slankdev/frr
+    interfaces:
+      - { name: up1, type: direct, args: Tor7#dn4 }
+      - { name: up2, type: direct, args: Tor8#dn4 }
+      - { name: dn1, type: direct, args: Vm16b#net0 }
+      - { name: dn2, type: direct, args: Vm16b#net0 }
+
+  - name: Vm1a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv1#dn1 } ]
+  - name: Vm2a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv2#dn1 } ]
+  - name: Vm3a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv3#dn1 } ]
+  - name: Vm4a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv4#dn1 } ]
+  - name: Vm5a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv5#dn1 } ]
+  - name: Vm6a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv6#dn1 } ]
+  - name: Vm7a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv7#dn1 } ]
+  - name: Vm8a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv8#dn1 } ]
+  - name: Vm9a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv9#dn1 } ]
+  - name: Vm10a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv10#dn1 } ]
+  - name: Vm11a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv11#dn1 } ]
+  - name: Vm12a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv12#dn1 } ]
+  - name: Vm13a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv13#dn1 } ]
+  - name: Vm14a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv14#dn1 } ]
+  - name: Vm15a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv15#dn1 } ]
+  - name: Vm16a
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv16#dn1 } ]
+  - name: Vm1b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv1#dn2 } ]
+  - name: Vm2b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv2#dn2 } ]
+  - name: Vm3b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv3#dn2 } ]
+  - name: Vm4b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv4#dn2 } ]
+  - name: Vm5b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv5#dn2 } ]
+  - name: Vm6b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv6#dn2 } ]
+  - name: Vm7b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv7#dn2 } ]
+  - name: Vm8b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv8#dn2 } ]
+  - name: Vm9b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv9#dn2 } ]
+  - name: Vm10b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv10#dn2 } ]
+  - name: Vm11b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv11#dn2 } ]
+  - name: Vm12b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv12#dn2 } ]
+  - name: Vm13b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv13#dn2 } ]
+  - name: Vm14b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv14#dn2 } ]
+  - name: Vm15b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv15#dn2 } ]
+  - name: Vm16b
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: Serv16#dn2 } ]
+
+node_configs:
+  - name: Ext1
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.254/32"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65999"
+          -c " bgp router-id 10.255.0.254"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Spine1
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.1/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65001"
+          -c " bgp router-id 10.255.0.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Spine2
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.2/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65002"
+          -c " bgp router-id 10.255.0.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Leaf1
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.11/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn5" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn6" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn7" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn8" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65011"
+          -c " bgp router-id 10.255.0.11"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " neighbor dn5 interface peer-group FABRIC"
+          -c " neighbor dn6 interface peer-group FABRIC"
+          -c " neighbor dn7 interface peer-group FABRIC"
+          -c " neighbor dn8 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Leaf2
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.12/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn5" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn6" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn7" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn8" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65012"
+          -c " bgp router-id 10.255.0.12"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " neighbor dn5 interface peer-group FABRIC"
+          -c " neighbor dn6 interface peer-group FABRIC"
+          -c " neighbor dn7 interface peer-group FABRIC"
+          -c " neighbor dn8 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Leaf3
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.13/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn5" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn6" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn7" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn8" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65013"
+          -c " bgp router-id 10.255.0.13"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " neighbor dn5 interface peer-group FABRIC"
+          -c " neighbor dn6 interface peer-group FABRIC"
+          -c " neighbor dn7 interface peer-group FABRIC"
+          -c " neighbor dn8 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Leaf4
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.14/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn5" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn6" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn7" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn8" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65014"
+          -c " bgp router-id 10.255.0.14"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " neighbor dn5 interface peer-group FABRIC"
+          -c " neighbor dn6 interface peer-group FABRIC"
+          -c " neighbor dn7 interface peer-group FABRIC"
+          -c " neighbor dn8 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+
+  - name: Tor1
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.31/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65031"
+          -c " bgp router-id 10.255.0.31"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor2
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.32/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65032"
+          -c " bgp router-id 10.255.0.32"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor3
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.33/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65033"
+          -c " bgp router-id 10.255.0.33"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor4
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.34/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65034"
+          -c " bgp router-id 10.255.0.34"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor5
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.35/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65035"
+          -c " bgp router-id 10.255.0.35"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor6
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.36/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65036"
+          -c " bgp router-id 10.255.0.36"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor7
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.37/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65037"
+          -c " bgp router-id 10.255.0.37"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Tor8
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.38/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn3" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int dn4" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65038"
+          -c " bgp router-id 10.255.0.38"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " neighbor up3 interface peer-group FABRIC"
+          -c " neighbor up4 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " neighbor dn2 interface peer-group FABRIC"
+          -c " neighbor dn3 interface peer-group FABRIC"
+          -c " neighbor dn4 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+
+  - name: Serv1
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.201/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65201"
+          -c " bgp router-id 10.255.0.201"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv2
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.202/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65202"
+          -c " bgp router-id 10.255.0.202"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv3
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.203/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65203"
+          -c " bgp router-id 10.255.0.203"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv4
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.204/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65204"
+          -c " bgp router-id 10.255.0.204"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv5
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.205/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65205"
+          -c " bgp router-id 10.255.0.205"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv6
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.206/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65206"
+          -c " bgp router-id 10.255.0.206"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv7
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.207/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65207"
+          -c " bgp router-id 10.255.0.207"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv8
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.208/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65208"
+          -c " bgp router-id 10.255.0.208"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+
+  - name: Serv9
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.209/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65209"
+          -c " bgp router-id 10.255.0.209"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv10
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.210/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65210"
+          -c " bgp router-id 10.255.0.210"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv11
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.211/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65211"
+          -c " bgp router-id 10.255.0.211"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv12
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.212/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65212"
+          -c " bgp router-id 10.255.0.212"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv13
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.213/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65213"
+          -c " bgp router-id 10.255.0.213"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv14
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.214/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65214"
+          -c " bgp router-id 10.255.0.214"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv15
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.215/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65215"
+          -c " bgp router-id 10.255.0.215"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+  - name: Serv16
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.216/32"
+          -c "int up1" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "int up2" -c "ipv6 nd ra-interval 1" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65216"
+          -c " bgp router-id 10.255.0.216"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor up2 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected route-map redis_lo"
+          -c " exit-address-family"
+          -c "route-map redis_lo permit 10"
+          -c " match interface lo"
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: docker exec Ext1 echo slank
+    - cmd: echo slankdev slankdev
+

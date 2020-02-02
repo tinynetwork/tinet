@@ -1,0 +1,34 @@
+
+nodes:
+  - name: H0
+    type: netns
+    interfaces:
+      - { name: net0, type: direct, args: C0#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+  - name: C0
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: H0#net0 }
+  - name: C1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: H0#net1 }
+
+node_configs:
+  - name: H0
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip addr add 10.1.0.1/24 dev net1
+  - name: C0
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip route replace default via 10.0.0.1
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.1.0.2/24 dev net0
+      - cmd: ip route replace default via 10.1.0.1
+
+test:
+  - cmds:
+    - cmd: echo slankdev
+

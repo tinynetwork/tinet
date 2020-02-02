@@ -1,0 +1,80 @@
+
+# DESCRIPTION: NAPT network using FRR
+#
+# TOPO:
+#                    S0
+#            (net0).2|
+#                    |
+#    WAN:20.0.0.0/24 |
+#                    |
+#            (net0).1|
+#                 R1(NAPT)
+#            (net1).1|
+#                    |
+#    LAN:10.0.0.0/24 |
+#                    |
+#            (net0).2|
+#                    C0
+#
+# INIT:
+#   cns spec7.yaml init | sudo sh
+#   ./setup7.sh
+# FINI:
+#   cns spec7.yaml fini | sudo sh
+#
+
+nodes:
+  - name: R0
+    image: slankdev/frr
+    interfaces:
+      - name: net0
+        type: direct
+        args: S0#net0
+      - name: net1
+        type: direct
+        args: C0#net0
+  - name: S0
+    image: slankdev/ubuntu:16.04
+    interfaces:
+      - name: net0
+        type: direct
+        args: R0#net0
+  - name: C0
+    image: slankdev/ubuntu:16.04
+    interfaces:
+      - name: net0
+        type: direct
+        args: R0#net1
+
+node_configs:
+  - name: R0
+    cmds:
+      - cmd: >-
+            vtysh -c "conf t"
+            -c "interface net0"
+            -c "ip address 20.0.0.1/24"
+            -c "exit"
+            -c "interface net1"
+            -c "ip address 10.0.0.1/24"
+            -c "exit"
+      - cmd: >-
+            iptables -t nat -A POSTROUTING
+            -s 10.0.0.0/24 -j MASQUERADE
+
+  - name: S0
+    cmds:
+      - cmd: ip addr add 20.0.0.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 20.0.0.1
+
+  - name: C0
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 10.0.0.1
+
+test:
+  - cmds:
+    - cmd: docker exec C0 ping -c2 20.0.0.2
+    - cmd: docker exec -d S0 iperf -s
+    - cmd: docker exec C0 iperf -c 20.0.0.2

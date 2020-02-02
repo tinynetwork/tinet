@@ -1,0 +1,153 @@
+# http://www.asciiflow.com
+
+nodes:
+  - name: S0
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R0#net1 }
+  - name: R0
+    image: slankdev/frr
+    interfaces:
+      - { name: net1, type: direct, args: S0#net0 }
+      - { name: net0, type: bridge, args: B0 }
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: S1#net0 }
+  - name: S1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: S2#net0 }
+  - name: S2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: S3#net0 }
+  - name: S3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net1 }
+
+switches:
+  - name: B0
+    interfaces:
+      - { name: net0, type: container, args: R0 }
+      - { name: net0, type: container, args: R1 }
+      - { name: net0, type: container, args: R2 }
+      - { name: net0, type: container, args: R3 }
+
+node_configs:
+  - name: S0
+    cmds:
+      - cmd: ip addr add 10.1.0.2/24 dev net0
+      - cmd: ip route replace default via 10.1.0.1
+  - name: R0
+    cmds:
+      - cmd: sysctl -w 'net.ipv4.fib_multipath_hash_policy=1'
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add 10.255.0.1/32 dev lo
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip addr add 10.1.0.1/24 dev net1
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router bgp 100'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' neighbor 10.0.0.10 remote-as 100'
+          -c ' neighbor 10.0.0.20 remote-as 100'
+          -c ' neighbor 10.0.0.30 remote-as 100'
+      - cmd: vtysh -c "do write mem"
+  - name: R1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add 10.255.0.10/32 dev lo
+      - cmd: ip addr add 10.0.0.10/24 dev net0
+      - cmd: ip addr add 192.168.0.1/24 dev net1
+      - cmd: ip route replace default via 10.0.0.1
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router bgp 100'
+          -c ' bgp router-id 10.255.0.10'
+          -c ' neighbor 10.0.0.1 remote-as 100'
+          -c ' network 192.168.0.2/32'
+  - name: S1
+    cmds:
+      - cmd: ip addr add 192.168.0.2/24 dev net0
+      - cmd: ip route replace default via 192.168.0.1
+      - cmd: sh -c "echo S1 > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+  - name: R2
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add 10.255.0.20/32 dev lo
+      - cmd: ip addr add 10.0.0.20/24 dev net0
+      - cmd: ip addr add 192.168.0.1/24 dev net1
+      - cmd: ip route replace default via 10.0.0.1
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router bgp 100'
+          -c ' bgp router-id 10.255.0.20'
+          -c ' neighbor 10.0.0.1 remote-as 100'
+          -c ' network 192.168.0.2/32'
+  - name: S2
+    cmds:
+      - cmd: ip addr add 192.168.0.2/24 dev net0
+      - cmd: ip route replace default via 192.168.0.1
+      - cmd: sh -c "echo S2 > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+  - name: R3
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add 10.255.0.30/32 dev lo
+      - cmd: ip addr add 10.0.0.30/24 dev net0
+      - cmd: ip addr add 192.168.0.1/24 dev net1
+      - cmd: ip route replace default via 10.0.0.1
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router bgp 100'
+          -c ' bgp router-id 10.255.0.30'
+          -c ' neighbor 10.0.0.1 remote-as 100'
+          -c ' network 192.168.0.2/32'
+  - name: S3
+    cmds:
+      - cmd: ip addr add 192.168.0.2/24 dev net0
+      - cmd: ip route replace default via 192.168.0.1
+      - cmd: sh -c "echo S3 > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+
+test:
+  - cmds:
+    # local link
+    - cmd: docker exec S0 ping -c2 10.1.0.1
+    - cmd: docker exec S1 ping -c2 192.168.0.1
+    - cmd: docker exec S2 ping -c2 192.168.0.1
+    - cmd: docker exec S3 ping -c2 192.168.0.1
+    - cmd: docker exec R0 ping -c2 10.1.0.2
+    - cmd: docker exec R0 ping -c2 10.0.0.10
+    - cmd: docker exec R0 ping -c2 10.0.0.20
+    - cmd: docker exec R0 ping -c2 10.0.0.30
+    - cmd: docker exec R1 ping -c2 192.168.0.2
+    - cmd: docker exec R1 ping -c2 10.0.0.1
+    - cmd: docker exec R1 ping -c2 10.0.0.10
+    - cmd: docker exec R1 ping -c2 10.0.0.20
+    - cmd: docker exec R1 ping -c2 10.0.0.30
+    - cmd: docker exec R2 ping -c2 10.0.0.1
+    - cmd: docker exec R2 ping -c2 10.0.0.10
+    - cmd: docker exec R2 ping -c2 10.0.0.20
+    - cmd: docker exec R2 ping -c2 10.0.0.30
+    - cmd: docker exec R3 ping -c2 10.0.0.1
+    - cmd: docker exec R3 ping -c2 10.0.0.10
+    - cmd: docker exec R3 ping -c2 10.0.0.20
+    - cmd: docker exec R3 ping -c2 10.0.0.30
+    # remote link
+    - cmd: docker exec S0 ping -c2 192.168.0.2
+

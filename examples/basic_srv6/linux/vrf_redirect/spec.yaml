@@ -1,0 +1,148 @@
+
+postinit:
+  - cmds:
+    - cmd: make -C /home/vagrant/git/srdump install_docker
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+      - { name: net2, type: direct, args: R4#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net2 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: ip addr add fc00:1::1/64 dev lo
+      - cmd: ip addr add 2001:12::1/64 dev net0
+      - cmd: ip -6 route add default via 2001:12::2
+      ## For fc00:4::/64 reachability for End.T
+      - cmd: ip -6 route add fc00:4::1 encap seg6 mode encap segs fc00:2::10 dev net0
+  - name: R2
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net2.rp_filter=0'
+      - cmd: ip addr add fc00:2::1/64 dev lo
+      - cmd: ip addr add 2001:12::2/64 dev net0
+      - cmd: ip addr add 2001:23::1/64 dev net1
+      - cmd: ip addr add 2001:24::1/64 dev net2
+      - cmd: ip -6 route add fc00:1::1 via 2001:12::1
+      - cmd: ip -6 route add fc00:3::1 via 2001:23::2
+      - cmd: ip -6 route add fc00:4::1 via 2001:24::2
+      ## Add VRF and config net2
+      - cmd: ip -6 route del fc00:4::1
+      - cmd: ip link add vrf10 type vrf table 10
+      - cmd: ip link set dev vrf10 up
+      - cmd: ip link set dev net2 master vrf10
+      - cmd: ip addr add 2001:24::1/64 dev net2
+      - cmd: ip -6 route add fc00:4::1 via 2001:24::2 table 10
+      ## For fc00:4::/64 reachability for End.T
+      - cmd: ip -6 route add fc00:2::10 encap seg6local action End.T table 10 dev net2
+  - name: R3
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: ip addr add fc00:3::1/64 dev lo
+      - cmd: ip addr add 2001:23::2/64 dev net0
+      - cmd: ip -6 route add default via 2001:23::1
+  - name: R4
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: ip addr add fc00:4::1/64 dev lo
+      - cmd: ip addr add 2001:24::2/64 dev net0
+      - cmd: ip -6 route add default via 2001:24::1
+
+test:
+  - name: p2p
+    cmds:
+      - cmd: docker exec R1 ping -c2 2001:12::1
+      - cmd: docker exec R1 ping -c2 2001:12::2
+      - cmd: docker exec R2 ping -c2 2001:12::1
+      - cmd: docker exec R2 ping -c2 2001:12::2
+      - cmd: docker exec R2 ping -c2 2001:23::1
+      - cmd: docker exec R2 ping -c2 2001:23::2
+      - cmd: docker exec R2 ping -c2 -I net2 2001:24::1
+      - cmd: docker exec R2 ping -c2 -I net2 2001:24::2
+      - cmd: docker exec R3 ping -c2 2001:23::1
+      - cmd: docker exec R3 ping -c2 2001:23::2
+      - cmd: docker exec R4 ping -c2 2001:24::1
+      - cmd: docker exec R4 ping -c2 2001:24::2
+  - name: lo
+    cmds:
+      - cmd: docker exec R1 ping -c2 fc00:1::1
+      - cmd: docker exec R1 ping -c2 fc00:2::1
+      - cmd: docker exec R1 ping -c2 fc00:3::1
+      - cmd: docker exec R2 ping -c2 fc00:1::1
+      - cmd: docker exec R2 ping -c2 fc00:2::1
+      - cmd: docker exec R2 ping -c2 fc00:3::1
+      - cmd: docker exec R3 ping -c2 fc00:1::1
+      - cmd: docker exec R3 ping -c2 fc00:2::1
+      - cmd: docker exec R3 ping -c2 fc00:3::1
+  - name: vrf
+    cmds:
+      ## Fail
+      ## - R2 receive packet from net0
+      ## - R2 doesn't forward packet each interfaces
+      ## - So, I check R2 cann't perform End.T
+      - cmd: docker exec R1 ping -c2 fc00:4::1
+
