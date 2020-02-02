@@ -15,8 +15,6 @@ import (
 var defaultCfgFile string = "spec.yaml"
 var cfgFile string
 var tnconfig shell.Tn
-
-// var verbose bool = false
 var verbose bool
 
 // rootCmd represents the base command when called without any subcommands
