@@ -1,0 +1,223 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: C3#net0 }
+      - { name: net3, type: direct, args: C5#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+      - { name: net2, type: direct, args: C4#net0 }
+      - { name: net3, type: direct, args: C6#net0 }
+  - name: C1
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R1#net1 } ]
+  - name: C2
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R2#net1 } ]
+  - name: C3
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R1#net2 } ]
+  - name: C4
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R2#net2 } ]
+  - name: C5
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R1#net3 } ]
+  - name: C6
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R2#net3 } ]
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sh -c 'echo 100000 > /proc/sys/net/mpls/platform_labels'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net0/input'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net1/input'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net2/input'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net3/input'
+      - cmd: ip link add vrf1 type vrf table 10
+      - cmd: ip link set vrf1 up
+      - cmd: ip link add vrf2 type vrf table 20
+      - cmd: ip link set vrf2 up
+      - cmd: ip link add vrf3 type vrf table 30
+      - cmd: ip link set vrf3 up
+      - cmd: ip link set net1 vrf vrf1
+      - cmd: ip link set net2 vrf vrf2
+      - cmd: ip link set net3 vrf vrf3
+      - cmd: tcpdump -ni net0 -w /tmp/R1.in.pcap &
+
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf te'
+          -c 'int net0'
+          -c ' ip address 10.0.0.1/24'
+          -c '!'
+          -c 'int net1 vrf vrf1'
+          -c ' ip address 20.1.0.1/24'
+          -c '!'
+          -c 'int net2 vrf vrf2'
+          -c ' ip address 20.3.0.1/24'
+          -c '!'
+          -c 'int net3 vrf vrf3'
+          -c ' ip address 20.5.0.1/24'
+          -c '!'
+          -c 'router bgp 65001'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' neighbor 10.0.0.2 remote-as 65002'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  neighbor 10.0.0.2 activate'
+          -c '  redistribute connected'
+          -c '  redistribute static'
+          -c ' exit-address-family'
+          -c ' !'
+          -c ' address-family ipv4 vpn'
+          -c '  neighbor 10.0.0.2 activate'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65001 vrf vrf1'
+          -c ' address-family ipv4'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c '  rd vpn export 65001:1'
+          -c '  rt vpn both 100:1'
+          -c '  label vpn export auto'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65001 vrf vrf2'
+          -c ' address-family ipv4'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c '  rd vpn export 65001:2'
+          -c '  rt vpn both 100:2'
+          -c '  label vpn export auto'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65001 vrf vrf3'
+          -c ' address-family ipv4'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c '  rd vpn export 65001:3'
+          -c '  rt vpn both 100:1'
+          -c '  label vpn export auto'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c '!'
+
+  - name: R2
+    cmds:
+      - cmd: sh -c 'echo 100000 > /proc/sys/net/mpls/platform_labels'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net0/input'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net1/input'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net2/input'
+      - cmd: sh -c 'echo 1 > /proc/sys/net/mpls/conf/net3/input'
+      - cmd: ip link add vrf1 type vrf table 10
+      - cmd: ip link set vrf1 up
+      - cmd: ip link add vrf2 type vrf table 20
+      - cmd: ip link set vrf2 up
+      - cmd: ip link add vrf3 type vrf table 30
+      - cmd: ip link set vrf3 up
+      - cmd: ip link set net1 vrf vrf1
+      - cmd: ip link set net2 vrf vrf2
+      - cmd: ip link set net3 vrf vrf3
+      - cmd: tcpdump -ni net0 -w /tmp/R2.in.pcap &
+
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf te'
+          -c 'int net0'
+          -c ' ip address 10.0.0.2/24'
+          -c '!'
+          -c 'int net1 vrf vrf1'
+          -c ' ip address 20.2.0.1/24'
+          -c '!'
+          -c 'int net2 vrf vrf2'
+          -c ' ip address 20.4.0.1/24'
+          -c '!'
+          -c 'int net3 vrf vrf3'
+          -c ' ip address 20.6.0.1/24'
+          -c '!'
+          -c 'router bgp 65002'
+          -c ' bgp router-id 10.255.0.2'
+          -c ' neighbor 10.0.0.1 remote-as 65001'
+          -c ' !'
+          -c ' address-family ipv4'
+          -c '  neighbor 10.0.0.1 activate'
+          -c '  redistribute connected'
+          -c '  redistribute static'
+          -c ' exit-address-family'
+          -c ' !'
+          -c ' address-family ipv4 vpn'
+          -c '  neighbor 10.0.0.1 activate'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65002 vrf vrf1'
+          -c ' address-family ipv4'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c '  rd vpn export 65002:1'
+          -c '  rt vpn both 100:1'
+          -c '  label vpn export auto'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65002 vrf vrf2'
+          -c ' address-family ipv4'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c '  rd vpn export 65002:2'
+          -c '  rt vpn both 100:2'
+          -c '  label vpn export auto'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'router bgp 65002 vrf vrf3'
+          -c ' address-family ipv4'
+          -c '  export vpn'
+          -c '  import vpn'
+          -c '  rd vpn export 65002:3'
+          -c '  rt vpn both 100:2'
+          -c '  label vpn export auto'
+          -c '  redistribute connected'
+          -c ' exit-address-family'
+          -c '!'
+
+  - name: C1
+    cmds:
+      - cmd: ip addr replace 20.1.0.2/24 dev net0
+      - cmd: ip route replace default via 20.1.0.1
+  - name: C2
+    cmds:
+      - cmd: ip addr replace 20.2.0.2/24 dev net0
+      - cmd: ip route replace default via 20.2.0.1
+  - name: C3
+    cmds:
+      - cmd: ip addr replace 20.3.0.2/24 dev net0
+      - cmd: ip route replace default via 20.3.0.1
+  - name: C4
+    cmds:
+      - cmd: ip addr replace 20.4.0.2/24 dev net0
+      - cmd: ip route replace default via 20.4.0.1
+  - name: C5
+    cmds:
+      - cmd: ip addr replace 20.5.0.2/24 dev net0
+      - cmd: ip route replace default via 20.5.0.1
+  - name: C6
+    cmds:
+      - cmd: ip addr replace 20.6.0.2/24 dev net0
+      - cmd: ip route replace default via 20.6.0.1
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: echo slankdev slankdev
+    - cmd: echo slankdev slankdev
+

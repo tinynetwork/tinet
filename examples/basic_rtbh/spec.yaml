@@ -1,0 +1,104 @@
+
+nodes:
+  ## AS65001
+  - name: R1
+    type: docker
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: RR#net0 }
+
+  ## AS65001
+  - name: RR
+    type: docker
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net2 }
+
+  ## AS65001
+  - name: C1
+    type: docker
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+
+  ## AS65002
+  - name: R2
+    type: docker
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+
+  ## AS65002
+  - name: C2
+    type: docker
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+
+  - name: R1
+    cmds:
+      - cmd: ip addr add 30.0.0.1/24 dev net0
+      - cmd: ip addr add 10.0.0.1/24 dev net1
+      - cmd: ip addr add 10.254.0.1/24 dev net2
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 65001"
+          -c " bgp router-id 30.0.0.1"
+          -c " neighbor 30.0.0.2 remote-as 65002"
+          -c " bgp router-id 10.254.0.2"
+          -c " neighbor 10.254.0.2 remote-as 65001"
+          -c " network 10.0.0.0/8"
+          -c " exit"
+          -c "ip route 192.2.0.1/32 blackhole"
+
+  - name: RR
+    cmds:
+      - cmd: ip addr add 10.254.0.2/24 dev net0
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 65001"
+          -c " bgp router-id 10.254.0.1"
+          -c " neighbor 10.254.0.1 remote-as 65001"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute static"
+          -c "  exit-address-family"
+          -c " exit"
+          -c "ip route 192.2.0.1/32 blackhole"
+
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip route add default via 10.0.0.1
+
+  - name: R2
+    cmds:
+      - cmd: ip addr add 30.0.0.2/24 dev net0
+      - cmd: ip addr add 20.0.0.1/24 dev net1
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 65002"
+          -c " bgp router-id 30.0.0.2"
+          -c " neighbor 30.0.0.1 remote-as 65001"
+          -c " network 20.0.0.0/8"
+          -c " exit"
+          -c "ip route 192.2.0.1/32 blackhole"
+
+  - name: C2
+    cmds:
+      - cmd: ip addr add 20.0.0.2/24 dev net0
+      - cmd: ip route add default via 20.0.0.1
+
+# test:
+#   - name: p2p
+#     cmds:
+#     - cmd: docker exec C0 ping -c2 10.0.0.2
+#     - cmd: echo slankdev slankdev
+

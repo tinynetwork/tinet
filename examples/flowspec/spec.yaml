@@ -1,0 +1,164 @@
+
+# DESCRIPTION: BGP Flowspec test using FRR/iptables
+# INIT:
+#    cns spec.yaml init | sudo sh
+#    cns spec.yaml conf | sudo sh
+#    cns spec.yaml test | sudo sh
+# FINI:
+#    cns spec.yaml fini | sudo sh
+# TOPO:
+#
+#            10.1.0.0/24  +-----------+  10.2.0.0/24
+#                 +----[net0]  R2   [net1]-----+
+#                 |     .2| lo3.3.3.3 |.2      |
+#                 |       +-----------+        |
+#                 |.1                        .1|
+#   192.168.    [net2]                       [net2]    192.168.
+#   10.0/24  +-----------+  10.0.0.0/24  +-----------+ 20.0/24
+# C0------[net1]  R0   [net0]---------[net0]  R1  [net1]------C1
+#   .2     .1| Lo1.1.1.1 |.1           .2| lo2.2.2.2 |.1      .2
+#            +-----------+               +-----------+
+#
+
+nodes:
+  - name: R0
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C0#net0 }
+      - { name: net2, type: direct, args: R2#net0 }
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R0#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: R2#net1 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R0#net2 }
+      - { name: net1, type: direct, args: R1#net2 }
+  - name: C0
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R0#net1 }
+  - name: C1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+
+node_configs:
+  - name: R0
+    cmds:
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c '  ip address 1.1.1.1/32'
+          -c 'exit'
+          -c 'interface net0'
+          -c '  ip address 10.0.0.1/24'
+          -c 'exit'
+          -c 'interface net1'
+          -c '  ip address 192.168.10.1/24'
+          -c 'exit'
+          -c 'interface net2'
+          -c '  ip address 10.1.0.1/24'
+          -c 'exit'
+          -c 'router ospf'
+          -c '  network 10.0.0.0/24 area 0'
+          -c '  network 10.1.0.0/24 area 0'
+          -c '  network 1.1.1.1/32 area 0'
+          -c 'exit'
+          -c 'router bgp 100'
+          -c '  bgp router-id 1.1.1.1'
+          -c '  neighbor 2.2.2.2 remote-as 100'
+          -c '  neighbor 2.2.2.2 update-source lo'
+          -c '  neighbor 3.3.3.3 remote-as 100'
+          -c '  neighbor 3.3.3.3 update-source lo'
+          -c '  network 192.168.10.0/24'
+          -c 'exit'
+
+  - name: R1
+    cmds:
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c '  ip address 2.2.2.2/32'
+          -c 'exit'
+          -c 'interface net0'
+          -c '  ip address 10.0.0.2/24'
+          -c 'exit'
+          -c 'interface net1'
+          -c '  ip address 192.168.20.1/24'
+          -c 'exit'
+          -c 'interface net2'
+          -c '  ip address 10.2.0.1/24'
+          -c 'exit'
+          -c 'router ospf'
+          -c '  network 10.0.0.0/24 area 0'
+          -c '  network 10.2.0.0/24 area 0'
+          -c '  network 2.2.2.2/32 area 0'
+          -c 'exit'
+          -c 'router bgp 100'
+          -c '  bgp router-id 2.2.2.2'
+          -c '  neighbor 1.1.1.1 remote-as 100'
+          -c '  neighbor 1.1.1.1 update-source lo'
+          -c '  neighbor 3.3.3.3 remote-as 100'
+          -c '  neighbor 3.3.3.3 update-source lo'
+          -c '  network 192.168.20.0/24'
+          -c 'exit'
+
+  - name: R2
+    cmds:
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c '  ip address 3.3.3.3/32'
+          -c 'exit'
+          -c 'interface net0'
+          -c '  ip address 10.1.0.2/24'
+          -c 'exit'
+          -c 'interface net1'
+          -c '  ip address 10.2.0.2/24'
+          -c 'exit'
+          -c 'router ospf'
+          -c '  network 10.1.0.0/24 area 0'
+          -c '  network 10.2.0.0/24 area 0'
+          -c '  network 3.3.3.3/32 area 0'
+          -c 'exit'
+          -c 'router bgp 100'
+          -c '  bgp router-id 3.3.3.3'
+          -c '  neighbor 1.1.1.1 remote-as 100'
+          -c '  neighbor 1.1.1.1 update-source lo'
+          -c '  neighbor 2.2.2.2 remote-as 100'
+          -c '  neighbor 2.2.2.2 update-source lo'
+          -c 'exit'
+
+  - name: C0
+    cmds:
+      - cmd: ip addr add 192.168.10.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.10.1
+  - name: C1
+    cmds:
+      - cmd: ip addr add 192.168.20.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.20.1
+
+test:
+  - cmds:
+    - cmd: echo 'Local Link Test'
+    - cmd: docker exec R0 ping -c2 -w4 10.0.0.2
+    - cmd: docker exec R0 ping -c2 -w4 10.1.0.2
+    - cmd: docker exec R0 ping -c2 -w4 192.168.10.2
+    - cmd: docker exec R1 ping -c2 -w4 10.0.0.1
+    - cmd: docker exec R1 ping -c2 -w4 10.2.0.2
+    - cmd: docker exec R1 ping -c2 -w4 192.168.20.2
+    - cmd: docker exec R2 ping -c2 -w4 10.1.0.1
+    - cmd: docker exec R2 ping -c2 -w4 10.2.0.1
+    - cmd: docker exec C0 ping -c2 -w4 192.168.10.1
+    - cmd: docker exec C1 ping -c2 -w4 192.168.20.1
+    - cmd: echo 'Remote Link Test'
+    - cmd: docker exec C0 ping -c2 -w4 192.168.20.2
+    - cmd: docker exec C1 ping -c2 -w4 192.168.10.2
+

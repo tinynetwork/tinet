@@ -1,0 +1,104 @@
+
+nodes:
+
+  - name: R1
+    image: slankdev/frr-7.3:slankdev-support-mpbgp-vpnv4-srv6-cplane
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: C3#net0 }
+      - { name: net3, type: direct, args: C5#net0 }
+
+  - name: R2
+    image: slankdev/frr-7.3:slankdev-support-mpbgp-vpnv4-srv6-cplane
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+      - { name: net2, type: direct, args: C4#net0 }
+      - { name: net3, type: direct, args: C6#net0 }
+
+  - name: C1
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R1#net1 } ]
+  - name: C2
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R2#net1 } ]
+  - name: C3
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R1#net2 } ]
+  - name: C4
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R2#net2 } ]
+  - name: C5
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R1#net3 } ]
+  - name: C6
+    image: slankdev/frr
+    interfaces: [ { name: net0, type: direct, args: R2#net3 } ]
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: touch /etc/frr/frr.conf
+
+      - cmd: ip link add vrf1 type vrf table 10
+      - cmd: ip link set vrf1 up
+      - cmd: ip link set net1 vrf vrf1
+      - cmd: ip route add 169.254.99.10 dev vrf1
+
+      - cmd: ip link add vrf2 type vrf table 20
+      - cmd: ip link set vrf2 up
+      - cmd: ip link set net2 vrf vrf2
+      - cmd: ip route add 169.254.99.20 dev vrf2
+
+      - cmd: ip link add vrf3 type vrf table 30
+      - cmd: ip link set vrf3 up
+      - cmd: ip link set net3 vrf vrf3
+      - cmd: ip route add 169.254.99.30 dev vrf3
+
+  - name: R2
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: touch /etc/frr/frr.conf
+
+      - cmd: ip link add vrf1 type vrf table 10
+      - cmd: ip link set vrf1 up
+      - cmd: ip link set net1 vrf vrf1
+      - cmd: ip route add 169.254.99.10 dev vrf1
+
+      - cmd: ip link add vrf2 type vrf table 20
+      - cmd: ip link set vrf2 up
+      - cmd: ip link set net2 vrf vrf2
+      - cmd: ip route add 169.254.99.20 dev vrf2
+
+      - cmd: ip link add vrf3 type vrf table 30
+      - cmd: ip link set vrf3 up
+      - cmd: ip link set net3 vrf vrf3
+      - cmd: ip route add 169.254.99.30 dev vrf3
+
+  - name: C1
+    cmds:
+      - cmd: ip addr replace 30.1.0.2/24 dev net0
+      - cmd: ip route replace default via 30.1.0.1
+  - name: C2
+    cmds:
+      - cmd: ip addr replace 30.2.0.2/24 dev net0
+      - cmd: ip route replace default via 30.2.0.1
+  - name: C3
+    cmds:
+      - cmd: ip addr replace 30.3.0.2/24 dev net0
+      - cmd: ip route replace default via 30.3.0.1
+  - name: C4
+    cmds:
+      - cmd: ip addr replace 30.4.0.2/24 dev net0
+      - cmd: ip route replace default via 30.4.0.1
+  - name: C5
+    cmds:
+      - cmd: ip addr replace 30.5.0.2/24 dev net0
+      - cmd: ip route replace default via 30.5.0.1
+  - name: C6
+    cmds:
+      - cmd: ip addr replace 30.6.0.2/24 dev net0
+      - cmd: ip route replace default via 30.6.0.1
+

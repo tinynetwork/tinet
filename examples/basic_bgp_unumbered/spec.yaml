@@ -1,0 +1,92 @@
+
+# DESCRIPTION: BGP network using FRR
+#
+# INIT:
+#    cns spec.yaml init | sudo sh
+#    cns spec.yaml conf | sudo sh
+#    cns spec.yaml test | sudo sh
+#
+# FINI:
+#    cns spec.yaml fini | sudo sh
+#
+# TOPO:
+#
+#                          vlan1:10.0.0.0/24
+#                     .1(net0)          .2(net0)
+#                R0(AS100)------------------R1(AS200)
+#            (net1).1|                          |.1(net1)
+#                    |                          |
+#  vlan1:10.1.0.0/24 |                          | vlan1:10.2.0.0/24
+#                    |                          |
+#            (net0).2|                          |.2(net0)
+#                R2(AS300)                  R3(AS400)
+#            (net1).1|                          |.1(net1)
+#                    |                          |
+#  vlan1:10.3.0.0/24 |                          | vlan1:10.4.0.0/24
+#                    |                          |
+#            (net0).2|                          |.2(net0)
+#                    C0                         C1
+#
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 1"
+          -c " bgp router-id 1.1.1.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c "  redistribute kernel"
+          -c " exit-address-family"
+
+      # -c "int net0"
+      # -c " !ipv6 nd ra-interval 1"
+      # -c " !no ipv6 nd suppress-ra"
+      # -c " !ip address 10.0.0.2/24"
+      # -c "!"
+  - name: R2
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 2"
+          -c " bgp router-id 2.2.2.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c "  redistribute kernel"
+          -c " exit-address-family"
+
+      # -c "int net0"
+      # -c " !ipv6 nd ra-interval 1"
+      # -c " !no ipv6 nd suppress-ra"
+      # -c " !ip address 10.0.0.2/24"
+      # -c "!"
+

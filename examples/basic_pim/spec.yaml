@@ -1,0 +1,101 @@
+# http://www.asciiflow.com
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo"
+          -c " ip address 10.255.0.1/32"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "int net0"
+          -c " ip address 10.0.0.1/30"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "int net1"
+          -c " ip address 10.0.0.5/30"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "ip pim rp 10.255.0.2"
+          -c 'ip route 10.255.0.2/32 10.0.0.2'
+          -c 'ip route 10.255.0.3/32 10.0.0.6'
+  - name: R2
+    cmds:
+      - cmd: ip route del default
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo"
+          -c " ip address 10.255.0.2/32"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "int net0"
+          -c " ip address 10.0.0.2/30"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "ip pim rp 10.255.0.2"
+          -c 'ip route 0.0.0.0/0 10.0.0.1'
+  - name: R3
+    cmds:
+      - cmd: ip route del default
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo"
+          -c " ip address 10.255.0.3/32"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "int net0"
+          -c " ip address 10.0.0.6/30"
+          -c " ip pim sm"
+          -c " ip igmp"
+          -c " exit"
+          -c "ip pim rp 10.255.0.2"
+          -c 'ip route 0.0.0.0/0 10.0.0.5'
+
+test:
+  - name: p2p
+    cmds:
+      - cmd: docker exec R1 ping -c2 10.0.0.1
+      - cmd: docker exec R1 ping -c2 10.0.0.2
+      - cmd: docker exec R1 ping -c2 10.0.0.5
+      - cmd: docker exec R1 ping -c2 10.0.0.6
+      - cmd: docker exec R2 ping -c2 10.0.0.1
+      - cmd: docker exec R2 ping -c2 10.0.0.2
+      - cmd: docker exec R3 ping -c2 10.0.0.5
+      - cmd: docker exec R3 ping -c2 10.0.0.6
+  - name: remote
+    cmds:
+      - cmd: docker exec R1 ping -c2 10.255.0.1
+      - cmd: docker exec R1 ping -c2 10.255.0.2
+      - cmd: docker exec R1 ping -c2 10.255.0.3
+      - cmd: docker exec R2 ping -c2 10.255.0.1
+      - cmd: docker exec R2 ping -c2 10.255.0.2
+      - cmd: docker exec R2 ping -c2 10.255.0.3
+      - cmd: docker exec R3 ping -c2 10.255.0.1
+      - cmd: docker exec R3 ping -c2 10.255.0.2
+      - cmd: docker exec R3 ping -c2 10.255.0.3
+

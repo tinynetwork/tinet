@@ -1,0 +1,88 @@
+
+postinit:
+  - cmds:
+    - cmd: docker cp ietf_rift_python/rift_spine1.yaml Spine1:/root/config.yaml
+    - cmd: docker cp ietf_rift_python/rift_spine2.yaml Spine2:/root/config.yaml
+    - cmd: docker cp ietf_rift_python/rift_leaf1.yaml Leaf1:/root/config.yaml
+    - cmd: docker cp ietf_rift_python/rift_leaf2.yaml Leaf2:/root/config.yaml
+
+nodes:
+  - name: Spine1
+    image: slankdev/rift:ietf-rift-03
+    interfaces:
+      - { name: net0, type: direct, args: Leaf1#net0 }
+      - { name: net1, type: direct, args: Leaf2#net0 }
+  - name: Spine2
+    image: slankdev/rift:ietf-rift-03
+    interfaces:
+      - { name: net0, type: direct, args: Leaf1#net1 }
+      - { name: net1, type: direct, args: Leaf2#net1 }
+  - name: Leaf1
+    image: slankdev/rift:ietf-rift-03
+    interfaces:
+      - { name: net0, type: direct, args: Spine1#net0 }
+      - { name: net1, type: direct, args: Spine2#net0 }
+      - { name: net2, type: direct, args: Serv1#net0 }
+  - name: Leaf2
+    image: slankdev/rift:ietf-rift-03
+    interfaces:
+      - { name: net0, type: direct, args: Spine1#net1 }
+      - { name: net1, type: direct, args: Spine2#net1 }
+      - { name: net2, type: direct, args: Serv2#net0 }
+  - name: Serv1
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: Leaf1#net2 } ]
+  - name: Serv2
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: Leaf2#net2 } ]
+
+node_configs:
+  - name: Spine1
+    cmds:
+      - cmd: ip addr add 88.1.1.1/32 dev lo
+      - cmd: ip addr add 99.1.2.2/24 dev net0
+      - cmd: ip addr add 99.5.6.6/24 dev net1
+      - cmd: >-
+          nohup bash -c "source rift-python/env/bin/activate;
+          python rift-python/rift --telnet-port-file /rift config.yaml" &
+  - name: Spine2
+    cmds:
+      - cmd: ip addr add 88.1.2.1/32 dev lo
+      - cmd: ip addr add 99.3.4.4/24 dev net0
+      - cmd: ip addr add 99.7.8.8/24 dev net1
+      - cmd: >-
+          nohup bash -c "source rift-python/env/bin/activate;
+          python rift-python/rift --telnet-port-file /rift config.yaml" &
+  - name: Leaf1
+    cmds:
+      - cmd: ip addr add 88.0.1.1/32 dev lo
+      - cmd: ip addr add 99.1.2.1/24 dev net0
+      - cmd: ip addr add 99.3.4.3/24 dev net1
+      - cmd: ip addr add 77.1.0.1/24 dev net2
+      - cmd: >-
+          nohup bash -c "source rift-python/env/bin/activate;
+          python rift-python/rift --telnet-port-file /rift config.yaml" &
+  - name: Leaf2
+    cmds:
+      - cmd: ip addr add 88.0.2.1/32 dev lo
+      - cmd: ip addr add 99.5.6.5/24 dev net0
+      - cmd: ip addr add 99.7.8.7/24 dev net1
+      - cmd: ip addr add 77.2.0.1/24 dev net2
+      - cmd: >-
+          nohup bash -c "source rift-python/env/bin/activate;
+          python rift-python/rift --telnet-port-file /rift config.yaml" &
+  - name: Serv1
+    cmds:
+      - cmd: ip addr add 77.1.0.2/24 dev net0
+      - cmd: ip route add default via 77.1.0.1
+  - name: Serv2
+    cmds:
+      - cmd: ip addr add 77.2.0.2/24 dev net0
+      - cmd: ip route add default via 77.2.0.1
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: echo slankdev slankdev
+    - cmd: echo slankdev slankdev
+

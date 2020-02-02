@@ -1,0 +1,85 @@
+
+precmd:
+  - cmds:
+      - cmd: export IMAGE=slankdev/frr
+      # - cmd: export IMAGE=slankdev/gobgp
+      # - cmd: export IMAGE=slankdev/ubuntu:18.04
+
+nodes:
+  - name: R1
+    image: $IMAGE
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: C2#net0 }
+  - name: R2
+    image: $IMAGE
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C3#net0 }
+      - { name: net2, type: direct, args: C4#net0 }
+  - name: C1
+    image: $IMAGE
+    interfaces: [ { name: net0, type: direct, args: R1#net1 } ]
+  - name: C2
+    image: $IMAGE
+    interfaces: [ { name: net0, type: direct, args: R1#net2 } ]
+  - name: C3
+    image: $IMAGE
+    interfaces: [ { name: net0, type: direct, args: R2#net1 } ]
+  - name: C4
+    image: $IMAGE
+    interfaces: [ { name: net0, type: direct, args: R2#net2 } ]
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sysctl -w net.ipv4.tcp_l3mdev_accept=1
+      - cmd: sysctl -w net.ipv4.udp_l3mdev_accept=1
+      - cmd: ip link add red type vrf table 10
+      - cmd: ip link add blu type vrf table 20
+      - cmd: ip link set dev red up
+      - cmd: ip link set dev blu up
+      - cmd: ip link set net0 vrf red
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c ' ip address 10.255.0.1/32'
+          -c 'interface net0 vrf red'
+          -c ' ip address 10.0.0.1/24'
+          -c 'router bgp 65011 vrf red'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' neighbor 10.0.0.2 remote-as external'
+          -c 'router bgp 65021 vrf blu'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' neighbor 10.0.0.2 remote-as external'
+  - name: R2
+    cmds:
+      - cmd: sysctl -w net.ipv4.tcp_l3mdev_accept=1
+      - cmd: sysctl -w net.ipv4.udp_l3mdev_accept=1
+      - cmd: ip link add red type vrf table 10
+      - cmd: ip link add blu type vrf table 20
+      - cmd: ip link set dev red up
+      - cmd: ip link set dev blu up
+      - cmd: ip link set net0 vrf red
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface lo'
+          -c ' ip address 10.255.0.2/32'
+          -c 'interface net0 vrf red'
+          -c ' ip address 10.0.0.2/24'
+          -c 'router bgp 65012 vrf red'
+          -c ' bgp router-id 10.255.0.2'
+          -c ' neighbor 10.0.0.1 remote-as external'
+          -c 'router bgp 65022 vrf blu'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' neighbor 10.0.0.2 remote-as external'
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: echo slankdev slankdev
+    - cmd: echo slankdev slankdev
+

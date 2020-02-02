@@ -1,0 +1,37 @@
+
+nodes:
+  - name: R1
+    image: slankdev/vpp:19.08
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+  - name: R3
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sh -c "echo nat { deterministic } >> /etc/vpp/startup.conf"
+      - cmd: sh -c "echo create host-interface name net0 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo create host-interface name net1 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int state host-net0 up >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int state host-net1 up >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net0 10.100.0.1/24 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set int ip addr host-net1 192.168.0.1/24 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo set interface nat44 in host-net1 out host-net0 >> /etc/vpp/exec.vpp"
+      - cmd: sh -c "echo nat44 deterministic add in 192.168.0.0/24 out 10.100.0.1/32 >> /etc/vpp/exec.vpp"
+      - cmd: nohup vpp -c /etc/vpp/startup.conf &
+  - name: R2
+    cmds:
+      - cmd: ip addr add 10.100.0.2/24 dev net0
+  - name: R3
+    cmds:
+      - cmd: ip addr add 192.168.0.2/24 dev net0
+      - cmd: ip route add default via 192.168.0.1
+

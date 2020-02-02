@@ -1,0 +1,152 @@
+
+# DESCRIPTION: OSPF network using FRR
+# INIT:
+#    cns spec.yaml init | sudo sh
+#    cns spec.yaml conf | sudo sh
+#    cns spec.yaml test | sudo sh
+# FINI:
+#    cns spec.yaml fini | sudo sh
+# TOPO:
+#
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+      - { name: net2, type: direct, args: S1#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+      - { name: net1, type: direct, args: R4#net1 }
+      - { name: net2, type: direct, args: S3#net0 }
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+      - { name: net1, type: direct, args: R3#net1 }
+      - { name: net2, type: direct, args: S4#net0 }
+  - name: S1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net2 }
+  - name: S3
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R3#net2 }
+  - name: S4
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R4#net2 }
+
+node_configs:
+  - name: S1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip -6 addr add 2001:11::2/64 dev net0
+      - cmd: ip -6 route replace default via 2001:11::1
+  - name: S3
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip -6 addr add 2001:33::2/64 dev net0
+      - cmd: ip -6 route replace default via 2001:33::1
+  - name: S4
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip -6 addr add 2001:44::2/64 dev net0
+      - cmd: ip -6 route replace default via 2001:44::1
+  - name: R1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip -6 addr add 2001:12::1/64 dev net0
+      - cmd: ip -6 addr add 2001:13::1/64 dev net1
+      - cmd: ip -6 addr add 2001:11::1/64 dev net2
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.1'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+          -c " interface net2 area 0.0.0.0"
+  - name: R2
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip -6 addr add 2001:12::2/64 dev net0
+      - cmd: ip -6 addr add 2001:24::1/64 dev net1
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.2'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+  - name: R3
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip -6 addr add 2001:13::2/64 dev net0
+      - cmd: ip -6 addr add 2001:34::1/64 dev net1
+      - cmd: ip -6 addr add 2001:33::1/64 dev net2
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.3'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+          -c " interface net2 area 0.0.0.0"
+  - name: R4
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip -6 addr add 2001:24::2/64 dev net0
+      - cmd: ip -6 addr add 2001:34::2/64 dev net1
+      - cmd: ip -6 addr add 2001:44::1/64 dev net2
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.4'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+          -c " interface net2 area 0.0.0.0"
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: docker exec S1 ping -c2 2001:11::1
+    - cmd: docker exec S3 ping -c2 2001:33::1
+    - cmd: docker exec S4 ping -c2 2001:44::1
+
+    - cmd: docker exec R1 ping -c2 2001:12::1
+    - cmd: docker exec R1 ping -c2 2001:12::2
+    - cmd: docker exec R1 ping -c2 2001:13::1
+    - cmd: docker exec R1 ping -c2 2001:13::2
+    - cmd: docker exec R1 ping -c2 2001:11::1
+    - cmd: docker exec R1 ping -c2 2001:11::2
+
+    - cmd: docker exec R2 ping -c2 2001:12::1
+    - cmd: docker exec R2 ping -c2 2001:12::2
+    - cmd: docker exec R2 ping -c2 2001:24::1
+    - cmd: docker exec R2 ping -c2 2001:24::2
+
+    - cmd: docker exec R3 ping -c2 2001:13::1
+    - cmd: docker exec R3 ping -c2 2001:13::2
+    - cmd: docker exec R3 ping -c2 2001:34::1
+    - cmd: docker exec R3 ping -c2 2001:34::2
+    - cmd: docker exec R3 ping -c2 2001:33::1
+    - cmd: docker exec R3 ping -c2 2001:33::2
+
+    - cmd: docker exec R4 ping -c2 2001:24::1
+    - cmd: docker exec R4 ping -c2 2001:24::2
+    - cmd: docker exec R4 ping -c2 2001:34::1
+    - cmd: docker exec R4 ping -c2 2001:34::2
+    - cmd: docker exec R4 ping -c2 2001:44::1
+    - cmd: docker exec R4 ping -c2 2001:44::2
+

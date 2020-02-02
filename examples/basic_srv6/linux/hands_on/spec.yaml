@@ -1,0 +1,177 @@
+
+postinit:
+  - cmds:
+    - cmd: make -C /home/vagrant/git/srdump install_docker
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net0 }
+      - { name: net1, type: direct, args: R1#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+      - { name: net2, type: direct, args: R6#net0 }
+      - { name: net3, type: direct, args: R7#net0 }
+      - { name: net4, type: direct, args: R8#net0 }
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net1 }
+      - { name: net1, type: direct, args: R5#net0 }
+  - name: R5
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R4#net1 }
+  - name: R6
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net2 }
+  - name: R7
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net3 }
+  - name: R8
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net4 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:1::1/64 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:1::/64"
+          -c "router ospf6"
+          -c " interface lo area 0.0.0.0"
+          -c ' ospf6 router-id 10.255.0.1'
+          -c " interface net0 area 0.0.0.0"
+
+  - name: R2
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:2::2/64 dev net0
+      - cmd: ip addr add cafe:1::2/64 dev net1
+      - cmd: ip -6 route add default via cafe:2::3
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:2::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.2'
+          -c " interface lo area 0.0.0.0"
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+      - cmd: ip route add cafe:4::5 encap seg6 mode encap segs fc00:6::1,fc00:7::1,fc00:4::1 dev net0
+
+  - name: R3
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:2::3/64 dev net0
+      - cmd: ip addr add cafe:3::3/64 dev net1
+      - cmd: ip addr add cafe:5::3/64 dev net2
+      - cmd: ip addr add cafe:6::3/64 dev net3
+      - cmd: ip addr add cafe:7::3/64 dev net4
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:3::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.3'
+          -c " interface lo area 0.0.0.0"
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+          -c " interface net2 area 0.0.0.0"
+          -c " interface net3 area 0.0.0.0"
+          -c " interface net4 area 0.0.0.0"
+
+  - name: R4
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:3::4/64 dev net0
+      - cmd: ip addr add cafe:4::4/64 dev net1
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:4::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.4'
+          -c " interface lo area 0.0.0.0"
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+      - cmd: ip route add fc00:4::1/128 encap seg6local action End.DX6 nh6 cafe:4::5 dev net0
+
+  - name: R5
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:4::5/64 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:5::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.5'
+          -c " interface lo area 0.0.0.0"
+          -c " interface net0 area 0.0.0.0"
+          -c " interface net1 area 0.0.0.0"
+
+  - name: R6
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:5::6/64 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:6::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.6'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface lo area 0.0.0.0"
+      - cmd: ip route add fc00:6::1/128 encap seg6local action End dev net0
+
+  - name: R7
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:6::7/64 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:7::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.7'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface lo area 0.0.0.0"
+      - cmd: ip route add fc00:7::1/128 encap seg6local action End dev net0
+
+  - name: R8
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add cafe:7::8/64 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo"
+          -c " ipv6 address fc00:8::/64"
+          -c "router ospf6"
+          -c ' ospf6 router-id 10.255.0.8'
+          -c " interface net0 area 0.0.0.0"
+          -c " interface lo area 0.0.0.0"
+      - cmd: ip route add fc00:8::1/128 encap seg6local action End dev net0
+

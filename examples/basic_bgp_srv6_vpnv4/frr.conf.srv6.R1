@@ -1,0 +1,72 @@
+hostname R1
+log file /tmp/frr.log
+!
+debug bgp vpn label
+debug bgp vpn leak-from-vrf
+debug bgp vpn leak-to-vrf
+debug bgp vpn rmap-event
+debug bgp vpn adv-prefix-sid
+!
+int net0
+ ipv6 address 2001::1/64
+!
+int net1 vrf vrf1
+ ip address 30.1.0.1/24
+!
+int net2 vrf vrf2
+ ip address 30.3.0.1/24
+!
+int net3 vrf vrf3
+ ip address 30.5.0.1/24
+!
+router bgp 65001
+ bgp router-id 10.255.0.1
+ neighbor 2001::2 remote-as 65002
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  redistribute static
+ exit-address-family
+ !
+ address-family ipv4 srv6-vpn
+  neighbor 2001::2 activate
+ exit-address-family
+!
+router bgp 65001 vrf vrf1
+ bgp router-id 10.255.0.1
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  sid srv6-vpn export 1:1::
+  rd srv6-vpn export 65001:1
+  rt srv6-vpn both 100:1
+  export srv6-vpn
+  import srv6-vpn
+ exit-address-family
+!
+router bgp 65001 vrf vrf2
+ bgp router-id 10.255.0.1
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  sid srv6-vpn export 1:2::
+  rd srv6-vpn export 65001:2
+  rt srv6-vpn both 100:2
+  export srv6-vpn
+  import srv6-vpn
+ exit-address-family
+!
+router bgp 65001 vrf vrf3
+ bgp router-id 10.255.0.1
+ !
+ address-family ipv4 unicast
+  redistribute connected
+  sid srv6-vpn export 1:3::
+  rd srv6-vpn export 65001:3
+  rt srv6-vpn both 100:3
+  export srv6-vpn
+  import srv6-vpn
+ exit-address-family
+!
+line vty
+!

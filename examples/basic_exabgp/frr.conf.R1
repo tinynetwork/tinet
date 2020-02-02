@@ -1,0 +1,22 @@
+hostname R1
+log file /tmp/frr.log
+!
+int net0
+ ip address 10.0.0.1/24
+ no shutdown
+!
+router bgp 1
+ bgp router-id 1.1.1.1
+ neighbor 10.0.0.2 remote-as 2
+ neighbor 10.0.0.2 capability extended-nexthop
+ !
+ address-family ipv4 unicast
+  redistribute kernel
+ exit-address-family
+ !
+ address-family ipv4 vpn
+  neighbor 10.0.0.2 activate
+ exit-address-family
+!
+line vty
+!

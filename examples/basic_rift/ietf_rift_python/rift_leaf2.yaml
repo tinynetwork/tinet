@@ -1,0 +1,17 @@
+shards:
+  - id: 0
+    nodes:
+      - name: Leaf2
+        level: 0
+        systemid: 1002
+        interfaces:
+          - name: net0 # leaf2:net0 -> spine1:net1
+          - name: net1 # leaf2:net1 -> spine2:net1
+          - name: net2
+        v4prefixes:
+          - address: 88.0.2.1
+            mask: 32
+            metric: 1
+          - address: 77.2.0.0
+            mask: 24
+            metric: 1

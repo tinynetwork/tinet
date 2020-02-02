@@ -1,0 +1,119 @@
+
+postinit:
+  - cmds:
+    - cmd: docker cp bird/R1_bird.conf R1:/etc/bird/bird.conf
+    - cmd: docker cp bird/R2_bird.conf R2:/etc/bird/bird.conf
+    - cmd: docker cp bird/R3_bird.conf R3:/etc/bird/bird.conf
+    - cmd: docker cp bird/R4_bird.conf R4:/etc/bird/bird.conf
+
+nodes:
+  - name: R1
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+      - { name: net2, type: direct, args: S1#net0 }
+  - name: R2
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+  - name: R3
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+      - { name: net1, type: direct, args: R4#net1 }
+      - { name: net2, type: direct, args: S3#net0 }
+  - name: R4
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+      - { name: net1, type: direct, args: R3#net1 }
+      - { name: net2, type: direct, args: S4#net0 }
+  - name: S1
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R1#net2 }
+  - name: S3
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R3#net2 }
+  - name: S4
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R4#net2 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip addr add 10.0.0.1/30 dev net0
+      - cmd: ip addr add 10.0.0.9/30 dev net1
+      - cmd: ip addr add 10.0.0.17/30 dev net2
+      - cmd: ip addr add 10.255.0.1/32 dev lo
+      - cmd: mkdir -p /run/bird
+      - cmd: bird -c /etc/bird/bird.conf
+  - name: R2
+    cmds:
+      - cmd: ip addr add 10.0.0.2/30 dev net0
+      - cmd: ip addr add 10.0.0.13/30 dev net1
+      - cmd: ip addr add 10.255.0.2/32 dev lo
+      - cmd: mkdir -p /run/bird
+      - cmd: bird -c /etc/bird/bird.conf
+  - name: R3
+    cmds:
+      - cmd: ip addr add 10.0.0.10/30 dev net0
+      - cmd: ip addr add 10.0.0.5/30 dev net1
+      - cmd: ip addr add 10.0.0.21/30 dev net2
+      - cmd: ip addr add 10.255.0.3/32 dev lo
+      - cmd: mkdir -p /run/bird
+      - cmd: bird -c /etc/bird/bird.conf
+  - name: R4
+    cmds:
+      - cmd: ip addr add 10.0.0.14/30 dev net0
+      - cmd: ip addr add 10.0.0.6/30 dev net1
+      - cmd: ip addr add 10.0.0.25/30 dev net2
+      - cmd: ip addr add 10.255.0.4/32 dev lo
+      - cmd: mkdir -p /run/bird
+      - cmd: bird -c /etc/bird/bird.conf
+  - name: S1
+    cmds:
+      - cmd: ip addr add 10.0.0.18/30 dev net0
+      - cmd: ip route replace default via 10.0.0.17
+  - name: S3
+    cmds:
+      - cmd: ip addr add 10.0.0.22/30 dev net0
+      - cmd: ip route replace default via 10.0.0.21
+  - name: S4
+    cmds:
+      - cmd: ip addr add 10.0.0.26/30 dev net0
+      - cmd: ip route replace default via 10.0.0.25
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: docker exec R1 ping -c2 10.0.0.1
+    - cmd: docker exec R1 ping -c2 10.0.0.2
+    - cmd: docker exec R1 ping -c2 10.0.0.9
+    - cmd: docker exec R1 ping -c2 10.0.0.10
+    - cmd: docker exec R1 ping -c2 10.0.0.17
+    - cmd: docker exec R1 ping -c2 10.0.0.18
+
+    - cmd: docker exec R2 ping -c2 10.0.0.1
+    - cmd: docker exec R2 ping -c2 10.0.0.2
+    - cmd: docker exec R2 ping -c2 10.0.0.13
+    - cmd: docker exec R2 ping -c2 10.0.0.14
+
+    - cmd: docker exec R3 ping -c2 10.0.0.9
+    - cmd: docker exec R3 ping -c2 10.0.0.10
+    - cmd: docker exec R3 ping -c2 10.0.0.5
+    - cmd: docker exec R3 ping -c2 10.0.0.6
+    - cmd: docker exec R3 ping -c2 10.0.0.21
+    - cmd: docker exec R3 ping -c2 10.0.0.22
+
+    - cmd: docker exec R4 ping -c2 10.0.0.13
+    - cmd: docker exec R4 ping -c2 10.0.0.14
+    - cmd: docker exec R4 ping -c2 10.0.0.5
+    - cmd: docker exec R4 ping -c2 10.0.0.6
+    - cmd: docker exec R4 ping -c2 10.0.0.25
+    - cmd: docker exec R4 ping -c2 10.0.0.26
+

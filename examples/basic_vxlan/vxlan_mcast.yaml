@@ -1,0 +1,142 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: BB_SW }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: C2#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: BB_SW }
+      - { name: net1, type: direct, args: C3#net0 }
+      - { name: net2, type: direct, args: C4#net0 }
+
+  - name: C1
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R1#net1 } ]
+  - name: C2
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R1#net2 } ]
+  - name: C3
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R2#net1 } ]
+  - name: C4
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R2#net2 } ]
+
+switches:
+  - name: BB_SW
+    interfaces:
+      - { name: net0, type: container, args: R1 }
+      - { name: net0, type: container, args: R2 }
+
+node_configs:
+
+  - name: R1
+    cmds:
+
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip link set net0 address 52:54:00:aa:01:00
+      - cmd: ip link set net1 address 52:54:00:aa:01:01
+      - cmd: ip link set net2 address 52:54:00:aa:01:02
+
+      - cmd: ip link add br100 type bridge
+      - cmd: ip link set dev br100 up
+      - cmd: ip addr add 10.100.0.1/16 dev br100
+      - cmd: >-
+          ip link add vxlan100 type vxlan
+          id 100 dstport 4789
+          group 239.0.1.1 dev net0
+
+      - cmd: ip link add br200 type bridge
+      - cmd: ip link set dev br200 up
+      - cmd: ip addr add 10.200.0.1/16 dev br200
+      - cmd: >-
+          ip link add vxlan200 type vxlan
+          id 200 dstport 4789
+          group 239.0.1.1 dev net0
+
+      - cmd: ip link set dev net1 master br100
+      - cmd: ip link set dev net1 promisc on
+      - cmd: ip link set dev net1 up
+      - cmd: ip link set dev vxlan100 master br100
+      - cmd: ip link set dev vxlan100 promisc on
+      - cmd: ip link set dev vxlan100 up
+
+      - cmd: ip link set dev net2 master br200
+      - cmd: ip link set dev net2 promisc on
+      - cmd: ip link set dev net2 up
+      - cmd: ip link set dev vxlan200 master br200
+      - cmd: ip link set dev vxlan200 promisc on
+      - cmd: ip link set dev vxlan200 up
+
+      - cmd: ip addr add 10.255.0.1/32 dev lo
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip route add 10.255.0.2/32 via 10.0.0.2
+
+  - name: R2
+    cmds:
+
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip link set net0 address 52:54:00:aa:02:00
+      - cmd: ip link set net1 address 52:54:00:aa:02:01
+      - cmd: ip link set net2 address 52:54:00:aa:02:02
+
+      - cmd: ip link add br100 type bridge
+      - cmd: ip link set dev br100 up
+      - cmd: ip addr add 10.100.0.2/16 dev br100
+      - cmd: >-
+          ip link add vxlan100 type vxlan
+          id 100 dstport 4789
+          group 239.0.1.1 dev net0
+
+      - cmd: ip link add br200 type bridge
+      - cmd: ip link set dev br200 up
+      - cmd: ip addr add 10.200.0.2/16 dev br200
+      - cmd: >-
+          ip link add vxlan200 type vxlan
+          id 200 dstport 4789
+          group 239.0.1.1 dev net0
+
+      - cmd: ip link set dev net1 master br100
+      - cmd: ip link set dev net1 promisc on
+      - cmd: ip link set dev net1 up
+      - cmd: ip link set dev vxlan100 master br100
+      - cmd: ip link set dev vxlan100 promisc on
+      - cmd: ip link set dev vxlan100 up
+
+      - cmd: ip link set dev net2 master br200
+      - cmd: ip link set dev net2 promisc on
+      - cmd: ip link set dev net2 up
+      - cmd: ip link set dev vxlan200 master br200
+      - cmd: ip link set dev vxlan200 promisc on
+      - cmd: ip link set dev vxlan200 up
+
+      - cmd: ip addr add 10.255.0.2/32 dev lo
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip route add 10.255.0.1/32 via 10.0.0.1
+
+  - name: C1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip link set net0 address 52:54:00:bb:01:00
+      - cmd: ip addr add 10.100.1.1/16 dev net0
+  - name: C2
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip link set net0 address 52:54:00:bb:02:00
+      - cmd: ip addr add 10.200.1.2/16 dev net0
+  - name: C3
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip link set net0 address 52:54:00:bb:03:00
+      - cmd: ip addr add 10.100.2.3/16 dev net0
+  - name: C4
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip link set net0 address 52:54:00:bb:04:00
+      - cmd: ip addr add 10.200.2.4/16 dev net0
+
+

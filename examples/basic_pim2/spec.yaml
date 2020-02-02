@@ -1,0 +1,201 @@
+# http://www.asciiflow.com
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+      - { name: net2, type: direct, args: R5#net0 }
+
+  # - name: R3
+  #   image: slankdev/ovs
+  #   interfaces:
+  #     - { name: ens7, type: phys }
+  #     - { name: ens8, type: phys }
+  #     - { name: ens9, type: phys }
+  #     - { name: net0, type: direct, args: R1#net1 }
+  #     - { name: net1, type: direct, args: R6#net0 }
+  #     - { name: net2, type: direct, args: R7#net0 }
+
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+      - { name: net1, type: direct, args: R6#net0 }
+      - { name: net2, type: direct, args: R7#net0 }
+
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+  - name: R5
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net2 }
+  - name: R6
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net1 }
+  - name: R7
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net2 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.disable_ipv6=0'
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip address 10.255.0.1/32" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "int net0" -c "ip address 10.0.0.1/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "int net1" -c "ip address 10.0.0.5/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "ip pim rp 10.255.0.1"
+          -c "router ospf"
+          -c " ospf router-id 10.255.0.1"
+          -c " network 10.255.0.1/32 area 0"
+          -c " network 10.0.0.0/30 area 0"
+          -c " network 10.0.0.4/30 area 0"
+  - name: R2
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.disable_ipv6=0'
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.255.0.2/32" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "int net0" -c "ip addr 10.0.0.2/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "int net1" -c "ip addr 10.0.0.9/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "int net2" -c "ip addr 10.0.0.13/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+          -c "ip pim rp 10.255.0.1"
+          -c "router ospf"
+          -c "router ospf"
+          -c " ospf router-id 10.255.0.2"
+          -c " network 10.255.0.2/32 area 0"
+          -c " network 10.0.0.0/30 area 0"
+          -c " network 10.0.0.8/30 area 0"
+          -c " network 10.0.0.12/30 area 0"
+  - name: R3
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.disable_ipv6=0'
+      # - cmd: /usr/lib/frr/frr start
+      # - cmd: >-
+      #     vtysh -c "conf t"
+      #     -c "int lo" -c "ip addr 10.255.0.3/32" -c "ip pim sm" -c "ip igmp" -c "exit"
+      #     -c "int net0" -c "ip addr 10.0.0.6/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+      #     -c "int net1" -c "ip addr 10.0.0.17/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+      #     -c "int net2" -c "ip addr 10.0.0.21/30" -c "ip pim sm" -c "ip igmp" -c "exit"
+      #     -c "ip pim rp 10.255.0.1"
+      #     -c "router ospf"
+      #     -c " ospf router-id 10.255.0.3"
+      #     -c " network 10.255.0.3/32 area 0"
+      #     -c " network 10.0.0.4/30 area 0"
+      #     -c " network 10.0.0.16/30 area 0"
+      #     -c " network 10.0.0.20/30 area 0"
+
+      - cmd: ovs-vsctl add-br ovs0
+      - cmd: ovs-vsctl add-port ovs0 net0 tag=1
+      - cmd: ovs-vsctl add-port ovs0 ens7 tag=1
+      - cmd: ovs-vsctl add-port ovs0 net1 tag=2
+      - cmd: ovs-vsctl add-port ovs0 ens8 tag=2
+      - cmd: ovs-vsctl add-port ovs0 net2 tag=3
+      - cmd: ovs-vsctl add-port ovs0 ens9 tag=3
+  - name: R4
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.forwarding=1'
+      - cmd: ip addr add 10.0.0.10/30 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 10.0.0.9
+  - name: R5
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.forwarding=1'
+      - cmd: ip addr add 10.0.0.14/30 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 10.0.0.13
+  - name: R6
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.forwarding=1'
+      - cmd: ip addr add 10.0.0.18/30 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 10.0.0.17
+  - name: R7
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.forwarding=1'
+      - cmd: ip addr add 10.0.0.22/30 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 10.0.0.21
+
+test:
+  - name: remote
+    cmds:
+      - cmd: docker exec R1 ping -c2 10.255.0.1
+      - cmd: docker exec R1 ping -c2 10.255.0.2
+      - cmd: docker exec R1 ping -c2 10.255.0.3
+      - cmd: docker exec R2 ping -c2 10.255.0.1
+      - cmd: docker exec R2 ping -c2 10.255.0.2
+      - cmd: docker exec R2 ping -c2 10.255.0.3
+      - cmd: docker exec R3 ping -c2 10.255.0.1
+      - cmd: docker exec R3 ping -c2 10.255.0.2
+      - cmd: docker exec R3 ping -c2 10.255.0.3
+      - cmd: docker exec R4 ping -c2 10.255.0.1
+      - cmd: docker exec R4 ping -c2 10.255.0.2
+      - cmd: docker exec R4 ping -c2 10.255.0.3
+      - cmd: docker exec R5 ping -c2 10.255.0.1
+      - cmd: docker exec R5 ping -c2 10.255.0.2
+      - cmd: docker exec R5 ping -c2 10.255.0.3
+      - cmd: docker exec R6 ping -c2 10.255.0.1
+      - cmd: docker exec R6 ping -c2 10.255.0.2
+      - cmd: docker exec R6 ping -c2 10.255.0.3
+      - cmd: docker exec R7 ping -c2 10.255.0.1
+      - cmd: docker exec R7 ping -c2 10.255.0.2
+      - cmd: docker exec R7 ping -c2 10.255.0.3
+

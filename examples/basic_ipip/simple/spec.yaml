@@ -1,0 +1,39 @@
+
+meta:
+  namespace: ns_
+
+nodes:
+  - name: R1
+    image: slankdev/frr:centos-7-stable-7.0
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr:centos-7-stable-7.0
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R3
+    image: slankdev/frr:centos-7-stable-7.0
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip route add default via 10.0.0.2
+      - cmd: ip tunnel add tun0 mode ipip remote 10.1.0.2 local 10.0.0.1 dev net0
+      - cmd: ip addr add 1.1.1.1 peer 1.1.1.2 dev tun0
+      - cmd: ip link set tun0 up
+  - name: R2
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip addr add 10.1.0.1/24 dev net1
+  - name: R3
+    cmds:
+      - cmd: ip addr add 10.1.0.2/24 dev net0
+      - cmd: ip route add default via 10.1.0.1
+      - cmd: ip tunnel add tun0 mode ipip remote 10.0.0.1 local 10.1.0.2 dev net0
+      - cmd: ip addr add 1.1.1.2 peer 1.1.1.1 dev tun0
+      - cmd: ip link set tun0 up
+

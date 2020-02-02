@@ -1,0 +1,77 @@
+
+postinit:
+  - cmds:
+      - cmd: docker cp Corefile.NS1 NS1:/Corefile
+      # - cmd: docker cp Corefile.NS2 NS2:/Corefile
+      # - cmd: docker cp Corefile.NS3 NS3:/Corefile
+
+nodes:
+  - name: S1
+    image: slankdev/coredns:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: NS1#net0 }
+      - { name: net2, type: direct, args: NS2#net0 }
+      - { name: net3, type: direct, args: NS3#net0 }
+      - { name: net4, type: direct, args: KVS#net0 }
+
+  - name: R1
+    image: slankdev/coredns:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: S1#net0 }
+
+  - name: KVS
+    image: slankdev/etcd:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: S1#net4 }
+
+  - name: NS1
+    image: slankdev/coredns:centos-7
+    net_base: bridge
+    interfaces:
+      - { name: net0, type: direct, args: S1#net1 }
+  - name: NS2
+    image: slankdev/coredns:centos-7
+    net_base: bridge
+    interfaces:
+      - { name: net0, type: direct, args: S1#net2 }
+  - name: NS3
+    image: slankdev/coredns:centos-7
+    net_base: bridge
+    interfaces:
+      - { name: net0, type: direct, args: S1#net3 }
+
+node_configs:
+
+  - name: S1
+    cmds:
+      - cmd: ip link add br0 type bridge
+      - cmd: ip link set br0 up
+      - cmd: ip link set net0 master br0
+      - cmd: ip link set net1 master br0
+      - cmd: ip link set net2 master br0
+      - cmd: ip link set net3 master br0
+      - cmd: ip link set net4 master br0
+
+  - name: KVS
+    cmds:
+      - cmd: ip addr add 10.0.0.100/24 dev net0
+      - cmd: >-
+          nohup etcd --listen-peer-urls="http://10.0.0.100:2380"
+          --listen-client-urls="http://10.0.0.100:2379"
+          --advertise-client-urls="http://10.0.0.100:2379" &
+      - cmd: sleep 3
+      - cmd: etcdctl --endpoints="http://10.0.0.100:2379" put /dns-server01/org/ichihara/test1/server01 '{"host":"99.1.0.1","port":80}'
+      - cmd: etcdctl --endpoints="http://10.0.0.100:2379" put /dns-server01/org/ichihara/test1/server02 '{"host":"99.1.0.2","port":80}'
+      - cmd: etcdctl --endpoints="http://10.0.0.100:2379" put /dns-server01/org/ichihara/test2/server01 '{"host":"99.2.0.2","port":80}'
+
+  - name: NS1
+    cmds:
+      - cmd: ip addr add 10.0.0.254/24 dev net0
+      - cmd: nohup coredns -conf /Corefile &
+
+  - name: R1
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: sh -c 'echo nameserver 10.0.0.254 > /etc/resolv.conf'
+

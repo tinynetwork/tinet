@@ -1,0 +1,92 @@
+
+nodes:
+  - name: C1
+    image: slankdev/sandbox
+    interfaces:
+      - { name: net0, type: direct, args: P1#net0 }
+  - name: P1
+    image: slankdev/sandbox
+    interfaces:
+      - { name: net0, type: direct, args: C1#net0 }
+      - { name: net1, type: bridge, args: SW }
+  - name: S1
+    image: slankdev/sandbox
+    interfaces: [ { name: net0, type: bridge, args: SW } ]
+  - name: S2
+    image: slankdev/sandbox
+    interfaces: [ { name: net0, type: bridge, args: SW } ]
+  - name: S3
+    image: slankdev/sandbox
+    interfaces: [ { name: net0, type: bridge, args: SW } ]
+  - name: S4
+    image: slankdev/sandbox
+    interfaces: [ { name: net0, type: bridge, args: SW } ]
+
+switches:
+  - name: SW
+    interfaces:
+      - { name: net1, type: docker, args: P1 }
+      - { name: net0, type: docker, args: S1 }
+      - { name: net0, type: docker, args: S2 }
+      - { name: net0, type: docker, args: S3 }
+      - { name: net0, type: docker, args: S4 }
+
+node_configs:
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+  - name: P1
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip addr add 10.1.0.254/24 dev net1
+      - cmd: bash -c "echo 'global                       ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  daemon                     ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '                             ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo 'defaults                     ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  log global                 ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  mode tcp                   ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '                             ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo 'frontend main                ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  bind *:80                  ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  default_backend static     ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '                             ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo 'backend static               ' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  server S1 10.1.0.1:80 check' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  server S2 10.1.0.2:80 check' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  server S3 10.1.0.3:80 check' >> /root/haproxy.conf"
+      - cmd: bash -c "echo '  server S4 10.1.0.4:80 check' >> /root/haproxy.conf"
+      - cmd: haproxy -f /root/haproxy.conf
+
+  - name: S1
+    cmds:
+      - cmd: ip addr add 10.1.0.1/24 dev net0
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+  - name: S2
+    cmds:
+      - cmd: ip addr add 10.1.0.2/24 dev net0
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+  - name: S3
+    cmds:
+      - cmd: ip addr add 10.1.0.3/24 dev net0
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+  - name: S4
+    cmds:
+      - cmd: ip addr add 10.1.0.4/24 dev net0
+      - cmd: sh -c "cat /etc/hostname > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: docker exec C1 ping -c2 10.0.0.1
+    - cmd: docker exec C1 ping -c2 10.0.0.2
+    - cmd: docker exec P1 ping -c2 10.0.0.1
+    - cmd: docker exec P1 ping -c2 10.0.0.2
+    - cmd: docker exec P1 ping -c2 10.1.0.1
+    - cmd: docker exec P1 ping -c2 10.1.0.2
+    - cmd: docker exec P1 ping -c2 10.1.0.3
+    - cmd: docker exec P1 ping -c2 10.1.0.4
+

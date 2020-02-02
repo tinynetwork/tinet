@@ -1,0 +1,181 @@
+
+# DESCRIPTION:
+#    Basic iBGP RR test using and FRR
+#    create reachability with loopback with OSPF
+#
+# INIT:
+#    cns spec.yaml init | sudo sh
+#    cns spec.yaml conf | sudo sh
+#    cns spec.yaml test | sudo sh
+# FINI:
+#    cns spec.yaml fini | sudo sh
+# TOPO:
+#        10.0.0.0/24                             .1(net0)
+#     B0----+-----------------+-----------------+------RR0(255.1.0.1)
+#           |                 |                 |
+#           |.10(net0)        |.11(net0)        |.12(net0)
+#          R0(255.10.0.1)    R1(255.11.0.1)    R2(255.12.0.1)
+#           |.1(net1)         |.1(net1)         |.1(net1)
+#           |                 |                 |
+#           |192.168.10.0/24  |192.168.11.0/24  |192.168.12.0/24
+#           |                 |                 |
+#           |.2(net0)         |.2(net0)         |.2(net0)
+#          C0                C1                C2
+#
+
+nodes:
+  - name: RR0
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+
+  - name: R0
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: C0#net0 }
+  - name: C0
+    image: slankdev/ubuntu:16.04
+    interfaces:
+      - { name: net0, type: direct, args: R0#net1 }
+
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: C1#net0 }
+  - name: C1
+    image: slankdev/ubuntu:16.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: C2#net0 }
+  - name: C2
+    image: slankdev/ubuntu:16.04
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+switches:
+  - name: B0
+    interfaces:
+      - { name: net0, type: container, args: RR0 }
+      - { name: net0, type: container, args: R0 }
+      - { name: net0, type: container, args: R1 }
+      - { name: net0, type: container, args: R2 }
+
+node_configs:
+  - name: RR0
+    cmds:
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo" -c "ip address 10.255.0.1/32" -c "exit"
+          -c "interface net0" -c "ip address 10.0.0.1/24" -c "exit"
+          -c "router ospf"
+          -c "  network 10.255.0.1/32 area 0"
+          -c "  network 10.0.0.0/24 area 0"
+          -c "exit"
+          -c "router bgp 100"
+          -c "  bgp router-id 10.255.0.1"
+          -c "  neighbor 10.255.0.10 remote-as 100"
+          -c "  neighbor 10.255.0.10 update-source lo"
+          -c "  neighbor 10.255.0.11 remote-as 100"
+          -c "  neighbor 10.255.0.11 update-source lo"
+          -c "  neighbor 10.255.0.12 remote-as 100"
+          -c "  neighbor 10.255.0.12 update-source lo"
+          -c "  address-family ipv4 unicast"
+          -c "     neighbor 10.255.0.10 route-reflector-client"
+          -c "     neighbor 10.255.0.11 route-reflector-client"
+          -c "     neighbor 10.255.0.12 route-reflector-client"
+          -c "  exit-address-family"
+          -c "exit"
+
+  - name: R0
+    cmds:
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo" -c "ip address 10.255.0.10/32" -c "exit"
+          -c "interface net0" -c "ip address 10.0.0.10/24" -c "exit"
+          -c "interface net1" -c "ip address 192.168.10.1/24" -c "exit"
+          -c "router ospf"
+          -c "  network 10.255.0.10/32 area 0"
+          -c "  network 10.0.0.0/24 area 0"
+          -c "exit"
+          -c "router bgp 100"
+          -c "  bgp router-id 10.255.0.10"
+          -c "  neighbor 10.255.0.1 remote-as 100"
+          -c "  neighbor 10.255.0.1 update-source lo"
+          -c "  network 192.168.10.0/24"
+          -c "exit"
+
+  - name: R1
+    cmds:
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo" -c "ip address 10.255.0.11/32" -c "exit"
+          -c "interface net0" -c "ip address 10.0.0.11/24" -c "exit"
+          -c "interface net1" -c "ip address 192.168.11.1/24" -c "exit"
+          -c "router ospf"
+          -c "  network 10.255.0.11/32 area 0"
+          -c "  network 10.0.0.0/24 area 0"
+          -c "exit"
+          -c "router bgp 100"
+          -c "  bgp router-id 10.255.0.11"
+          -c "  neighbor 10.255.0.1 remote-as 100"
+          -c "  neighbor 10.255.0.1 update-source lo"
+          -c "  network 192.168.11.0/24"
+          -c "exit"
+
+  - name: R2
+    cmds:
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "interface lo" -c "ip address 10.255.0.12/32" -c "exit"
+          -c "interface net0" -c "ip address 10.0.0.12/24" -c "exit"
+          -c "interface net1" -c "ip address 192.168.12.1/24" -c "exit"
+          -c "router ospf"
+          -c "  network 10.255.0.12/32 area 0"
+          -c "  network 10.0.0.0/24 area 0"
+          -c "exit"
+          -c "router bgp 100"
+          -c "  bgp router-id 10.255.0.12"
+          -c "  neighbor 10.255.0.1 remote-as 100"
+          -c "  neighbor 10.255.0.1 update-source lo"
+          -c "  network 192.168.12.0/24"
+          -c "exit"
+
+  - name: C0
+    cmds:
+      - cmd: ip addr add 192.168.10.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.10.1
+  - name: C1
+    cmds:
+      - cmd: ip addr add 192.168.11.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.11.1
+  - name: C2
+    cmds:
+      - cmd: ip addr add 192.168.12.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.12.1
+
+test:
+  - cmds:
+    - cmd: docker exec RR0 ping -c2 10.255.0.1
+    - cmd: docker exec RR0 ping -c2 10.255.0.10
+    - cmd: docker exec RR0 ping -c2 10.255.0.11
+    - cmd: docker exec RR0 ping -c2 10.255.0.12
+    - cmd: docker exec C0 ping -c2 192.168.10.1
+    - cmd: docker exec C0 ping -c2 192.168.11.2
+    - cmd: docker exec C0 ping -c2 192.168.12.2
+    - cmd: docker exec C1 ping -c2 192.168.11.1
+    - cmd: docker exec C1 ping -c2 192.168.10.2
+    - cmd: docker exec C1 ping -c2 192.168.12.2
+    - cmd: docker exec C2 ping -c2 192.168.12.1
+    - cmd: docker exec C2 ping -c2 192.168.10.2
+    - cmd: docker exec C2 ping -c2 192.168.11.2
+

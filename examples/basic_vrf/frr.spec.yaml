@@ -1,0 +1,126 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+      - { name: net2, type: direct, args: C3#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+      - { name: net2, type: direct, args: C4#net0 }
+
+  - name: C1
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R1#net1 } ]
+  - name: C2
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R2#net1 } ]
+  - name: C3
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R1#net2 } ]
+  - name: C4
+    image: slankdev/ubuntu:18.04
+    interfaces: [ { name: net0, type: direct, args: R2#net2 } ]
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+
+      # following operation can't be executed by FRR.
+      - cmd: ip link add link net0 name net0.10 type vlan id 10
+      - cmd: ip link add link net0 name net0.20 type vlan id 20
+      - cmd: ip link add red type vrf table 10
+      - cmd: ip link add blu type vrf table 20
+      - cmd: ip link set dev net1 vrf red
+      - cmd: ip link set dev net2 vrf blu
+      - cmd: ip link set dev net0.10 vrf red
+      - cmd: ip link set dev net0.20 vrf blu
+
+      # configure FRR
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'int net0.10 vrf red'
+          -c ' ip address 10.10.255.1/24'
+          -c ' no shutdown'
+          -c 'int net0.20 vrf blu'
+          -c ' ip address 10.20.255.1/24'
+          -c ' no shutdown'
+          -c 'int net1 vrf red'
+          -c ' ip address 10.10.1.1/24'
+          -c ' no shutdown'
+          -c 'int net2 vrf blu'
+          -c ' ip address 10.20.1.1/24'
+          -c ' no shutdown'
+          -c 'int red'
+          -c ' no shutdown'
+          -c 'int blu'
+          -c ' no shutdown'
+          -c 'ip route 10.10.2.0/24 10.10.255.2 vrf red'
+          -c 'ip route 10.20.2.0/24 10.20.255.2 vrf blu'
+
+  - name: R2
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+
+      # following operation can't be executed by FRR.
+      - cmd: ip link add link net0 name net0.10 type vlan id 10
+      - cmd: ip link add link net0 name net0.20 type vlan id 20
+      - cmd: ip link add red type vrf table 10
+      - cmd: ip link add blu type vrf table 20
+      - cmd: ip link set dev net1 vrf red
+      - cmd: ip link set dev net2 vrf blu
+      - cmd: ip link set dev net0.10 vrf red
+      - cmd: ip link set dev net0.20 vrf blu
+
+      # configure FRR
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'int net0.10 vrf red'
+          -c ' ip address 10.10.255.2/24'
+          -c ' no shutdown'
+          -c 'int net0.20 vrf blu'
+          -c ' ip address 10.20.255.2/24'
+          -c ' no shutdown'
+          -c 'int net1 vrf red'
+          -c ' ip address 10.10.2.1/24'
+          -c ' no shutdown'
+          -c 'int net2 vrf blu'
+          -c ' ip address 10.20.2.1/24'
+          -c ' no shutdown'
+          -c 'int red'
+          -c ' no shutdown'
+          -c 'int blu'
+          -c ' no shutdown'
+          -c 'ip route 10.10.1.0/24 10.10.255.1 vrf red'
+          -c 'ip route 10.20.1.0/24 10.20.255.1 vrf blu'
+
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.10.1.2/24 dev net0
+      - cmd: ip route add default via 10.10.1.1
+  - name: C2
+    cmds:
+      - cmd: ip addr add 10.10.2.2/24 dev net0
+      - cmd: ip route add default via 10.10.2.1
+  - name: C3
+    cmds:
+      - cmd: ip addr add 10.20.1.2/24 dev net0
+      - cmd: ip route add default via 10.20.1.1
+  - name: C4
+    cmds:
+      - cmd: ip addr add 10.20.2.2/24 dev net0
+      - cmd: ip route add default via 10.20.2.1
+
+test:
+  - name: remote
+    cmds:
+    - cmd: docker exec C1 ping -c2 10.10.2.2
+    - cmd: docker exec C2 ping -c2 10.10.1.2
+    - cmd: docker exec C3 ping -c2 10.20.2.2
+    - cmd: docker exec C4 ping -c2 10.20.1.2
+

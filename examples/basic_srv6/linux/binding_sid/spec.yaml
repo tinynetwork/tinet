@@ -1,0 +1,225 @@
+
+postinit:
+  - cmds:
+    - cmd: make -C /home/vagrant/git/srdump install_docker
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+      - { name: net1, type: direct, args: S11#net0 }
+      - { name: net2, type: direct, args: S21#net0 }
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+      - { name: net1, type: direct, args: S12#net0 }
+      - { name: net2, type: direct, args: S22#net0 }
+  - name: S11
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net1 }
+  - name: S12
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R4#net1 }
+  - name: S21
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net2 }
+  - name: S22
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R4#net2 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+      - cmd: ip addr add fc00:1::1/64 dev lo
+      - cmd: ip addr add 2000::1/64 dev net0
+      - cmd: ip addr add 2001::1/64 dev net1
+      - cmd: ip -6 route add fc00:2::/64 via 2000::2
+      - cmd: ip -6 route add fc00:3::/64 via 2001::2
+      ##
+      - cmd: ip sr tunsrc set fc00:1::1
+      - cmd: ip -6 route add fc00:1::10 encap seg6local action End.B6.Encaps srh segs fc00:2::10 dev net0
+      - cmd: ip -6 route add fc00:1::11 encap seg6local action End.DX6 nh6 2001::2 dev net0
+      ##
+      # ip -6 route add fc00:1::20 encap seg6local action End.B6 srh segs fc00:2::20 dev net0
+  - name: R2
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+      - cmd: ip addr add fc00:2::1/64 dev lo
+      - cmd: ip addr add 2000::2/64 dev net0
+      - cmd: ip addr add 2001::10/64 dev net1
+      - cmd: ip -6 route add fc00:1::/64 via 2000::1
+      - cmd: ip -6 route add fc00:4::/64 via 2001::20
+      ##
+      - cmd: ip sr tunsrc set fc00:2::1
+      - cmd: ip -6 route add fc00:2::10 encap seg6local action End.DX6 nh6 2001::20 dev net1
+      - cmd: ip -6 route add fc00:2::11 encap seg6local action End.B6.Encaps srh segs fc00:1::11 dev net0
+      ##
+      #?XXX ip -6 route add fc00:2::20 encap seg6local action End via 2001::20
+  - name: R3
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net2.rp_filter=0'
+      - cmd: ip addr add fc00:3::1/64 dev lo
+      - cmd: ip addr add 2001::2/64 dev net0
+      - cmd: ip addr add 10.10.1.1/24 dev net1
+      - cmd: ip addr add 10.20.1.1/24 dev net2
+      - cmd: ip -6 route add fc00:1::/64 via 2001::1
+      ##
+      - cmd: ip sr tunsrc set fc00:3::1
+      - cmd: ip route add 10.10.2.0/24 encap seg6 mode encap segs fc00:1::10,fc00:4::10 dev net0
+      - cmd: ip -6 route add fc00:3::11 encap seg6local action End.DX4 nh4 10.10.1.2 dev net0
+      ##
+      # ip route add 10.20.2.0/24 encap seg6 mode encap segs fc00:1::20,fc00:4::20 dev net0
+  - name: R4
+    cmds:
+      - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+      - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+      - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.default.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+      - cmd: sysctl -w 'net.ipv6.conf.net2.seg6_enabled=1'
+      - cmd: sysctl -w 'net.ipv4.conf.net2.rp_filter=0'
+      - cmd: ip addr add fc00:4::1/64 dev lo
+      - cmd: ip addr add 2001::20/64 dev net0
+      - cmd: ip addr add 10.10.2.1/24 dev net1
+      - cmd: ip addr add 10.20.2.1/24 dev net2
+      - cmd: ip -6 route add fc00:2::/64 via 2001::10
+      ##
+      - cmd: ip sr tunsrc set fc00:4::1
+      - cmd: ip -6 route add fc00:4::10 encap seg6local action End.DX4 nh4 10.10.2.2 dev net0
+      - cmd: ip route add 10.10.1.0/24 encap seg6 mode encap segs fc00:2::11,fc00:3::11 dev net0
+
+  - name: S11
+    cmds:
+      - cmd: ip addr add 10.10.1.2/24 dev net0
+      - cmd: ip route replace default via 10.10.1.1
+  - name: S12
+    cmds:
+      - cmd: ip addr add 10.10.2.2/24 dev net0
+      - cmd: ip route replace default via 10.10.2.1
+  - name: S21
+    cmds:
+      - cmd: ip addr add 10.20.1.2/24 dev net0
+      - cmd: ip route replace default via 10.20.1.1
+  - name: S22
+    cmds:
+      - cmd: ip addr add 10.20.2.2/24 dev net0
+      - cmd: ip route replace default via 10.20.2.1
+
+test:
+  - name: p2p
+    cmds:
+      - cmd: docker exec S11 ping -c2 10.10.1.1
+      - cmd: docker exec S11 ping -c2 10.10.1.2
+      - cmd: docker exec S12 ping -c2 10.10.2.1
+      - cmd: docker exec S12 ping -c2 10.10.2.2
+      - cmd: docker exec S21 ping -c2 10.20.1.1
+      - cmd: docker exec S21 ping -c2 10.20.1.2
+      - cmd: docker exec S22 ping -c2 10.20.2.1
+      - cmd: docker exec S22 ping -c2 10.20.2.2
+      - cmd: docker exec R1 ping -c2 2000::1
+      - cmd: docker exec R1 ping -c2 2000::2
+      - cmd: docker exec R1 ping -c2 2001::1
+      - cmd: docker exec R1 ping -c2 2001::2
+      - cmd: docker exec R2 ping -c2 2000::1
+      - cmd: docker exec R2 ping -c2 2000::2
+      - cmd: docker exec R2 ping -c2 2001::10
+      - cmd: docker exec R2 ping -c2 2001::20
+      - cmd: docker exec R3 ping -c2 2001::1
+      - cmd: docker exec R3 ping -c2 2001::2
+      - cmd: docker exec R3 ping -c2 10.10.1.1
+      - cmd: docker exec R3 ping -c2 10.10.1.2
+      - cmd: docker exec R3 ping -c2 10.20.1.1
+      - cmd: docker exec R3 ping -c2 10.20.1.2
+      - cmd: docker exec R4 ping -c2 2001::10
+      - cmd: docker exec R4 ping -c2 2001::20
+      - cmd: docker exec R4 ping -c2 10.10.2.1
+      - cmd: docker exec R4 ping -c2 10.10.2.2
+      - cmd: docker exec R4 ping -c2 10.20.2.1
+      - cmd: docker exec R4 ping -c2 10.20.2.2
+  - name: bb
+    cmds:
+      - cmd: docker exec R1 ping -c2 fc00:1::1
+      - cmd: docker exec R1 ping -c2 fc00:2::1
+      - cmd: docker exec R1 ping -c2 fc00:3::1
+      - cmd: docker exec R2 ping -c2 fc00:1::1
+      - cmd: docker exec R2 ping -c2 fc00:2::1
+      - cmd: docker exec R2 ping -c2 fc00:4::1
+      - cmd: docker exec R3 ping -c2 fc00:1::1
+      - cmd: docker exec R3 ping -c2 fc00:3::1
+      - cmd: docker exec R4 ping -c2 fc00:2::1
+      - cmd: docker exec R4 ping -c2 fc00:4::1
+  - name: vpn
+    cmds:
+      - cmd: docker exec S11 ping -c2 10.10.2.2
+      # - cmd: docker exec S12 ping -c2 10.10.1.2
+      # - cmd: docker exec S21 ping -c2 10.20.2.2
+      # - cmd: docker exec S22 ping -c2 10.20.1.2
+
+

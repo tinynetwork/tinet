@@ -1,0 +1,54 @@
+# http://www.asciiflow.com
+
+nodes:
+  - name: R0
+    image: tmp
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+      - { name: net1, type: direct, args: S0#net0 }
+  - name: S0
+    image: tmp
+    interfaces:
+      - { name: net0, type: direct, args: R0#net1 }
+  - name: S1
+    image: tmp
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+  - name: S2
+    image: tmp
+    interfaces:
+      - { name: net0, type: bridge, args: B0 }
+
+switches:
+  - name: B0
+    interfaces:
+      - { name: net0, type: container, args: R0 }
+      - { name: net0, type: container, args: S1 }
+      - { name: net0, type: container, args: S2 }
+
+node_configs:
+  - name: R0
+    cmds:
+      - cmd: sh -c 'echo  > /etc/ppp/options'
+      - cmd: sh -c 'echo asyncmap 0           >> /etc/ppp/options'
+      - cmd: sh -c 'echo auth                 >> /etc/ppp/options'
+      - cmd: sh -c 'echo crtscts              >> /etc/ppp/options'
+      - cmd: sh -c 'echo lock                 >> /etc/ppp/options'
+      - cmd: sh -c 'echo hide-password        >> /etc/ppp/options'
+      - cmd: sh -c 'echo modem                >> /etc/ppp/options'
+      - cmd: sh -c 'echo +pap                 >> /etc/ppp/options'
+      - cmd: sh -c 'echo proxyarp             >> /etc/ppp/options'
+      - cmd: sh -c 'echo lcp-echo-interval 30 >> /etc/ppp/options'
+      - cmd: sh -c 'echo lcp-echo-failure 4   >> /etc/ppp/options'
+      - cmd: sh -c 'echo noipx                >> /etc/ppp/options'
+      - cmd: sh -c 'echo  > /etc/ppp/pap-secrets'
+      - cmd: sh -c 'echo testuser1 * "password" 172.16.0.101 >> /etc/ppp/pap-secrets'
+      - cmd: sh -c 'echo testuser2 * "password" 172.16.0.102 >> /etc/ppp/pap-secrets'
+      - cmd: ip link set net0 up
+      - cmd: pppoe-server -I net0 -C slankPPPoEserv -L 172.16.0.254 -O /etc/ppp/options
+
+test:
+  - cmds:
+    - cmd: docker exec S1 echo slankdev slankdev
+    - cmd: docker exec S2 echo slankdev slankdev
+

@@ -1,0 +1,166 @@
+
+nodes:
+
+  - name: C1
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: S1#net0, }
+  - name: C2
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: S2#net0, }
+
+  - name: S1
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: C1#net0, }
+      - { name: net1, type: direct, args: N1#net0, }
+      - { name: net2, type: direct, args: N2#net0, }
+  - name: S2
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: C2#net0, }
+      - { name: net1, type: direct, args: N1#net1, }
+      - { name: net2, type: direct, args: N2#net1, }
+
+  - name: N1
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: S1#net1, }
+      - { name: net1, type: direct, args: S2#net1, }
+      - { name: fab0, type: direct, args: N2#fab0, }
+  - name: N2
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: S1#net2, }
+      - { name: net1, type: direct, args: S2#net2, }
+      - { name: fab0, type: direct, args: N1#fab0, }
+
+node_configs:
+
+  - name: C1
+    cmds:
+      - cmd: ip addr add 8.8.8.8/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 1"
+          -c " bgp router-id 10.255.0.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c " exit-address-family"
+          -c "!"
+          -c "do write"
+      - cmd: sh -c "echo It works > index.html"
+      - cmd: nohup python3 -m http.server 80 &
+  - name: C2
+    cmds:
+      - cmd: ip addr add 10.0.0.1/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 2"
+          -c " bgp router-id 10.255.0.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c " exit-address-family"
+          -c "!"
+          -c "do write"
+
+  - name: S1
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 3"
+          -c " bgp router-id 10.255.0.3"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " neighbor net1 interface peer-group FABRIC"
+          -c " neighbor net2 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c " exit-address-family"
+          -c "!"
+          -c "do write"
+
+  - name: S2
+    cmds:
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 4"
+          -c " bgp router-id 10.255.0.4"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " neighbor net1 interface peer-group FABRIC"
+          -c " neighbor net2 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  redistribute connected"
+          -c " exit-address-family"
+          -c "!"
+          -c "do write"
+
+  - name: N1
+    cmds:
+      - cmd: ip addr add 99.0.0.1/24 dev fab0
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 5"
+          -c " bgp router-id 10.255.0.5"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor net0 interface remote-as external"
+          -c " neighbor net1 interface remote-as external"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 0.0.0.0/0"
+          -c "  redistribute connected"
+          -c "  neighbor net0 route-map MAP1 out"
+          -c "  neighbor net1 route-map MAP2 out"
+          -c " exit-address-family"
+          -c "!"
+          -c "route-map MAP1 permit 1"
+          -c " match ip address prefix-list PLIST1"
+          -c "!"
+          -c "route-map MAP2 permit 1"
+          -c " match ip address prefix-list PLIST2"
+          -c "!"
+          -c "ip prefix-list PLIST1 seq 5 permit 20.0.0.0/8 ge 24"
+          -c "ip prefix-list PLIST2 seq 5 permit 0.0.0.0/0"
+          -c "!"
+          -c "do write"
+
+      - cmd: ip addr add 20.0.0.1/32 dev lo
+      - cmd: ip addr add 20.0.0.2/32 dev lo
+      - cmd: iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j SNAT -p tcp --to-source 20.0.0.1:10000-20008
+
+  - name: N2
+    cmds:
+      - cmd: ip addr add 99.0.0.2/24 dev fab0
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: ip addr add 20.0.0.1/32 dev lo
+      - cmd: ip addr add 20.0.0.2/32 dev lo
+      - cmd: iptables -t nat -A POSTROUTING -s 10.0.0.0/24 -j SNAT -p tcp --to-source 20.0.0.1:10000-20008
+

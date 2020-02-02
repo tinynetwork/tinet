@@ -1,0 +1,126 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+      - { name: net2, type: direct, args: R4#net0 }
+
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net2 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0' -c 'ipv6 nd ra-interval 3' -c 'no ipv6 nd suppress-ra'
+          -c 'interface net1' -c 'ipv6 nd ra-interval 3' -c 'no ipv6 nd suppress-ra'
+          -c 'interface net2' -c 'ipv6 nd ra-interval 3' -c 'no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65001'
+          -c ' bgp router-id 10.255.0.1'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor net0 interface peer-group PEER'
+          -c ' neighbor net1 interface peer-group PEER'
+          -c ' neighbor net2 interface peer-group PEER'
+          -c '!'
+          -c ' address-family ipv4 unicast'
+          -c '  neighbor net0 activate'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'ip prefix-list PREF1 seq 5 permit 10.0.0.1/32'
+          -c 'ip prefix-list PREF2 seq 5 permit 10.0.0.2/32'
+          -c 'ip prefix-list PREF3 seq 5 permit 10.0.0.3/32'
+
+  - name: R2
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0' -c 'ipv6 nd ra-interval 3' -c 'no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65002'
+          -c ' bgp router-id 10.255.0.2'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor net0 interface peer-group PEER'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  network 10.0.0.1/32 route-map COM1'
+          -c '  network 10.0.0.2/32 route-map COM2'
+          -c '  network 10.0.0.3/32 route-map COM3'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'ip prefix-list PREF1 seq 5 permit 10.0.0.1/32'
+          -c 'ip prefix-list PREF2 seq 5 permit 10.0.0.2/32'
+          -c 'ip prefix-list PREF3 seq 5 permit 10.0.0.3/32'
+          -c '!'
+          -c 'route-map COM1 permit 1' -c 'set community 65002:1' -c 'exit'
+          -c 'route-map COM2 permit 1' -c 'set community 65002:2' -c 'exit'
+          -c 'route-map COM3 permit 1' -c 'set community 65002:3' -c 'exit'
+
+  - name: R3
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0' -c 'ipv6 nd ra-interval 3' -c 'no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65003'
+          -c ' bgp router-id 10.255.0.3'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor net0 interface peer-group PEER'
+          -c ' !'
+          -c ' address-family ipv4 unicast'
+          -c '  neighbor net0 route-map MAP1 in'
+          -c ' exit-address-family'
+          -c '!'
+          -c 'route-map MAP1 permit 1'
+          -c ' match ip address prefix-list PREF2'
+          -c ' !match community 65002:2'
+          -c ' exit'
+          -c '!'
+          -c 'ip prefix-list PREF1 seq 5 permit 10.0.0.1/32'
+          -c 'ip prefix-list PREF2 seq 5 permit 10.0.0.2/32'
+          -c 'ip prefix-list PREF3 seq 5 permit 10.0.0.3/32'
+
+  - name: R4
+    cmds:
+      - cmd: sh -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0' -c 'ipv6 nd ra-interval 3' -c 'no ipv6 nd suppress-ra'
+          -c '!'
+          -c 'router bgp 65004'
+          -c ' bgp router-id 10.255.0.4'
+          -c ' bgp bestpath as-path multipath-relax'
+          -c ' neighbor PEER peer-group'
+          -c ' neighbor PEER remote-as external'
+          -c ' neighbor net0 interface peer-group PEER'
+          -c '!'
+          -c 'ip prefix-list PREF1 seq 5 permit 10.0.0.1/32'
+          -c 'ip prefix-list PREF2 seq 5 permit 10.0.0.2/32'
+          -c 'ip prefix-list PREF3 seq 5 permit 10.0.0.3/32'
+

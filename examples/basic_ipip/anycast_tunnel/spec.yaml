@@ -1,0 +1,204 @@
+
+postinit:
+  - cmds:
+    - cmd: docker cp /root/dotfiles/bin/linkstat.py CLOS:/usr/bin/linkstat.py
+    - cmd: docker cp /root/dotfiles/bin/http_server.py CS:/usr/bin/http_server.py
+    - cmd: docker cp /root/dotfiles/bin/echo_server.py CS:/usr/bin/echo_server.py
+
+nodes:
+  - name: CLOS
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net1, type: direct, args: N1#net0 }
+      - { name: net2, type: direct, args: N2#net0 }
+      - { name: net3, type: direct, args: N2#net0 }
+      - { name: up1, type: direct, args: CS#net0 }
+      - { name: dn1, type: direct, args: HV1#net0 }
+
+  - name: N1
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: CLOS#net1 }
+  - name: N2
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: CLOS#net2 }
+  - name: N3
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: CLOS#net3 }
+
+  - name: HV1
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: CLOS#dn1 }
+  - name: CS
+    image: slankdev/conntrack:centos-7
+    interfaces:
+      - { name: net0, type: direct, args: CLOS#up1 }
+
+node_configs:
+  - name: CLOS
+    cmds:
+      - cmd: ip addr add 10.255.0.10/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: sysctl -w net.ipv4.fib_multipath_hash_policy=1
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 10"
+          -c " bgp router-id 10.255.0.10"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net1 interface peer-group FABRIC"
+          -c " neighbor net2 interface peer-group FABRIC"
+          -c " neighbor net3 interface peer-group FABRIC"
+          -c " neighbor up1 interface peer-group FABRIC"
+          -c " neighbor dn1 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.255.0.10/32"
+          -c " exit-address-family"
+
+  - name: N1
+    cmds:
+      - cmd: ip addr add 10.255.0.1/32 dev lo
+      - cmd: ip addr add 10.255.0.254/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 1"
+          -c " bgp router-id 10.255.0.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.255.0.1/32"
+          -c "  network 10.255.0.254/32"
+          -c " exit-address-family"
+      - cmd: ip tunnel add tun-nat2 mode ipip local 10.255.0.1 remote 10.255.0.2 dev net0
+      - cmd: ip addr add 10.254.0.1/32 peer 10.254.0.2/32 dev tun-nat2
+      - cmd: ip link set tun-nat2 up
+      - cmd: ip tunnel add tun-nat3 mode ipip local 10.255.0.1 remote 10.255.0.3 dev net0
+      - cmd: ip addr add 10.254.0.1/32 peer 10.254.0.3/32 dev tun-nat3
+      - cmd: ip link set tun-nat3 up
+
+      - cmd: ip link set tunl0 up
+      - cmd: iptables -t nat -A POSTROUTING -s 10.255.0.20/32 -j SNAT -p tcp --to-source 10.255.0.254:10000-10063
+
+  - name: N2
+    cmds:
+      - cmd: ip addr add 10.255.0.2/32 dev lo
+      - cmd: ip addr add 10.255.0.254/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 2"
+          -c " bgp router-id 10.255.0.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.255.0.2/32"
+          -c "  !network 10.255.0.254/32"
+          -c " exit-address-family"
+      - cmd: ip tunnel add tun-nat1 mode ipip local 10.255.0.2 remote 10.255.0.1 dev net0
+      - cmd: ip addr add 10.254.0.2/32 peer 10.254.0.1/32 dev tun-nat1
+      - cmd: ip link set tun-nat1 up
+      - cmd: ip tunnel add tun-nat3 mode ipip local 10.255.0.2 remote 10.255.0.3 dev net0
+      - cmd: ip addr add 10.254.0.2/32 peer 10.254.0.3/32 dev tun-nat3
+      - cmd: ip link set tun-nat3 up
+
+      - cmd: ip link set tunl0 up
+
+  - name: N3
+    cmds:
+      - cmd: ip addr add 10.255.0.3/32 dev lo
+      - cmd: ip addr add 10.255.0.254/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 3"
+          -c " bgp router-id 10.255.0.3"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.255.0.3/32"
+          -c "  !network 10.255.0.254/32"
+          -c " exit-address-family"
+      - cmd: ip tunnel add tun-nat1 mode ipip local 10.255.0.3 remote 10.255.0.1 dev net0
+      - cmd: ip addr add 10.254.0.3/32 peer 10.254.0.1/32 dev tun-nat1
+      - cmd: ip link set tun-nat1 up
+      - cmd: ip tunnel add tun-nat2 mode ipip local 10.255.0.3 remote 10.255.0.2 dev net0
+      - cmd: ip addr add 10.254.0.3/32 peer 10.254.0.2/32 dev tun-nat2
+      - cmd: ip link set tun-nat2 up
+
+      - cmd: ip link set tunl0 up
+
+  - name: HV1
+    cmds:
+      - cmd: ip addr add 10.255.0.20/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 20"
+          -c " bgp router-id 10.255.0.20"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.255.0.20/32"
+          -c " exit-address-family"
+
+      - cmd: ip tunnel add tun-nat1 mode ipip remote 10.255.0.254 dev net0
+      - cmd: ip link set tun-nat1 up
+      - cmd: ip route add default dev tun-nat1
+
+  - name: CS
+    cmds:
+      - cmd: ip addr add 10.255.0.30/32 dev lo
+      - cmd: ip addr add 8.8.8.8/32 dev lo
+      - cmd: bash -c "enable_seg6_router.py | sh"
+      - cmd: /usr/lib/frr/frrinit.sh start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 30"
+          -c " bgp router-id 10.255.0.30"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " bgp bestpath compare-routerid"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor net0 interface peer-group FABRIC"
+          -c " !"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.255.0.30/32"
+          -c "  network 0.0.0.0/0"
+          -c " exit-address-family"
+
+      - cmd: nohup /usr/bin/http_server.py &
+      - cmd: nohup /usr/bin/echo_server.py &

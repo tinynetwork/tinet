@@ -1,0 +1,193 @@
+
+# Description: Testing attach physical netif to Container
+# INIT:
+#    cns init | sudo sh
+#    cns conf | sudo sh
+#    cns test | sudo sh
+# FINI:
+#    cns fini | sudo sh
+# TOPO:
+#
+#              C1
+#      (net0).2|
+#              | 192.168.10.0/24
+#              |
+#      (net0).1|  .1(net1)      .2(net0)
+#          R1(AS100)------------------R2(AS200)
+#      (net2).1|       10.0.0.0/24        |.1(vnet1)
+#              |                          |
+#  10.1.0.0/24 |                          | 10.2.0.0/24
+#              |                          |
+#      (net0).2|       10.3.0.0/24        |.2(ens6)
+#          R3(AS300)------------------DUT(AS400)
+#                 .1(vnet2)      .2(ens7) |.1(ens8)
+#                                         |
+#                         192.168.20.0/24 |
+#                                         |.2(vnet3)
+#                                         C2
+
+# preinit:
+#  - cmds:
+#    - cmd: ovs-vsctl del-port ovs-dum vnet1
+#    - cmd: ovs-vsctl del-port ovs-dum vnet2
+#    - cmd: ovs-vsctl del-port ovs-dum vnet3
+#
+#postfini:
+#  - cmds:
+#    - cmd: ovs-vsctl add-port ovs-dum vnet1
+#    - cmd: ovs-vsctl add-port ovs-dum vnet2
+#    - cmd: ovs-vsctl add-port ovs-dum vnet3
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: C1#net0 }
+      - { name: net1, type: direct, args: R2#net0 }
+      - { name: net2, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+      - { name: vnet1, type: direct, args: DUT#ens6 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net2 }
+      - { name: vnet2, type: direct, args: DUT#ens7 }
+  - name: C1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+  - name: C2
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: vnet3, type: direct, args: DUT#ens8 }
+
+  - name: DUT
+    image: slankdev/frr
+    interfaces:
+      - { name: ens6, type: direct, args: R2#vnet1}
+      - { name: ens7, type: direct, args: R3#vnet2 }
+      - { name: ens8, type: direct, args: C2#vnet3 }
+
+node_configs:
+
+  - name: R1
+    cmds:
+      - cmd: echo R1 config
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0'
+          -c '  ip address 192.168.10.1/24'
+          -c 'exit'
+          -c 'interface net1'
+          -c '  ip address 10.0.0.1/24'
+          -c 'exit'
+          -c 'interface net2'
+          -c '  ip address 10.1.0.1/24'
+          -c 'exit'
+          -c 'router bgp 100'
+          -c '  bgp router-id 1.1.1.1'
+          -c '  neighbor 10.0.0.2 remote-as 200'
+          -c '  neighbor 10.1.0.2 remote-as 300'
+          -c '  network 192.168.10.0/24'
+          -c '  network 10.0.0.0/24'
+          -c '  network 10.1.0.0/24'
+          -c 'exit'
+
+  - name: R2
+    cmds:
+      - cmd: echo R2 config
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0'
+          -c '  ip address 10.0.0.2/24'
+          -c 'exit'
+          -c 'interface vnet1'
+          -c '  ip address 10.2.0.1/24'
+          -c 'exit'
+          -c 'router bgp 200'
+          -c '  bgp router-id 2.2.2.2'
+          -c '  neighbor 10.0.0.1 remote-as 100'
+          -c '  neighbor 10.2.0.2 remote-as 400'
+          -c '  network 10.0.0.0/24'
+          -c '  network 10.2.0.0/24'
+          -c 'exit'
+
+  - name: R3
+    cmds:
+      - cmd: echo R3 config
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface net0'
+          -c '  ip address 10.1.0.2/24'
+          -c 'exit'
+          -c 'interface vnet2'
+          -c '  ip address 10.3.0.1/24'
+          -c 'exit'
+          -c 'router bgp 300'
+          -c '  bgp router-id 3.3.3.3'
+          -c '  neighbor 10.1.0.1 remote-as 100'
+          -c '  neighbor 10.3.0.2 remote-as 400'
+          -c '  network 10.1.0.0/24'
+          -c '  network 10.3.0.0/24'
+          -c 'exit'
+
+  - name: C1
+    cmds:
+      - cmd: echo C1 config
+      - cmd: ip addr add 192.168.10.2/24 dev net0
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.10.1
+  - name: C2
+    cmds:
+      - cmd: echo C2 config
+      - cmd: ip addr add 192.168.20.2/24 dev vnet3
+      - cmd: ip route del default
+      - cmd: ip route add default via 192.168.20.1
+
+  - name: DUT
+    cmds:
+      - cmd: echo DUT config
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'interface ens6'
+          -c ' ip address 10.2.0.2/24'
+          -c ' ipv6 nd suppress-ra'
+          -c ' no link-detect'
+          -c 'exit'
+          -c 'interface ens7'
+          -c ' ip address 10.3.0.2/24'
+          -c ' ipv6 nd suppress-ra'
+          -c ' no link-detect'
+          -c 'exit'
+          -c 'interface ens8'
+          -c ' ip address 192.168.20.1/24'
+          -c ' ipv6 nd suppress-ra'
+          -c ' no link-detect'
+          -c 'exit'
+          -c 'router bgp 400'
+          -c ' bgp router-id 4.4.4.4'
+          -c ' network 10.2.0.0/24'
+          -c ' network 10.3.0.0/24'
+          -c ' network 192.168.20.0/24'
+          -c ' neighbor 10.2.0.1 remote-as 200'
+          -c ' neighbor 10.3.0.1 remote-as 300'
+          -c 'exit'
+
+test:
+  - cmds:
+    - cmd: echo each link test
+    - cmd: docker exec C1 ping -c2 192.168.10.1
+    - cmd: docker exec R1 ping -c2 192.168.10.2
+    - cmd: docker exec R1 ping -c2 10.0.0.2
+    - cmd: docker exec R1 ping -c2 10.1.0.2
+    - cmd: docker exec R2 ping -c2 10.0.0.1
+    - cmd: docker exec R2 ping -c2 10.2.0.2
+    - cmd: docker exec R3 ping -c2 10.1.0.1
+    - cmd: docker exec R3 ping -c2 10.3.0.2
+    - cmd: docker exec C2 ping -c2 192.168.20.1
+    - cmd: echo bgp route test
+    - cmd: docker exec C2 ping -c2 192.168.10.2
+

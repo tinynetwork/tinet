@@ -1,0 +1,31 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 65001"
+          -c "bgp router-id 10.255.0.1"
+          -c "neighbor 10.0.0.2 remote-as 65002"
+  - name: R2
+    cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "router bgp 65002"
+          -c "bgp router-id 10.255.0.2"
+          -c "neighbor 10.0.0.1 remote-as 65001"
+

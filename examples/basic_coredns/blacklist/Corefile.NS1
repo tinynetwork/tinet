@@ -1,0 +1,17 @@
+.:53 {
+  errors
+  log
+  forward . 8.8.8.8
+}
+
+ichihara.org {
+  etcd ichihara.org {
+    path /dns-server01
+    endpoint http://10.0.0.100:2379
+  }
+}
+
+emacs.org {
+}
+sublimetext.com {
+}

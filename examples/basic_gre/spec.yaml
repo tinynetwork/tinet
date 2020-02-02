@@ -1,0 +1,180 @@
+
+nodes:
+  - name: R1
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: R3#net0 }
+  - name: R2
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: R4#net0 }
+  - name: R3
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+      - { name: net1, type: direct, args: R5#net0 }
+  - name: R4
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+      - { name: net1, type: direct, args: R6#net0 }
+  - name: R5
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R3#net1 }
+  - name: R6
+    image: slankdev/frr
+    interfaces:
+      - { name: net0, type: direct, args: R4#net1 }
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip addr add 10.255.0.1/32 dev lo
+      - cmd: ip addr add 10.0.0.1/30 dev net0
+      - cmd: ip addr add 10.0.0.5/30 dev net1
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router ospf'
+          -c ' ospf router-id 10.255.0.1'
+          -c ' network 10.255.0.1/32 area 0'
+          -c ' network 10.0.0.0/30 area 0'
+          -c ' network 10.0.0.4/30 area 0'
+  - name: R2
+    cmds:
+      - cmd: ip addr add 10.255.0.2/32 dev lo
+      - cmd: ip addr add 10.0.0.2/30 dev net0
+      - cmd: ip addr add 10.0.0.9/30 dev net1
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router ospf'
+          -c ' ospf router-id 10.255.0.2'
+          -c ' network 10.255.0.2/32 area 0'
+          -c ' network 10.0.0.0/30 area 0'
+          -c ' network 10.0.0.8/30 area 0'
+  - name: R3
+    cmds:
+      - cmd: ip addr add 10.255.0.3/32 dev lo
+      - cmd: ip addr add 10.0.0.6/30 dev net0
+      - cmd: ip addr add 10.0.0.13/30 dev net1
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'ip route 10.0.0.8/30 10.0.0.5' ## This is IMPORTANT..?
+          -c 'router ospf'
+          -c ' ospf router-id 10.255.0.3'
+          -c ' network 10.255.0.3/32 area 0'
+          -c ' network 10.0.0.4/30 area 0'
+          -c ' network 10.0.0.12/30 area 0'
+          -c ' network 20.0.0.0/30 area 0'
+      - cmd: ip tunnel add gre1 mode gre remote 10.255.0.4 local 10.255.0.3 ttl 10
+      - cmd: ip link set gre1 up
+      - cmd: ip addr add 20.0.0.1/30 dev gre1
+  - name: R4
+    cmds:
+      - cmd: ip addr add 10.255.0.4/32 dev lo
+      - cmd: ip addr add 10.0.0.10/30 dev net0
+      - cmd: ip addr add 10.0.0.17/30 dev net1
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'ip route 10.0.0.4/30 10.0.0.9' ## This is IMPORTANT..?
+          -c 'router ospf'
+          -c ' ospf router-id 10.255.0.4'
+          -c ' network 10.255.0.4/32 area 0'
+          -c ' network 10.0.0.8/30 area 0'
+          -c ' network 10.0.0.16/30 area 0'
+          -c ' network 20.0.0.0/30 area 0'
+      - cmd: ip tunnel add gre1 mode gre remote 10.255.0.3 local 10.255.0.4 ttl 10
+      - cmd: ip link set gre1 up
+      - cmd: ip addr add 20.0.0.2/30 dev gre1
+  - name: R5
+    cmds:
+      - cmd: ip addr add 10.255.0.5/32 dev lo
+      - cmd: ip addr add 10.0.0.14/30 dev net0
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router ospf'
+          -c ' ospf router-id 10.255.0.5'
+          -c ' network 10.255.0.5/32 area 0'
+          -c ' network 10.0.0.12/30 area 0'
+  - name: R6
+    cmds:
+      - cmd: ip addr add 10.255.0.6/32 dev lo
+      - cmd: ip addr add 10.0.0.18/30 dev net0
+      - cmd: /usr/lib/frr/frr start
+      - cmd: >-
+          vtysh -c 'conf t'
+          -c 'router ospf'
+          -c ' ospf router-id 10.255.0.6'
+          -c ' network 10.255.0.6/32 area 0'
+          -c ' network 10.0.0.16/30 area 0'
+
+test:
+  - name: p2p
+    cmds:
+    - cmd: docker exec R1 ping -c2 10.0.0.1
+    - cmd: docker exec R1 ping -c2 10.0.0.2
+    - cmd: docker exec R1 ping -c2 10.0.0.5
+    - cmd: docker exec R1 ping -c2 10.0.0.6
+    - cmd: docker exec R2 ping -c2 10.0.0.1
+    - cmd: docker exec R2 ping -c2 10.0.0.2
+    - cmd: docker exec R2 ping -c2 10.0.0.9
+    - cmd: docker exec R2 ping -c2 10.0.0.10
+    - cmd: docker exec R3 ping -c2 10.0.0.5
+    - cmd: docker exec R3 ping -c2 10.0.0.6
+    - cmd: docker exec R3 ping -c2 10.0.0.13
+    - cmd: docker exec R3 ping -c2 10.0.0.14
+    - cmd: docker exec R4 ping -c2 10.0.0.9
+    - cmd: docker exec R4 ping -c2 10.0.0.10
+    - cmd: docker exec R4 ping -c2 10.0.0.17
+    - cmd: docker exec R4 ping -c2 10.0.0.18
+    - cmd: docker exec R5 ping -c2 10.0.0.13
+    - cmd: docker exec R5 ping -c2 10.0.0.14
+    - cmd: docker exec R6 ping -c2 10.0.0.17
+    - cmd: docker exec R6 ping -c2 10.0.0.18
+  - name: lo
+    cmds:
+    - cmd: docker exec R1 ping -c2 10.255.0.1
+    - cmd: docker exec R1 ping -c2 10.255.0.2
+    - cmd: docker exec R1 ping -c2 10.255.0.3
+    - cmd: docker exec R1 ping -c2 10.255.0.4
+    - cmd: docker exec R1 ping -c2 10.255.0.5
+    - cmd: docker exec R1 ping -c2 10.255.0.6
+    - cmd: docker exec R2 ping -c2 10.255.0.1
+    - cmd: docker exec R2 ping -c2 10.255.0.2
+    - cmd: docker exec R2 ping -c2 10.255.0.3
+    - cmd: docker exec R2 ping -c2 10.255.0.4
+    - cmd: docker exec R2 ping -c2 10.255.0.5
+    - cmd: docker exec R2 ping -c2 10.255.0.6
+    - cmd: docker exec R3 ping -c2 10.255.0.1
+    - cmd: docker exec R3 ping -c2 10.255.0.2
+    - cmd: docker exec R3 ping -c2 10.255.0.3
+    - cmd: docker exec R3 ping -c2 10.255.0.4
+    - cmd: docker exec R3 ping -c2 10.255.0.5
+    - cmd: docker exec R3 ping -c2 10.255.0.6
+    - cmd: docker exec R4 ping -c2 10.255.0.1
+    - cmd: docker exec R4 ping -c2 10.255.0.2
+    - cmd: docker exec R4 ping -c2 10.255.0.3
+    - cmd: docker exec R4 ping -c2 10.255.0.4
+    - cmd: docker exec R4 ping -c2 10.255.0.5
+    - cmd: docker exec R4 ping -c2 10.255.0.6
+    - cmd: docker exec R5 ping -c2 10.255.0.1
+    - cmd: docker exec R5 ping -c2 10.255.0.2
+    - cmd: docker exec R5 ping -c2 10.255.0.3
+    - cmd: docker exec R5 ping -c2 10.255.0.4
+    - cmd: docker exec R5 ping -c2 10.255.0.5
+    - cmd: docker exec R5 ping -c2 10.255.0.6
+    - cmd: docker exec R6 ping -c2 10.255.0.1
+    - cmd: docker exec R6 ping -c2 10.255.0.2
+    - cmd: docker exec R6 ping -c2 10.255.0.3
+    - cmd: docker exec R6 ping -c2 10.255.0.4
+    - cmd: docker exec R6 ping -c2 10.255.0.5
+    - cmd: docker exec R6 ping -c2 10.255.0.6
+
+
