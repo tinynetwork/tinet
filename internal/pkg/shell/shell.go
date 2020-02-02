@@ -143,7 +143,7 @@ func (node *Node) DeleteNode() []string {
 
 // DeleteSwitch Delete bridge
 func (br *Switch) DeleteSwitch() string {
-	deleteBrCmd := fmt.Sprintf("ip link delete %s", br.Name)
+	deleteBrCmd := fmt.Sprintf("ovs-vsctl del-br %s", br.Name)
 	return deleteBrCmd
 }
 
@@ -203,7 +203,7 @@ func GenerateFile() (string, error) {
 	postinit := PostInit{
 		Cmds: []Cmd{
 			Cmd{
-				Cmd: "",
+				Cmd: "echo hoge",
 			},
 		},
 	}
@@ -217,43 +217,91 @@ func GenerateFile() (string, error) {
 	}
 
 	nodes := Node{
-		Name:    "",
-		Image:   "",
+		Name:    "R1",
+		Image:   "slankdev/ubuntu18.04",
 		NetBase: "",
 		Interfaces: []Interface{
 			Interface{
-				Name: "",
-				Type: "",
-				Args: "",
+				Name: "net0",
+				Type: "direct",
+				Args: "C1#net0",
+			},
+			Interface{
+				Name: "net1",
+				Type: "bridge",
+				Args: "B0",
+			},
+			Interface{
+				Name: "net2",
+				Type: "veth",
+				Args: "peer0",
+			},
+			Interface{
+				Name: "net3",
+				Type: "phys",
 			},
 		},
 	}
 
 	switches := Switch{
-		Name: "",
+		Name: "B0",
 		Interfaces: []Interface{
 			Interface{
-				Name: "",
-				Type: "",
-				Args: "",
+				Name: "net0",
+				Type: "docker",
+				Args: "R1",
+			},
+			Interface{
+				Name: "net0",
+				Type: "netns",
+				Args: "R2",
 			},
 		},
 	}
 
-	nodeConfig := NodeConfig{
-		Name: "",
-		Cmds: []Cmd{
-			Cmd{
-				Cmd: "",
+	nodeConfigs := []NodeConfig{
+		NodeConfig{
+			Name: "C0",
+			Cmds: []Cmd{
+				Cmd{
+					Cmd: "ip link set dev net0 up",
+				},
+			},
+		},
+		NodeConfig{
+			Name: "C1",
+			Cmds: []Cmd{
+				Cmd{
+					Cmd: "echo slankdev slankdev",
+				},
+				Cmd{
+					Cmd: "echo slankdev &&\necho slankdev",
+				},
 			},
 		},
 	}
 
-	test := Test{
-		Name: "",
-		Cmds: []Cmd{
-			Cmd{
-				Cmd: "",
+	tests := []Test{
+		Test{
+			Name: "p2p",
+			Cmds: []Cmd{
+				Cmd{
+					Cmd: "docker exec C0 ping -c2 10.0.0.2",
+				},
+				Cmd{
+					Cmd: "echo hoge",
+				},
+			},
+		},
+		Test{
+			Name: "lo",
+			Cmds: []Cmd{
+				Cmd{
+					Cmd: "docker exec C0 ping -c2 10.255.0.1",
+				},
+				Cmd{
+					Cmd: "echo hoge",
+				},
 			},
 		},
 	}
@@ -265,8 +313,8 @@ func GenerateFile() (string, error) {
 		PostFini:    []PostFini{postfini},
 		Nodes:       []Node{nodes},
 		Switches:    []Switch{switches},
-		NodeConfigs: []NodeConfig{nodeConfig},
-		Test:        []Test{test},
+		NodeConfigs: nodeConfigs,
+		Test:        tests,
 	}
 
 	data, err := yaml.Marshal(tnconfig)
@@ -404,7 +452,7 @@ func NetnsLinkUp(netnsName string, linkName string) string {
 func (bridge *Switch) CreateSwitch() []string {
 	var createSwitchCmds []string
 
-	addSwitchCmd := fmt.Sprintf("ip link add %s type bridge", bridge.Name)
+	addSwitchCmd := fmt.Sprintf("ovs-vsctl add-br %s", bridge.Name)
 	createSwitchCmds = append(createSwitchCmds, addSwitchCmd)
 
 	bridgeUpCmd := HostLinkUp(bridge.Name)
@@ -445,7 +493,7 @@ func (inf *Interface) S2nLink(nodeName string) []string {
 	s2nLinkCmds = append(s2nLinkCmds, s2nLinkCmd)
 	s2nLinkCmds = append(s2nLinkCmds, NetnsLinkUp(nodeName, nodeinf))
 	s2nLinkCmds = append(s2nLinkCmds, HostLinkUp(peerBrInf))
-	setBrLinkCmd := fmt.Sprintf("ip link set dev %s master %s", peerBrInf, peerBr)
+	setBrLinkCmd := fmt.Sprintf("ovs-vsctl add-port %s %s", peerBr, peerBrInf)
 	s2nLinkCmds = append(s2nLinkCmds, setBrLinkCmd)
 
 	return s2nLinkCmds
