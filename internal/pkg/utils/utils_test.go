@@ -6,26 +6,6 @@ import (
 	"testing"
 )
 
-func TestAsk4confirm(t *testing.T) {
-	type args struct {
-		confirmMessage string
-	}
-	tests := []struct {
-		name string
-		args args
-		want bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Ask4confirm(tt.args.confirmMessage); got != tt.want {
-				t.Errorf("Ask4confirm() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestExists(t *testing.T) {
 	type args struct {
 		name string
@@ -111,6 +91,44 @@ func TestPrintCmd(t *testing.T) {
 			PrintCmd(w, tt.args.cmd, tt.args.verbose)
 			if gotW := w.String(); gotW != tt.wantW {
 				t.Errorf("PrintCmd() = %v, want %v", gotW, tt.wantW)
+			}
+		})
+	}
+}
+
+func TestPrintCmds(t *testing.T) {
+	type args struct {
+		cmds    []string
+		verbose bool
+	}
+	tests := []struct {
+		name  string
+		args  args
+		wantW string
+	}{
+		{
+			name: "cmds output verbose",
+			args: args{
+				cmds:    []string{"test output", "test2 output"},
+				verbose: true,
+			},
+			wantW: "test output\ntest2 output\n",
+		},
+		{
+			name: "cmd output no verbose",
+			args: args{
+				cmds:    []string{"test output > /dev/null", "test2 output > /dev/null"},
+				verbose: true,
+			},
+			wantW: "test output > /dev/null\ntest2 output > /dev/null\n",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := &bytes.Buffer{}
+			PrintCmds(w, tt.args.cmds, tt.args.verbose)
+			if gotW := w.String(); gotW != tt.wantW {
+				t.Errorf("PrintCmds() = %v, want %v", gotW, tt.wantW)
 			}
 		})
 	}
