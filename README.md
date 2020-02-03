@@ -9,26 +9,34 @@ Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 - docker
 - graphviz (if you want to use `tn img`)
 
-## Install
+## Install and Build
 
+to install
 ```
 wget https://github.com/tinynetwork/tinet/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
 tar zxvf /tmp/tinet-go_linux_amd64.tar.gz -C /usr/local/bin
 ```
 
+to build
+```
+git clone https://github.com/tinynetwork/tinet tinet && cd $_
+docker run --rm -i -t -v $PWD:/v -w /v golang:1.12 go build
+mv tinet /usr/local/bin
+```
+
 ## Usage
 
 ```
-tn up -c spec.yaml | sudo sh -x
-tn conf -c spec.yaml | sudo sh -x
-tn test -c spec.yaml | sudo sh -x
-tn down -c spec.yaml | sudo sh -x
+tinet up -c spec.yaml | sudo sh -x
+tinet conf -c spec.yaml | sudo sh -x
+tinet test -c spec.yaml | sudo sh -x
+tinet down -c spec.yaml | sudo sh -x
 ```
 
 ## Command Options
 
 ```
-➜ tn
+# tinet
 tinet is network emulator created by docker
 
 Usage:
