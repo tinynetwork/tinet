@@ -51,6 +51,7 @@ type Node struct {
 	Name       string      `yaml:"name" mapstructure:"name"`
 	Type       string      `yaml:"type" mapstructure:"type"`
 	NetBase    string      `yaml:"net_base" mapstructure:"net_base"`
+	VolumeBase string      `yaml:"volume" mapstructure:"volume"`
 	Image      string      `yaml:"image" mapstructure:"image"`
 	Interfaces []Interface `yaml:"interfaces" mapstructure:"interfaces"`
 	Sysctls    []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
@@ -401,6 +402,12 @@ func (node *Node) CreateNode() []string {
 			for _, sysctl := range node.Sysctls {
 				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
 			}
+		}
+
+		if node.VolumeBase == "" {
+			createNodeCmd += fmt.Sprintf("-v /tmp/tinet:/tinet ")
+		} else {
+			createNodeCmd += fmt.Sprintf("-v %s:/tinet ", node.VolumeBase)
 		}
 
 		if len(node.Mounts) != 0 {
