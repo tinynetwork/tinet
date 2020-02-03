@@ -996,3 +996,53 @@ func TestGetContainerPid(t *testing.T) {
 		})
 	}
 }
+
+func TestNode_DelNsCmd(t *testing.T) {
+	type fields struct {
+		Name       string
+		Type       string
+		NetBase    string
+		Image      string
+		Interfaces []Interface
+		Sysctls    []Sysctl
+		Mounts     []string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "node netns del",
+			fields: fields{
+				Name:  "R1",
+				Image: "slankdev/frr",
+				Type:  "docker",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "R2#net0",
+					},
+				},
+			},
+			want: "ip netns del R1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node := &Node{
+				Name:       tt.fields.Name,
+				Type:       tt.fields.Type,
+				NetBase:    tt.fields.NetBase,
+				Image:      tt.fields.Image,
+				Interfaces: tt.fields.Interfaces,
+				Sysctls:    tt.fields.Sysctls,
+				Mounts:     tt.fields.Mounts,
+			}
+			if got := node.DelNsCmd(); got != tt.want {
+				t.Errorf("Node.DelNsCmd() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

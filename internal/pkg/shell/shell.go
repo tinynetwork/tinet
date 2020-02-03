@@ -129,8 +129,6 @@ func (node *Node) DeleteNode() []string {
 	} else if node.Type == "netns" {
 		deleteCmd = fmt.Sprintf("ip netns del %s", node.Name)
 	} else {
-		// err := fmt.Errorf("not supported node type...")
-		// log.Fatal(err)
 		return []string{""}
 	}
 
@@ -415,8 +413,6 @@ func (node *Node) CreateNode() []string {
 	} else if node.Type == "netns" {
 		createNodeCmd = fmt.Sprintf("ip netns add %s", node.Name)
 	} else {
-		// err := fmt.Errorf("unknown nodetype %s", node.Type)
-		// log.Fatal(err)
 		createNodeCmd = fmt.Sprintf("unknown nodetype %s", node.Type)
 	}
 
@@ -548,4 +544,10 @@ func GetContainerPid(nodename string) string {
 	getpidcmd := fmt.Sprintf("PID=`docker inspect %s --format '{{.State.Pid}}'`", nodename)
 
 	return getpidcmd
+}
+
+// DelNsCmds
+func (node *Node) DelNsCmd() string {
+	delNsCmd := fmt.Sprintf("ip netns del %s", node.Name)
+	return delNsCmd
 }
