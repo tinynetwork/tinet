@@ -100,6 +100,13 @@ func CmdUp(c *cli.Context) error {
 		}
 	}
 
+	for _, node := range tnconfig.Nodes {
+		if node.Type == "docker" || node.Type == "" {
+			delNsCmd := node.DelNsCmd()
+			utils.PrintCmd(os.Stdout, delNsCmd, verbose)
+		}
+	}
+
 	return nil
 }
 
