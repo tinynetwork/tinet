@@ -118,6 +118,7 @@ func TestNode_DeleteNode(t *testing.T) {
 		Mounts         []string
 		HostNameIgnore bool
 		EntryPoint     string
+		ExtraArgs      string
 	}
 	tests := []struct {
 		name   string
@@ -183,6 +184,7 @@ func TestNode_DeleteNode(t *testing.T) {
 				Mounts:         tt.fields.Mounts,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
+				ExtraArgs:      tt.fields.ExtraArgs,
 			}
 			if got := node.DeleteNode(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Node.DeleteNode() = %v, want %v", got, tt.want)
@@ -485,6 +487,7 @@ func TestNode_CreateNode(t *testing.T) {
 		Mounts         []string
 		HostNameIgnore bool
 		EntryPoint     string
+		ExtraArgs      string
 	}
 	tests := []struct {
 		name   string
@@ -670,6 +673,22 @@ func TestNode_CreateNode(t *testing.T) {
 			},
 			want: []string{"docker run -td --net none --name T1 --rm --privileged --hostname T1 --entrypoint bash -v /tmp/ak1ra24:/tinet slankdev/frr"},
 		},
+		{
+			name: "create node with extra args",
+			fields: fields{
+				Name:  "T1",
+				Image: "nginx",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "T2#net0",
+					},
+				},
+				ExtraArgs: "-p 8080:80",
+			},
+			want: []string{"docker run -td --net none --name T1 --rm --privileged --hostname T1 -v /tmp/tinet:/tinet -p 8080:80 nginx"},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -684,6 +703,7 @@ func TestNode_CreateNode(t *testing.T) {
 				Mounts:         tt.fields.Mounts,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
+				ExtraArgs:      tt.fields.ExtraArgs,
 			}
 			if got := node.CreateNode(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Node.CreateNode() = %v, want %v", got, tt.want)
@@ -989,6 +1009,7 @@ func TestNode_Mount_docker_netns(t *testing.T) {
 		Mounts         []string
 		HostNameIgnore bool
 		EntryPoint     string
+		ExtraArgs      string
 	}
 	tests := []struct {
 		name   string
@@ -1024,6 +1045,7 @@ func TestNode_Mount_docker_netns(t *testing.T) {
 				Mounts:         tt.fields.Mounts,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
+				ExtraArgs:      tt.fields.ExtraArgs,
 			}
 			if got := node.Mount_docker_netns(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Node.Mount_docker_netns() = %v, want %v", got, tt.want)
@@ -1069,6 +1091,7 @@ func TestNode_DelNsCmd(t *testing.T) {
 		Mounts         []string
 		HostNameIgnore bool
 		EntryPoint     string
+		ExtraArgs      string
 	}
 	tests := []struct {
 		name   string
@@ -1104,6 +1127,7 @@ func TestNode_DelNsCmd(t *testing.T) {
 				Mounts:         tt.fields.Mounts,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
+				ExtraArgs:      tt.fields.ExtraArgs,
 			}
 			if got := node.DelNsCmd(); got != tt.want {
 				t.Errorf("Node.DelNsCmd() = %v, want %v", got, tt.want)
