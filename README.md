@@ -4,20 +4,15 @@
 
 Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
-## Requirements
+## Release
+[release](https://github.com/tinynetwork/tinet/releases)
 
+## Requirements
 - docker
+- OpenvSwitch
 - graphviz (if you want to use `tn img`)
 
-## Install and Build
-
-to install
-```
-wget https://github.com/tinynetwork/tinet/releases/download/v0.0.0/tinet-go_linux_amd64.tar.gz -P /tmp
-tar zxvf /tmp/tinet-go_linux_amd64.tar.gz -C /usr/local/bin
-```
-
-to build
+## Build
 ```
 git clone https://github.com/tinynetwork/tinet tinet && cd $_
 docker run --rm -i -t -v $PWD:/v -w /v golang:1.12 go build
@@ -37,36 +32,37 @@ tinet down -c spec.yaml | sudo sh -x
 
 ```
 # tinet
-tinet is network emulator created by docker
+NAME:
+   tinet - tinet: Tiny Network
 
-Usage:
-  tn [command]
+USAGE:
+   tinet [global options] command [command options] [arguments...]
 
-Available Commands:
-  build       Generate a Docker bundle from the spec file
-  check       check config
-  completion  Generates shell completion scripts
-  conf        Execute config-cmd in a running container
-  down        Stop and remove containers
-  exec        Execute a command in a running container
-  help        Help about any command
-  img         Generate topology png file by graphviz
-  init        Generate template spec file
-  print       print tinet config file
-  ps          List services
-  pull        Pull Service images
-  reconf      Stop, remove, create, start and config
-  reup        Stop, remove, create and start
-  test        Execute tests
-  up          Create and start containers
-  upconf      Create, start and config
-  version     show the tinet version
+VERSION:
+   0.0.1 (rev:)
 
-Flags:
-  -h, --help   help for tn
+AUTHOR:
+   ak1ra24 <marug4580@gmail.com>
 
-Use "tn [command] --help" for more information about a command.
+COMMANDS:
+   check    check config
+   conf     configure Node from tinet config file
+   down     Down Node from tinet config file
+   exec     Execute Command on Node from tinet config file.
+   img      visualize network topology by graphviz from tinet config file
+   init     Generate tinet config template file
+   ps       docker and netns process
+   pull     Pull Node docker image from tinet config file
+   reconf   Stop, remove, create, start and config
+   reup     Stop, remove, create, start
+   test     Execute test commands from tinet config file.
+   up       create Node from tinet config file
+   upconf   Create, start and config
+   help, h  Shows a list of commands or help for one command
 
+GLOBAL OPTIONS:
+   --help, -h     show help (default: false)
+   --version, -v  print the version (default: false)
 ```
 
 ## Contribute
