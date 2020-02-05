@@ -109,13 +109,14 @@ func TestNodeConfig_ExecConf(t *testing.T) {
 
 func TestNode_DeleteNode(t *testing.T) {
 	type fields struct {
-		Name       string
-		Type       string
-		NetBase    string
-		Image      string
-		Interfaces []Interface
-		Sysctls    []Sysctl
-		Mounts     []string
+		Name           string
+		Type           string
+		NetBase        string
+		Image          string
+		Interfaces     []Interface
+		Sysctls        []Sysctl
+		Mounts         []string
+		HostNameIgnore bool
 	}
 	tests := []struct {
 		name   string
@@ -172,13 +173,14 @@ func TestNode_DeleteNode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			node := &Node{
-				Name:       tt.fields.Name,
-				Type:       tt.fields.Type,
-				NetBase:    tt.fields.NetBase,
-				Image:      tt.fields.Image,
-				Interfaces: tt.fields.Interfaces,
-				Sysctls:    tt.fields.Sysctls,
-				Mounts:     tt.fields.Mounts,
+				Name:           tt.fields.Name,
+				Type:           tt.fields.Type,
+				NetBase:        tt.fields.NetBase,
+				Image:          tt.fields.Image,
+				Interfaces:     tt.fields.Interfaces,
+				Sysctls:        tt.fields.Sysctls,
+				Mounts:         tt.fields.Mounts,
+				HostNameIgnore: tt.fields.HostNameIgnore,
 			}
 			if got := node.DeleteNode(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Node.DeleteNode() = %v, want %v", got, tt.want)
@@ -474,14 +476,15 @@ func TestExecCmd(t *testing.T) {
 
 func TestNode_CreateNode(t *testing.T) {
 	type fields struct {
-		Name       string
-		Type       string
-		NetBase    string
-		VolumeBase string
-		Image      string
-		Interfaces []Interface
-		Sysctls    []Sysctl
-		Mounts     []string
+		Name           string
+		Type           string
+		NetBase        string
+		VolumeBase     string
+		Image          string
+		Interfaces     []Interface
+		Sysctls        []Sysctl
+		Mounts         []string
+		HostNameIgnore bool
 	}
 	tests := []struct {
 		name   string
@@ -501,7 +504,7 @@ func TestNode_CreateNode(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"docker run -td --hostname R1 --net none --name R1 --rm --privileged -v /tmp/tinet:/tinet slankdev/frr"},
+			want: []string{"docker run -td --net none --name R1 --rm --privileged --hostname R1 -v /tmp/tinet:/tinet slankdev/frr"},
 		},
 		{
 			name: "create docker node net None with sysctls",
@@ -524,7 +527,7 @@ func TestNode_CreateNode(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"docker run -td --hostname R1 --net none --name R1 --rm --privileged --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /tmp/tinet:/tinet slankdev/frr"},
+			want: []string{"docker run -td --net none --name R1 --rm --privileged --hostname R1 --sysctl net.ipv4.ip_forward=1 --sysctl net.ipv6.conf.all.forwarding=1 -v /tmp/tinet:/tinet slankdev/frr"},
 		},
 		{
 			name: "create docker node net bridge",
@@ -540,7 +543,7 @@ func TestNode_CreateNode(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"docker run -td --hostname R1 --net bridge --name R1 --rm --privileged -v /tmp/tinet:/tinet slankdev/frr"},
+			want: []string{"docker run -td --net bridge --name R1 --rm --privileged --hostname R1 -v /tmp/tinet:/tinet slankdev/frr"},
 		},
 		{
 			name: "create netns node",
@@ -615,7 +618,7 @@ func TestNode_CreateNode(t *testing.T) {
 					"/usr/share/vim:/mnt/vim",
 				},
 			},
-			want: []string{"docker run -td --hostname T1 --net none --name T1 --rm --privileged -v /tmp/tinet:/tinet -v `pwd`:/mnt/test -v /usr/share/vim:/mnt/vim slankdev/frr"},
+			want: []string{"docker run -td --net none --name T1 --rm --privileged --hostname T1 -v /tmp/tinet:/tinet -v `pwd`:/mnt/test -v /usr/share/vim:/mnt/vim slankdev/frr"},
 		},
 		{
 			name: "create node with specify tinet volume",
@@ -631,20 +634,38 @@ func TestNode_CreateNode(t *testing.T) {
 					},
 				},
 			},
-			want: []string{"docker run -td --hostname T1 --net none --name T1 --rm --privileged -v /tmp/ak1ra24:/tinet slankdev/frr"},
+			want: []string{"docker run -td --net none --name T1 --rm --privileged --hostname T1 -v /tmp/ak1ra24:/tinet slankdev/frr"},
+		},
+		{
+			name: "create node with hostname_ignore",
+			fields: fields{
+				Name:       "T1",
+				Image:      "slankdev/frr",
+				VolumeBase: "/tmp/ak1ra24",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "T2#net0",
+					},
+				},
+				HostNameIgnore: true,
+			},
+			want: []string{"docker run -td --net none --name T1 --rm --privileged -v /tmp/ak1ra24:/tinet slankdev/frr"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			node := &Node{
-				Name:       tt.fields.Name,
-				Type:       tt.fields.Type,
-				NetBase:    tt.fields.NetBase,
-				VolumeBase: tt.fields.VolumeBase,
-				Image:      tt.fields.Image,
-				Interfaces: tt.fields.Interfaces,
-				Sysctls:    tt.fields.Sysctls,
-				Mounts:     tt.fields.Mounts,
+				Name:           tt.fields.Name,
+				Type:           tt.fields.Type,
+				NetBase:        tt.fields.NetBase,
+				VolumeBase:     tt.fields.VolumeBase,
+				Image:          tt.fields.Image,
+				Interfaces:     tt.fields.Interfaces,
+				Sysctls:        tt.fields.Sysctls,
+				Mounts:         tt.fields.Mounts,
+				HostNameIgnore: tt.fields.HostNameIgnore,
 			}
 			if got := node.CreateNode(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Node.CreateNode() = %v, want %v", got, tt.want)
@@ -941,13 +962,14 @@ func TestInterface_P2cLink(t *testing.T) {
 
 func TestNode_Mount_docker_netns(t *testing.T) {
 	type fields struct {
-		Name       string
-		Type       string
-		NetBase    string
-		Image      string
-		Interfaces []Interface
-		Sysctls    []Sysctl
-		Mounts     []string
+		Name           string
+		Type           string
+		NetBase        string
+		Image          string
+		Interfaces     []Interface
+		Sysctls        []Sysctl
+		Mounts         []string
+		HostNameIgnore bool
 	}
 	tests := []struct {
 		name   string
@@ -974,13 +996,14 @@ func TestNode_Mount_docker_netns(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			node := &Node{
-				Name:       tt.fields.Name,
-				Type:       tt.fields.Type,
-				NetBase:    tt.fields.NetBase,
-				Image:      tt.fields.Image,
-				Interfaces: tt.fields.Interfaces,
-				Sysctls:    tt.fields.Sysctls,
-				Mounts:     tt.fields.Mounts,
+				Name:           tt.fields.Name,
+				Type:           tt.fields.Type,
+				NetBase:        tt.fields.NetBase,
+				Image:          tt.fields.Image,
+				Interfaces:     tt.fields.Interfaces,
+				Sysctls:        tt.fields.Sysctls,
+				Mounts:         tt.fields.Mounts,
+				HostNameIgnore: tt.fields.HostNameIgnore,
 			}
 			if got := node.Mount_docker_netns(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Node.Mount_docker_netns() = %v, want %v", got, tt.want)
@@ -1017,13 +1040,14 @@ func TestGetContainerPid(t *testing.T) {
 
 func TestNode_DelNsCmd(t *testing.T) {
 	type fields struct {
-		Name       string
-		Type       string
-		NetBase    string
-		Image      string
-		Interfaces []Interface
-		Sysctls    []Sysctl
-		Mounts     []string
+		Name           string
+		Type           string
+		NetBase        string
+		Image          string
+		Interfaces     []Interface
+		Sysctls        []Sysctl
+		Mounts         []string
+		HostNameIgnore bool
 	}
 	tests := []struct {
 		name   string
@@ -1050,13 +1074,14 @@ func TestNode_DelNsCmd(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			node := &Node{
-				Name:       tt.fields.Name,
-				Type:       tt.fields.Type,
-				NetBase:    tt.fields.NetBase,
-				Image:      tt.fields.Image,
-				Interfaces: tt.fields.Interfaces,
-				Sysctls:    tt.fields.Sysctls,
-				Mounts:     tt.fields.Mounts,
+				Name:           tt.fields.Name,
+				Type:           tt.fields.Type,
+				NetBase:        tt.fields.NetBase,
+				Image:          tt.fields.Image,
+				Interfaces:     tt.fields.Interfaces,
+				Sysctls:        tt.fields.Sysctls,
+				Mounts:         tt.fields.Mounts,
+				HostNameIgnore: tt.fields.HostNameIgnore,
 			}
 			if got := node.DelNsCmd(); got != tt.want {
 				t.Errorf("Node.DelNsCmd() = %v, want %v", got, tt.want)
