@@ -307,7 +307,26 @@ func CmdTest(c *cli.Context) error {
 		return err
 	}
 
-	tnTestCmds := shell.TnTestCmdExec(tnconfig.Test)
+	testName := c.Args().Get(0)
+
+	var tnTestCmds []string
+
+	if testName == "all" || testName == "" {
+		for _, test := range tnconfig.Test {
+			tnTestCmds = test.TnTestCmdExec()
+		}
+	} else {
+		for _, test := range tnconfig.Test {
+			if testName == test.Name {
+				tnTestCmds = test.TnTestCmdExec()
+			}
+		}
+	}
+
+	if len(tnTestCmds) == 0 {
+		return fmt.Errorf("not found test name\n")
+	}
+
 	fmt.Fprintln(os.Stdout, strings.Join(tnTestCmds, "\n"))
 
 	return nil

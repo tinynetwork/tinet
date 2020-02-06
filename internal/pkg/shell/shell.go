@@ -367,14 +367,11 @@ func Pull(nodes []Node) []string {
 }
 
 // TnTestCmdExec Execute test cmds
-func TnTestCmdExec(tests []Test) []string {
+func (t *Test) TnTestCmdExec() []string {
 	var tnTestCmds []string
-	for _, test := range tests {
 
-		for _, testCmd := range test.Cmds {
-			tnTestCmds = append(tnTestCmds, testCmd.Cmd)
-		}
-
+	for _, testCmd := range t.Cmds {
+		tnTestCmds = append(tnTestCmds, testCmd.Cmd)
 	}
 
 	return tnTestCmds

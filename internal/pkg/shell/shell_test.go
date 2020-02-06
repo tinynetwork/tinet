@@ -391,24 +391,21 @@ func TestPull(t *testing.T) {
 }
 
 func TestTnTestCmdExec(t *testing.T) {
-	type args struct {
-		tests []Test
+	type fields struct {
+		Name string
+		Cmds []Cmd
 	}
 	tests := []struct {
-		name string
-		args args
-		want []string
+		name   string
+		fields fields
+		want   []string
 	}{
 		{
 			name: "test name not set",
-			args: args{
-				tests: []Test{
-					Test{
-						Cmds: []Cmd{
-							Cmd{
-								Cmd: "echo slankdev",
-							},
-						},
+			fields: fields{
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "echo slankdev",
 					},
 				},
 			},
@@ -416,18 +413,14 @@ func TestTnTestCmdExec(t *testing.T) {
 		},
 		{
 			name: "test name set",
-			args: args{
-				tests: []Test{
-					Test{
-						Name: "p2p",
-						Cmds: []Cmd{
-							Cmd{
-								Cmd: "docker exec R1 echo hello",
-							},
-							Cmd{
-								Cmd: "docker exec R2 echo world",
-							},
-						},
+			fields: fields{
+				Name: "p2p",
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "docker exec R1 echo hello",
+					},
+					Cmd{
+						Cmd: "docker exec R2 echo world",
 					},
 				},
 			},
@@ -436,8 +429,12 @@ func TestTnTestCmdExec(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := TnTestCmdExec(tt.args.tests); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("TnTestCmdExec() = %v, want %v", got, tt.want)
+			tr := &Test{
+				Name: tt.fields.Name,
+				Cmds: tt.fields.Cmds,
+			}
+			if got := tr.TnTestCmdExec(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Test.TnTestCmdExec() = %v, want %v", got, tt.want)
 			}
 		})
 	}
