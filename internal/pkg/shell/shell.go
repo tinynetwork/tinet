@@ -48,14 +48,16 @@ type PostFini struct {
 
 // Node
 type Node struct {
-	Name       string      `yaml:"name" mapstructure:"name"`
-	Type       string      `yaml:"type" mapstructure:"type"`
-	NetBase    string      `yaml:"net_base" mapstructure:"net_base"`
-	VolumeBase string      `yaml:"volume" mapstructure:"volume"`
-	Image      string      `yaml:"image" mapstructure:"image"`
-	Interfaces []Interface `yaml:"interfaces" mapstructure:"interfaces"`
-	Sysctls    []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
-	Mounts     []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
+	Name           string      `yaml:"name" mapstructure:"name"`
+	Type           string      `yaml:"type" mapstructure:"type"`
+	NetBase        string      `yaml:"net_base" mapstructure:"net_base"`
+	VolumeBase     string      `yaml:"volume" mapstructure:"volume"`
+	Image          string      `yaml:"image" mapstructure:"image"`
+	Interfaces     []Interface `yaml:"interfaces" mapstructure:"interfaces"`
+	Sysctls        []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
+	Mounts         []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
+	HostNameIgnore bool        `yaml:"hostname_ignore" mapstructure:"hostname_ignore"`
+	EntryPoint     string      `yaml:"entrypoint" mapstructure:"entrypoint"`
 }
 
 // Interface
@@ -397,11 +399,20 @@ func (node *Node) CreateNode() []string {
 		node.NetBase = "none"
 	}
 	if node.Type == "docker" || node.Type == "" {
-		createNodeCmd = fmt.Sprintf("docker run -td --hostname %s --net %s --name %s --rm --privileged ", node.Name, node.NetBase, node.Name)
+		createNodeCmd = fmt.Sprintf("docker run -td --net %s --name %s --rm --privileged ", node.NetBase, node.Name)
+
+		if !node.HostNameIgnore {
+			createNodeCmd += fmt.Sprintf("--hostname %s ", node.Name)
+		}
+
 		if len(node.Sysctls) != 0 {
 			for _, sysctl := range node.Sysctls {
 				createNodeCmd += fmt.Sprintf("--sysctl %s ", sysctl.Sysctl)
 			}
+		}
+
+		if node.EntryPoint != "" {
+			createNodeCmd += fmt.Sprintf("--entrypoint %s ", node.EntryPoint)
 		}
 
 		if node.VolumeBase == "" {
