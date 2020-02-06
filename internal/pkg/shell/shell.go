@@ -58,6 +58,7 @@ type Node struct {
 	Mounts         []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
 	HostNameIgnore bool        `yaml:"hostname_ignore" mapstructure:"hostname_ignore"`
 	EntryPoint     string      `yaml:"entrypoint" mapstructure:"entrypoint"`
+	ExtraArgs      string      `yaml:"docker_run_extra_args" mapstructure:"docker_run_extra_args"`
 }
 
 // Interface
@@ -422,6 +423,10 @@ func (node *Node) CreateNode() []string {
 			for _, mount := range node.Mounts {
 				createNodeCmd += fmt.Sprintf("-v %s ", mount)
 			}
+		}
+
+		if node.ExtraArgs != "" {
+			createNodeCmd += fmt.Sprintf("%s ", node.ExtraArgs)
 		}
 
 		createNodeCmd += node.Image
