@@ -640,6 +640,23 @@ func TestNode_CreateNode(t *testing.T) {
 			want: []string{"docker run -td --net none --name T1 --rm --privileged --hostname T1 -v /tmp/ak1ra24:/tinet slankdev/frr"},
 		},
 		{
+			name: "create node with hostname_ignore",
+			fields: fields{
+				Name:       "T1",
+				Image:      "slankdev/frr",
+				VolumeBase: "/tmp/ak1ra24",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "T2#net0",
+					},
+				},
+				HostNameIgnore: true,
+			},
+			want: []string{"docker run -td --net none --name T1 --rm --privileged -v /tmp/ak1ra24:/tinet slankdev/frr"},
+		},
+		{
 			name: "create node with entrypoint",
 			fields: fields{
 				Name:       "T1",
