@@ -1,0 +1,36 @@
+
+nodes:
+  - name: R1
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+    sysctls:
+      - { sysctl: net.ipv4.ip_forward=1 }
+      - { sysctl: net.ipv4.ip_forward_use_pmtu=1 }
+      - { sysctl: net.ipv6.conf.all.forwarding=1 }
+      - { sysctl: net.ipv6.conf.all.disable_ipv6=1 }
+
+  - name: R2
+    image: slankdev/ubuntu:18.04
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+    sysctls:
+      - { sysctl: net.ipv4.ip_forward=0 }
+      - { sysctl: net.ipv4.ip_forward_use_pmtu=0 }
+      - { sysctl: net.ipv6.conf.all.forwarding=0 }
+      - { sysctl: net.ipv6.conf.all.disable_ipv6=0 }
+
+test:
+  - name: all
+    cmds:
+      - cmd: echo R1 sysctl state
+      - cmd: docker exec R1 sysctl net.ipv4.ip_forward
+      - cmd: docker exec R1 sysctl net.ipv4.ip_forward_use_pmtu
+      - cmd: docker exec R1 sysctl net.ipv6.conf.all.forwarding
+      - cmd: docker exec R1 sysctl net.ipv6.conf.all.disable_ipv6
+      - cmd: echo R2 sysctl state
+      - cmd: docker exec R2 sysctl net.ipv4.ip_forward
+      - cmd: docker exec R2 sysctl net.ipv4.ip_forward_use_pmtu
+      - cmd: docker exec R2 sysctl net.ipv6.conf.all.forwarding
+      - cmd: docker exec R2 sysctl net.ipv6.conf.all.disable_ipv6
+
