@@ -31,7 +31,11 @@ func newApp() *cli.App {
 	app.Authors = []*cli.Author{
 		{
 			Name:  "ak1ra24",
-			Email: "marug4580@gmail.com",
+			Email: "ak1ra24net@gmail.com",
+		},
+		{
+			Name:  "slankdev",
+			Email: "slank.dev@gmail.com",
 		},
 	}
 	app.Commands = commands
