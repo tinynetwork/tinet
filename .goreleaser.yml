@@ -12,6 +12,10 @@ builds:
       - -X main.Version={{.Version}}
     env:
       - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
 archives:
   - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}_v{{ .Version }}'
     replacements:
