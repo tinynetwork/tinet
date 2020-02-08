@@ -21,7 +21,7 @@ archives:
     replacements:
       linux: linux
       amd64: x86_64
-  - files:
-    - none*
+    files:
+      - none*
 release:
   prerelease: auto
