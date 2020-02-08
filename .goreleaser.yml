@@ -10,11 +10,10 @@ builds:
     ldflags:
       - -s -w
       - -X main.Version={{.Version}}
-      - -X main.Revision={{.ShortCommit}}
     env:
       - CGO_ENABLED=0
 archives:
-  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}v{{ .Version }}{{ end }}'
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}_v{{ .Version }}'
     replacements:
       linux: linux
       amd64: x86_64
