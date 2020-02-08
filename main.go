@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/urfave/cli/v2"
@@ -10,12 +10,15 @@ import (
 const (
 	name        = "tinet"
 	description = "tinet: Tiny Network"
-	version     = "0.0.0"
+)
+
+var (
+	Version = "0.0.1"
 )
 
 func main() {
 	if err := newApp().Run(os.Args); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
@@ -23,12 +26,16 @@ func main() {
 func newApp() *cli.App {
 	app := cli.NewApp()
 	app.Name = name
-	app.Version = version
+	app.Version = Version
 	app.Usage = description
 	app.Authors = []*cli.Author{
 		{
 			Name:  "ak1ra24",
-			Email: "marug4580@gmail.com",
+			Email: "ak1ra24net@gmail.com",
+		},
+		{
+			Name:  "slankdev",
+			Email: "slank.dev@gmail.com",
 		},
 	}
 	app.Commands = commands
