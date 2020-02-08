@@ -13,6 +13,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type linkstatus struct {
+	leftNodeName  string
+	leftInfName   string
+	leftIsSet     bool
+	leftNodeType  string
+	rightNodeName string
+	rightInfName  string
+	rightIsSet    bool
+	rightNodeType string
+}
+
 func LoadCfg(c *cli.Context) (tnconfig shell.Tn, verbose bool, err error) {
 	cfgFile := c.String("config")
 	verbose = c.Bool("verbose")
@@ -34,6 +45,62 @@ func LoadCfg(c *cli.Context) (tnconfig shell.Tn, verbose bool, err error) {
 
 	return tnconfig, verbose, nil
 
+}
+
+func CmdCheck(c *cli.Context) error {
+
+	tnconfig, _, err := LoadCfg(c)
+	if err != nil {
+		return err
+	}
+
+	nodes := tnconfig.Nodes
+	bridges := tnconfig.Switches
+	confmap := map[string]string{}
+
+	for _, node := range nodes {
+		for _, inf := range node.Interfaces {
+			if inf.Type == "direct" {
+				host := node.Name + ":" + inf.Name
+				peer := strings.Split(inf.Args, "#")
+				target := peer[0] + ":" + peer[1]
+				confmap[host] = target
+			} else if inf.Type == "bridge" {
+				host := node.Name + ":" + inf.Name
+				target := inf.Args + ":" + node.Name
+				confmap[host] = target
+			}
+		}
+	}
+
+	for _, bridge := range bridges {
+		for _, inf := range bridge.Interfaces {
+			host := bridge.Name + ":" + inf.Args
+			target := inf.Args + ":" + inf.Name
+			confmap[host] = target
+		}
+	}
+
+	var matchNum int
+	falseConfigMap := map[string]string{}
+
+	for key, value := range confmap {
+		if confmap[key] == value && confmap[value] == key {
+			matchNum++
+		} else {
+			falseConfigMap[key] = value
+		}
+	}
+
+	if len(confmap) == matchNum {
+		return nil
+	} else {
+		var errMsg string
+		for key, value := range falseConfigMap {
+			errMsg += fmt.Sprintf("%s<->%s\n", key, value)
+		}
+		return fmt.Errorf(errMsg)
+	}
 }
 
 func CmdUp(c *cli.Context) error {
@@ -72,11 +139,36 @@ func CmdUp(c *cli.Context) error {
 		}
 	}
 
+	var links []linkstatus
+
 	for _, node := range tnconfig.Nodes {
 		for _, inf := range node.Interfaces {
 			if inf.Type == "direct" {
-				n2nLinkCmds := inf.N2nLink(node.Name)
-				utils.PrintCmds(os.Stdout, n2nLinkCmds, verbose)
+				rNodeArgs := strings.Split(inf.Args, "#")
+				rNodeName := rNodeArgs[0]
+				rInfName := rNodeArgs[1]
+				peerFound := false
+				for _, link := range links {
+					if !link.rightIsSet {
+						nodecheck := link.leftNodeName == rNodeName
+						infcheck := link.leftInfName == rInfName
+						if nodecheck && infcheck {
+							link.rightNodeName = node.Name
+							link.rightInfName = inf.Name
+							link.rightNodeType = node.Type
+							link.rightIsSet = true
+							peerFound = true
+						}
+					}
+				}
+				if !peerFound {
+					link := linkstatus{leftNodeName: node.Name, leftInfName: inf.Name, rightNodeName: rNodeName, rightInfName: rInfName}
+					link.leftNodeType = node.Type
+					link.leftIsSet = true
+					links = append(links, link)
+					n2nLinkCmds := inf.N2nLink(node.Name)
+					utils.PrintCmds(os.Stdout, n2nLinkCmds, verbose)
+				}
 			} else if inf.Type == "bridge" {
 				s2nLinkCmds := inf.S2nLink(node.Name)
 				utils.PrintCmds(os.Stdout, s2nLinkCmds, verbose)
@@ -91,6 +183,12 @@ func CmdUp(c *cli.Context) error {
 				log.Fatal(err)
 			}
 		}
+	}
+
+	// check
+	err = CmdCheck(c)
+	if err != nil {
+		return err
 	}
 
 	if len(tnconfig.PostInit) != 0 {
@@ -328,59 +426,6 @@ func CmdTest(c *cli.Context) error {
 	}
 
 	fmt.Fprintln(os.Stdout, strings.Join(tnTestCmds, "\n"))
-
-	return nil
-}
-
-func CmdCheck(c *cli.Context) error {
-	tnconfig, _, err := LoadCfg(c)
-	if err != nil {
-		return err
-	}
-
-	nodes := tnconfig.Nodes
-	bridges := tnconfig.Switches
-	confmap := map[string]string{}
-
-	for _, node := range nodes {
-		for _, inf := range node.Interfaces {
-			if inf.Type == "direct" {
-				host := node.Name + ":" + inf.Name
-				peer := strings.Split(inf.Args, "#")
-				target := peer[0] + ":" + peer[1]
-				confmap[host] = target
-			} else if inf.Type == "bridge" {
-				host := node.Name + ":" + inf.Name
-				target := inf.Args + ":" + node.Name
-				confmap[host] = target
-			}
-		}
-	}
-
-	for _, bridge := range bridges {
-		for _, inf := range bridge.Interfaces {
-			host := bridge.Name + ":" + inf.Args
-			target := inf.Args + ":" + inf.Name
-			confmap[host] = target
-		}
-	}
-
-	var matchNum int
-	falseConfigMap := map[string]string{}
-
-	for key, value := range confmap {
-		if confmap[key] == value && confmap[value] == key {
-			matchNum++
-		} else {
-			falseConfigMap[key] = value
-		}
-	}
-
-	if len(confmap) == matchNum {
-		log.Println("Success Check!")
-	} else {
-		log.Fatalf("Failed Check: %s\n", falseConfigMap)
-	}
 
 	return nil
 }
