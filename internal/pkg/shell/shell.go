@@ -56,6 +56,8 @@ type Node struct {
 	Interfaces     []Interface `yaml:"interfaces" mapstructure:"interfaces"`
 	Sysctls        []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
 	Mounts         []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
+	DNS            []string    `yaml:"dns,flow" mapstructure:"dns,flow"`
+	DNSSearches    []string    `yaml:"dns_search,flow" mapstructure:"dns_search,flow"`
 	HostNameIgnore bool        `yaml:"hostname_ignore" mapstructure:"hostname_ignore"`
 	EntryPoint     string      `yaml:"entrypoint" mapstructure:"entrypoint"`
 	ExtraArgs      string      `yaml:"docker_run_extra_args" mapstructure:"docker_run_extra_args"`
@@ -422,6 +424,18 @@ func (node *Node) CreateNode() []string {
 		if len(node.Mounts) != 0 {
 			for _, mount := range node.Mounts {
 				createNodeCmd += fmt.Sprintf("-v %s ", mount)
+			}
+		}
+
+		if len(node.DNS) != 0 {
+			for _, dns := range node.DNS {
+				createNodeCmd += fmt.Sprintf("--dns=%s ", dns)
+			}
+		}
+
+		if len(node.DNSSearches) != 0 {
+			for _, dns_search := range node.DNSSearches {
+				createNodeCmd += fmt.Sprintf("--dns-search=%s ", dns_search)
 			}
 		}
 

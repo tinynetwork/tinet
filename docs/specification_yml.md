@@ -9,8 +9,11 @@
 	- docker: node is docker container
 	- netns: node is just network namespace
 - image: specify docker-image
-- sysctls: set sysctls 
+- sysctls: set sysctls
 - mounts: mounts file/directory on the container
+- dns: set DNS resolver
+- dns_search: set DNS search domain
+
 
 ```
 nodes:

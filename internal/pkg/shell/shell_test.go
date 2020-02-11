@@ -116,6 +116,8 @@ func TestNode_DeleteNode(t *testing.T) {
 		Interfaces     []Interface
 		Sysctls        []Sysctl
 		Mounts         []string
+		DNS            []string
+		DNSSearches    []string
 		HostNameIgnore bool
 		EntryPoint     string
 		ExtraArgs      string
@@ -182,6 +184,8 @@ func TestNode_DeleteNode(t *testing.T) {
 				Interfaces:     tt.fields.Interfaces,
 				Sysctls:        tt.fields.Sysctls,
 				Mounts:         tt.fields.Mounts,
+				DNS:            tt.fields.DNS,
+				DNSSearches:    tt.fields.DNSSearches,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
 				ExtraArgs:      tt.fields.ExtraArgs,
@@ -485,6 +489,8 @@ func TestNode_CreateNode(t *testing.T) {
 		Interfaces     []Interface
 		Sysctls        []Sysctl
 		Mounts         []string
+		DNS            []string
+		DNSSearches    []string
 		HostNameIgnore bool
 		EntryPoint     string
 		ExtraArgs      string
@@ -624,6 +630,30 @@ func TestNode_CreateNode(t *testing.T) {
 			want: []string{"docker run -td --net none --name T1 --rm --privileged --hostname T1 -v /tmp/tinet:/tinet -v `pwd`:/mnt/test -v /usr/share/vim:/mnt/vim slankdev/frr"},
 		},
 		{
+			name: "create node with DNS",
+			fields: fields{
+				Name:  "R1",
+				Image: "slankdev/frr",
+				NetBase: "bridge",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "C1#net0",
+					},
+				},
+				DNS: []string{
+					"8.8.8.8",
+					"1.1.1.1",
+				},
+				DNSSearches: []string{
+					"local",
+					"corp",
+				},
+			},
+			want: []string{"docker run -td --net bridge --name R1 --rm --privileged --hostname R1 -v /tmp/tinet:/tinet --dns=8.8.8.8 --dns=1.1.1.1 --dns-search=local --dns-search=corp slankdev/frr"},
+		},
+		{
 			name: "create node with specify tinet volume",
 			fields: fields{
 				Name:       "T1",
@@ -701,6 +731,8 @@ func TestNode_CreateNode(t *testing.T) {
 				Interfaces:     tt.fields.Interfaces,
 				Sysctls:        tt.fields.Sysctls,
 				Mounts:         tt.fields.Mounts,
+				DNS:            tt.fields.DNS,
+				DNSSearches:    tt.fields.DNSSearches,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
 				ExtraArgs:      tt.fields.ExtraArgs,
@@ -1089,6 +1121,8 @@ func TestNode_DelNsCmd(t *testing.T) {
 		Interfaces     []Interface
 		Sysctls        []Sysctl
 		Mounts         []string
+		DNS            []string
+		DNSSearches    []string
 		HostNameIgnore bool
 		EntryPoint     string
 		ExtraArgs      string
@@ -1125,6 +1159,8 @@ func TestNode_DelNsCmd(t *testing.T) {
 				Interfaces:     tt.fields.Interfaces,
 				Sysctls:        tt.fields.Sysctls,
 				Mounts:         tt.fields.Mounts,
+				DNS:            tt.fields.DNS,
+				DNSSearches:    tt.fields.DNSSearches,
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
 				ExtraArgs:      tt.fields.ExtraArgs,
