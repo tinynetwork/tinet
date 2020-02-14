@@ -105,8 +105,8 @@ func BuildCmd(nodes []Node) string {
 }
 
 // ExecConf Execute NodeConfig command
-func (nodeConfig *NodeConfig) ExecConf(nodeType string) []string {
-	var execConfCmds []string
+func (nodeConfig *NodeConfig) ExecConf(nodeType string) (execConfCmds []string) {
+
 	for _, nodeConfigCmd := range nodeConfig.Cmds {
 		var execConfCmd string
 		if nodeType == "docker" {
@@ -128,8 +128,10 @@ func (nodeConfig *NodeConfig) ExecConf(nodeType string) []string {
 }
 
 // DeleteNode Delete docker and netns
-func (node *Node) DeleteNode() []string {
+func (node *Node) DeleteNode() (deleteNodeCmds []string) {
+
 	var deleteCmd string
+
 	if node.Type == "docker" || node.Type == "" {
 		deleteCmd = fmt.Sprintf("docker rm -f %s", node.Name)
 	} else if node.Type == "netns" {
@@ -140,20 +142,22 @@ func (node *Node) DeleteNode() []string {
 
 	deleteNsCmd := fmt.Sprintf("rm -rf /var/run/netns/%s", node.Name)
 
-	deleteNodeCmds := []string{deleteCmd, deleteNsCmd}
+	deleteNodeCmds = []string{deleteCmd, deleteNsCmd}
 
 	return deleteNodeCmds
 }
 
 // DeleteSwitch Delete bridge
-func (br *Switch) DeleteSwitch() string {
-	deleteBrCmd := fmt.Sprintf("ovs-vsctl del-br %s", br.Name)
+func (br *Switch) DeleteSwitch() (deleteBrCmd string) {
+
+	deleteBrCmd = fmt.Sprintf("ovs-vsctl del-br %s", br.Name)
+
 	return deleteBrCmd
 }
 
 // Exec Select Node exec command
-func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
-	var execCommand string
+func (tnconfig *Tn) Exec(nodeName string, Cmds []string) (execCommand string) {
+
 	var selectedNode *Node
 
 	for i, node := range tnconfig.Nodes {
@@ -188,7 +192,8 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) string {
 }
 
 // GenerateFile Generate tinet template config file
-func GenerateFile() (string, error) {
+func GenerateFile() (genContent string, err error) {
+
 	precmd := PreCmd{
 		Cmds: []Cmd{
 			Cmd{
@@ -325,19 +330,17 @@ func GenerateFile() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//
-	// err = ioutil.WriteFile(cfgFile, data, 0644)
-	// if err != nil {
-	// 	return err
-	// }
 
-	// return nil
-	return string(data), nil
+	genContent = string(data)
+
+	return genContent, err
 }
 
 // DockerPs Show docker ps
-func DockerPs(all bool) string {
-	dockerPsCmd := "docker ps --format 'table {{.ID}}\\t{{.Names}}\\t{{.Status}}\\t{{.Networks}}'"
+func DockerPs(all bool) (dockerPsCmd string) {
+
+	dockerPsCmd = "docker ps --format 'table {{.ID}}\\t{{.Names}}\\t{{.Status}}\\t{{.Networks}}'"
+
 	if all {
 		dockerPsCmd += " -a"
 	}
@@ -346,21 +349,24 @@ func DockerPs(all bool) string {
 }
 
 // NetnsPs Show ip netns list
-func NetnsPs() string {
-	netnsListCmd := "ip netns list"
+func NetnsPs() (netnsListCmd string) {
+
+	netnsListCmd = "ip netns list"
 
 	return netnsListCmd
 }
 
 // Pull pull Docker Image
-func Pull(nodes []Node) []string {
+func Pull(nodes []Node) (pullCmds []string) {
+
 	var images []string
+
 	for _, node := range nodes {
 		images = append(images, node.Image)
 	}
+
 	images = utils.RemoveDuplicatesString(images)
 
-	var pullCmds []string
 	for _, image := range images {
 		pullCmd := fmt.Sprintf("docker pull %s", image)
 		pullCmds = append(pullCmds, pullCmd)
@@ -370,8 +376,7 @@ func Pull(nodes []Node) []string {
 }
 
 // TnTestCmdExec Execute test cmds
-func (t *Test) TnTestCmdExec() []string {
-	var tnTestCmds []string
+func (t *Test) TnTestCmdExec() (tnTestCmds []string) {
 
 	for _, testCmd := range t.Cmds {
 		tnTestCmds = append(tnTestCmds, testCmd.Cmd)
@@ -381,8 +386,8 @@ func (t *Test) TnTestCmdExec() []string {
 }
 
 // ExecCmd Execute cmds
-func ExecCmd(cmds []Cmd) []string {
-	var execCmds []string
+func ExecCmd(cmds []Cmd) (execCmds []string) {
+
 	for _, cmd := range cmds {
 		execCmds = append(execCmds, cmd.Cmd)
 	}
@@ -391,13 +396,14 @@ func ExecCmd(cmds []Cmd) []string {
 }
 
 // CreateNode Create nodes set in config
-func (node *Node) CreateNode() []string {
-	var createNodeCmds []string
+func (node *Node) CreateNode() (createNodeCmds []string) {
 
 	var createNodeCmd string
+
 	if node.NetBase == "" {
 		node.NetBase = "none"
 	}
+
 	if node.Type == "docker" || node.Type == "" {
 		createNodeCmd = fmt.Sprintf("docker run -td --net %s --name %s --rm --privileged ", node.NetBase, node.Name)
 
@@ -467,20 +473,23 @@ func (node *Node) CreateNode() []string {
 }
 
 // HostLinkUp Link up link of host
-func HostLinkUp(linkName string) string {
-	linkUpCmd := fmt.Sprintf("ip link set %s up", linkName)
+func HostLinkUp(linkName string) (linkUpCmd string) {
+
+	linkUpCmd = fmt.Sprintf("ip link set %s up", linkName)
+
 	return linkUpCmd
 }
 
 // NetnsLinkUp Link up link of netns
-func NetnsLinkUp(netnsName string, linkName string) string {
-	netnsLinkUpCmd := fmt.Sprintf("ip netns exec %s ip link set %s up", netnsName, linkName)
+func NetnsLinkUp(netnsName string, linkName string) (netnsLinkUpCmd string) {
+
+	netnsLinkUpCmd = fmt.Sprintf("ip netns exec %s ip link set %s up", netnsName, linkName)
+
 	return netnsLinkUpCmd
 }
 
 // CreateSwitch Create bridge set in config
-func (bridge *Switch) CreateSwitch() []string {
-	var createSwitchCmds []string
+func (bridge *Switch) CreateSwitch() (createSwitchCmds []string) {
 
 	addSwitchCmd := fmt.Sprintf("ovs-vsctl add-br %s", bridge.Name)
 	createSwitchCmds = append(createSwitchCmds, addSwitchCmd)
@@ -492,8 +501,7 @@ func (bridge *Switch) CreateSwitch() []string {
 }
 
 // N2nLink Connect links between nodes
-func (inf *Interface) N2nLink(nodeName string) []string {
-	var n2nLinkCmds []string
+func (inf *Interface) N2nLink(nodeName string) (n2nLinkCmds []string) {
 
 	nodeinf := inf.Name
 	peerinfo := strings.Split(inf.Args, "#")
@@ -513,8 +521,7 @@ func (inf *Interface) N2nLink(nodeName string) []string {
 }
 
 // S2nLink Connect links between nodes and switches
-func (inf *Interface) S2nLink(nodeName string) []string {
-	var s2nLinkCmds []string
+func (inf *Interface) S2nLink(nodeName string) (s2nLinkCmds []string) {
 
 	nodeinf := inf.Name
 	peerBr := inf.Args
@@ -530,8 +537,8 @@ func (inf *Interface) S2nLink(nodeName string) []string {
 }
 
 // V2cLink Connect links between veth and container
-func (inf *Interface) V2cLink(nodeName string) []string {
-	var v2cLinkCmds []string
+func (inf *Interface) V2cLink(nodeName string) (v2cLinkCmds []string) {
+
 	nodeinf := inf.Name
 	peerName := inf.Args
 	v2cLinkCmd := fmt.Sprintf("ip link add %s type veth peer name %s", nodeinf, peerName)
@@ -544,8 +551,7 @@ func (inf *Interface) V2cLink(nodeName string) []string {
 }
 
 // P2cLink Connect links between phys-eth and container
-func (inf *Interface) P2cLink(nodeName string) []string {
-	var p2cLinkCmds []string
+func (inf *Interface) P2cLink(nodeName string) (p2cLinkCmds []string) {
 
 	physInf := inf.Name
 	setNsCmd := fmt.Sprintf("ip link set dev %s netns %s", physInf, nodeName)
@@ -559,8 +565,7 @@ func (inf *Interface) P2cLink(nodeName string) []string {
 }
 
 // Mount_docker_netns Mount docker netns to ip netns
-func (node *Node) Mount_docker_netns() []string {
-	var mountDockerNetnsCmds []string
+func (node *Node) Mount_docker_netns() (mountDockerNetnsCmds []string) {
 
 	netnsDir := "/var/run/netns"
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", netnsDir)
@@ -574,14 +579,17 @@ func (node *Node) Mount_docker_netns() []string {
 }
 
 // GetContainerPid func is Output get Docker PID Command
-func GetContainerPid(nodename string) string {
-	getpidcmd := fmt.Sprintf("PID=`docker inspect %s --format '{{.State.Pid}}'`", nodename)
+func GetContainerPid(nodename string) (getpidCmd string) {
 
-	return getpidcmd
+	getpidCmd = fmt.Sprintf("PID=`docker inspect %s --format '{{.State.Pid}}'`", nodename)
+
+	return getpidCmd
 }
 
 // DelNsCmds
-func (node *Node) DelNsCmd() string {
-	delNsCmd := fmt.Sprintf("ip netns del %s", node.Name)
+func (node *Node) DelNsCmd() (delNsCmd string) {
+
+	delNsCmd = fmt.Sprintf("ip netns del %s", node.Name)
+
 	return delNsCmd
 }
