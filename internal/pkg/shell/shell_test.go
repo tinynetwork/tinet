@@ -5,26 +5,6 @@ import (
 	"testing"
 )
 
-func TestBuildCmd(t *testing.T) {
-	type args struct {
-		nodes []Node
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := BuildCmd(tt.args.nodes); got != tt.want {
-				t.Errorf("BuildCmd() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestNodeConfig_ExecConf(t *testing.T) {
 	type fields struct {
 		Name string
@@ -396,56 +376,6 @@ func TestPull(t *testing.T) {
 	}
 }
 
-func TestTnTestCmdExec(t *testing.T) {
-	type fields struct {
-		Name string
-		Cmds []Cmd
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []string
-	}{
-		{
-			name: "test name not set",
-			fields: fields{
-				Cmds: []Cmd{
-					Cmd{
-						Cmd: "echo slankdev",
-					},
-				},
-			},
-			want: []string{"echo slankdev"},
-		},
-		{
-			name: "test name set",
-			fields: fields{
-				Name: "p2p",
-				Cmds: []Cmd{
-					Cmd{
-						Cmd: "docker exec R1 echo hello",
-					},
-					Cmd{
-						Cmd: "docker exec R2 echo world",
-					},
-				},
-			},
-			want: []string{"docker exec R1 echo hello", "docker exec R2 echo world"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := &Test{
-				Name: tt.fields.Name,
-				Cmds: tt.fields.Cmds,
-			}
-			if got := tr.TnTestCmdExec(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Test.TnTestCmdExec() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestExecCmd(t *testing.T) {
 	type args struct {
 		cmds []Cmd
@@ -632,8 +562,8 @@ func TestNode_CreateNode(t *testing.T) {
 		{
 			name: "create node with DNS",
 			fields: fields{
-				Name:  "R1",
-				Image: "slankdev/frr",
+				Name:    "R1",
+				Image:   "slankdev/frr",
 				NetBase: "bridge",
 				Interfaces: []Interface{
 					Interface{
@@ -1167,6 +1097,121 @@ func TestNode_DelNsCmd(t *testing.T) {
 			}
 			if got := node.DelNsCmd(); got != tt.want {
 				t.Errorf("Node.DelNsCmd() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNode_BuildCmd(t *testing.T) {
+	type fields struct {
+		Name           string
+		Type           string
+		NetBase        string
+		VolumeBase     string
+		Image          string
+		BuildFile      string
+		Interfaces     []Interface
+		Sysctls        []Sysctl
+		Mounts         []string
+		DNS            []string
+		DNSSearches    []string
+		HostNameIgnore bool
+		EntryPoint     string
+		ExtraArgs      string
+	}
+	tests := []struct {
+		name         string
+		fields       fields
+		wantBuildCmd string
+	}{
+		{
+			name: "docker build",
+			fields: fields{
+				Name:      "R1",
+				Type:      "docker",
+				Image:     "ak1ra24/testimage",
+				BuildFile: "`pwd`/dockerfile/Dockerfile",
+				Interfaces: []Interface{
+					Interface{
+						Name: "net0",
+						Type: "direct",
+						Args: "R2#net0",
+					},
+				},
+			},
+			wantBuildCmd: "docker build -t ak1ra24/testimage `pwd`/dockerfile/Dockerfile",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node := &Node{
+				Name:           tt.fields.Name,
+				Type:           tt.fields.Type,
+				NetBase:        tt.fields.NetBase,
+				VolumeBase:     tt.fields.VolumeBase,
+				Image:          tt.fields.Image,
+				BuildFile:      tt.fields.BuildFile,
+				Interfaces:     tt.fields.Interfaces,
+				Sysctls:        tt.fields.Sysctls,
+				Mounts:         tt.fields.Mounts,
+				DNS:            tt.fields.DNS,
+				DNSSearches:    tt.fields.DNSSearches,
+				HostNameIgnore: tt.fields.HostNameIgnore,
+				EntryPoint:     tt.fields.EntryPoint,
+				ExtraArgs:      tt.fields.ExtraArgs,
+			}
+			if gotBuildCmd := node.BuildCmd(); gotBuildCmd != tt.wantBuildCmd {
+				t.Errorf("Node.BuildCmd() = %v, want %v", gotBuildCmd, tt.wantBuildCmd)
+			}
+		})
+	}
+}
+
+func TestTest_TnTestCmdExec(t *testing.T) {
+	type fields struct {
+		Name string
+		Cmds []Cmd
+	}
+	tests := []struct {
+		name           string
+		fields         fields
+		wantTnTestCmds []string
+	}{
+		{
+			name: "test name not set",
+			fields: fields{
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "echo slankdev",
+					},
+				},
+			},
+			wantTnTestCmds: []string{"echo slankdev"},
+		},
+		{
+			name: "test name set",
+			fields: fields{
+				Name: "p2p",
+				Cmds: []Cmd{
+					Cmd{
+						Cmd: "docker exec R1 echo hello",
+					},
+					Cmd{
+						Cmd: "docker exec R2 echo world",
+					},
+				},
+			},
+			wantTnTestCmds: []string{"docker exec R1 echo hello", "docker exec R2 echo world"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tr := &Test{
+				Name: tt.fields.Name,
+				Cmds: tt.fields.Cmds,
+			}
+			if gotTnTestCmds := tr.TnTestCmdExec(); !reflect.DeepEqual(gotTnTestCmds, tt.wantTnTestCmds) {
+				t.Errorf("Test.TnTestCmdExec() = %v, want %v", gotTnTestCmds, tt.wantTnTestCmds)
 			}
 		})
 	}
