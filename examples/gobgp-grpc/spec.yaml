@@ -1,0 +1,51 @@
+postinit:
+  - cmds:
+      - cmd: docker cp gobgp01.conf R1:/root/gobgpd.conf
+      - cmd: docker cp gobgp02.conf R2:/root/gobgpd.conf
+      - cmd: docker cp add_path01.py C1:/root/gobgp/api/add_path.py
+      - cmd: docker cp add_path02.py C2:/root/gobgp/api/add_path.py
+
+nodes:
+  - name: R1
+    image: akiranet24/gobgp-frr:7.2
+    interfaces:
+      - { name: net0, type: direct, args: R2#net0 }
+      - { name: net1, type: direct, args: C1#net0 }
+  - name: R2
+    image: akiranet24/gobgp-frr:7.2
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+  - name: C1
+    image: akiranet24/gobgp-grpc-client
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+  - name: C2
+    image: akiranet24/gobgp-grpc-client
+    interfaces:
+      - { name: net0, type: direct, args: R2#net1 }
+
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip addr add 192.168.10.1/24 dev net1
+      - cmd: /etc/init.d/frr start
+      - cmd: nohup gobgpd -f /root/gobgpd.conf &
+  - name: R2
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip addr add 192.168.20.1/24 dev net1
+      - cmd: /etc/init.d/frr start
+      - cmd: nohup gobgpd -f /root/gobgpd.conf &
+  - name: C1
+    cmds:
+      - cmd: ip addr add 192.168.10.2/24 dev net0
+      - cmd: ip r del default
+      - cmd: ip r add default via 192.168.10.1
+  - name: C2
+    cmds:
+      - cmd: ip addr add 192.168.20.2/24 dev net0
+      - cmd: ip r del default
+      - cmd: ip r add default via 192.168.20.1
