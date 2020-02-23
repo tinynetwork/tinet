@@ -11,22 +11,14 @@ jobs:
     name: all
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v1
-
       - name: set up Go
         uses: actions/setup-go@v1
         with:
           go-version: 1.13
         id: go
 
-      - name: cache
-        uses: actions/cache@v1
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
+      - name: checkout
+        uses: actions/checkout@v1
 
       - name: download modules
         if: steps.cache.outputs.cache-hit != 'true'
