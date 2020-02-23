@@ -1,0 +1,32 @@
+name: release-master
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Build
+      env:
+        GO111MODULE: on
+        GOPATH: /home/runner/work/
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        go get -u github.com/tcnksm/ghr
+        go get -u github.com/Songmu/ghch/cmd/ghch
+        export TAGNAME=latest
+        go build -ldflags="-s -w -X main.Version=$TAGNAME"
+        mkdir -p dist/latest
+        tar -zcvf dist/latest/tinet_latest_linux64_amd64.tar.gz tinet
+        $GOPATH/bin/ghr -n=$TAGNAME -b="$($GOPATH/bin/ghch -F markdown --latest)" -replace $TAGNAME ./dist/$TAGNAME
