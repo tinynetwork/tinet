@@ -175,23 +175,23 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) (execCommand string) {
 	if selectedNode == nil {
 		err := fmt.Errorf("no such node...\n")
 		log.Error(err)
-	}
-
-	if selectedNode.Type == "docker" {
-		execCommand = fmt.Sprintf("docker exec %s", nodeName)
-	} else if selectedNode.Type == "netns" {
-		execCommand = fmt.Sprintf("ip netns exec %s", nodeName)
-	} else if selectedNode.Type == "" {
-		execCommand = fmt.Sprintf("docker exec %s", nodeName)
 	} else {
-		err := fmt.Errorf("no such node type...\n")
-		log.Error(err)
-	}
+		if selectedNode.Type == "docker" {
+			execCommand = fmt.Sprintf("docker exec %s", nodeName)
+		} else if selectedNode.Type == "netns" {
+			execCommand = fmt.Sprintf("ip netns exec %s", nodeName)
+		} else if selectedNode.Type == "" {
+			execCommand = fmt.Sprintf("docker exec %s", nodeName)
+		} else {
+			err := fmt.Errorf("no such node type...\n")
+			log.Error(err)
+		}
 
-	var cmdStr string
-	for _, cmd := range Cmds {
-		cmdStr += fmt.Sprintf(" %s", cmd)
-		execCommand += cmdStr
+		var cmdStr string
+		for _, cmd := range Cmds {
+			cmdStr += fmt.Sprintf(" %s", cmd)
+			execCommand += cmdStr
+		}
 	}
 
 	return execCommand
@@ -428,7 +428,7 @@ func (node *Node) CreateNode() (createNodeCmds []string) {
 		}
 
 		if node.VolumeBase == "" {
-			createNodeCmd += fmt.Sprintf("-v /tmp/tinet:/tinet ")
+			createNodeCmd += "-v /tmp/tinet:/tinet "
 		} else {
 			createNodeCmd += fmt.Sprintf("-v %s:/tinet ", node.VolumeBase)
 		}
