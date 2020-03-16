@@ -47,6 +47,22 @@ func LoadCfg(c *cli.Context) (tnconfig shell.Tn, verbose bool, err error) {
 
 }
 
+func CmdBuild(c *cli.Context) error {
+
+	tnconfig, _, err := LoadCfg(c)
+	if err != nil {
+		return err
+	}
+	nodes := tnconfig.Nodes
+
+	for _, node := range nodes {
+		buildCmd := node.BuildCmd()
+		fmt.Fprint(os.Stdout, buildCmd)
+	}
+
+	return nil
+}
+
 func CmdCheck(c *cli.Context) error {
 
 	tnconfig, _, err := LoadCfg(c)

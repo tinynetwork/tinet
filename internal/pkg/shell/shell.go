@@ -53,6 +53,7 @@ type Node struct {
 	NetBase        string      `yaml:"net_base" mapstructure:"net_base"`
 	VolumeBase     string      `yaml:"volume" mapstructure:"volume"`
 	Image          string      `yaml:"image" mapstructure:"image"`
+	BuildFile      string      `yaml:"buildfile" mapstructure:"buildfile"`
 	Interfaces     []Interface `yaml:"interfaces" mapstructure:"interfaces"`
 	Sysctls        []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
 	Mounts         []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
@@ -100,8 +101,13 @@ type Test struct {
 }
 
 // BuildCmd
-func BuildCmd(nodes []Node) string {
-	return "sorry not implement..."
+func (node *Node) BuildCmd() (buildCmd string) {
+
+	if node.BuildFile != "" {
+		buildCmd = fmt.Sprintf("docker build -t %s %s", node.Image, node.BuildFile)
+	}
+
+	return buildCmd
 }
 
 // ExecConf Execute NodeConfig command
