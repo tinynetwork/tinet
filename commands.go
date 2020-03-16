@@ -3,6 +3,7 @@ package main
 import "github.com/urfave/cli/v2"
 
 var commands = []*cli.Command{
+	commandBuild,
 	commandCheck,
 	commandConf,
 	commandDown,
@@ -16,6 +17,25 @@ var commands = []*cli.Command{
 	commandTest,
 	commandUp,
 	commandUpConf,
+}
+
+var commandBuild = &cli.Command{
+	Name:   "build",
+	Usage:  "Build docker Image from tinet config file",
+	Action: CmdBuild,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "Specify the Config file.",
+			Value:   "spec.yaml",
+		},
+		&cli.BoolFlag{
+			Name:    "verbose",
+			Aliases: []string{"v"},
+			Usage:   "Verbose",
+		},
+	},
 }
 
 var commandUp = &cli.Command{
