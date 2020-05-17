@@ -1,0 +1,220 @@
+# ref: https://www.apresiatac.jp/blog/201903121016/
+
+nodes:
+  - name: Spine1
+    image: akiranet24/frr
+    interfaces:
+      - { name: swp49, type: direct, args: Leaf1#swp49 }
+      - { name: swp50, type: direct, args: Leaf2#swp49 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.lo.rp_filter=0
+      - sysctl: net.ipv6.conf.all.disable_ipv6=0
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.seg6_enabled=1
+      - sysctl: net.ipv6.conf.default.seg6_enabled=1
+      - sysctl: net.ipv4.fib_multipath_hash_policy=1
+  - name: Spine2
+    image: akiranet24/frr
+    interfaces:
+      - { name: swp49, type: direct, args: Leaf1#swp50 }
+      - { name: swp50, type: direct, args: Leaf2#swp50 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.lo.rp_filter=0
+      - sysctl: net.ipv6.conf.all.disable_ipv6=0
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.seg6_enabled=1
+      - sysctl: net.ipv6.conf.default.seg6_enabled=1
+      - sysctl: net.ipv4.fib_multipath_hash_policy=1
+  - name: Leaf1
+    image: akiranet24/frr
+    interfaces:
+      - { name: swp49, type: direct, args: Spine1#swp49 }
+      - { name: swp50, type: direct, args: Spine2#swp49 }
+      - { name: swp1, type: direct, args: Vm1#net1 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.lo.rp_filter=0
+      - sysctl: net.ipv6.conf.all.disable_ipv6=0
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.seg6_enabled=1
+      - sysctl: net.ipv6.conf.default.seg6_enabled=1
+      - sysctl: net.ipv4.fib_multipath_hash_policy=1
+  - name: Leaf2
+    image: akiranet24/frr
+    interfaces:
+      - { name: swp49, type: direct, args: Spine1#swp50 }
+      - { name: swp50, type: direct, args: Spine2#swp50 }
+      - { name: swp1, type: direct, args: Vm2#net1 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.lo.rp_filter=0
+      - sysctl: net.ipv6.conf.all.disable_ipv6=0
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.seg6_enabled=1
+      - sysctl: net.ipv6.conf.default.seg6_enabled=1
+      - sysctl: net.ipv4.fib_multipath_hash_policy=1
+
+  - name: Vm1
+    image: akiranet24/frr
+    interfaces: [ { name: net1, type: direct, args: Leaf1#swp1 } ]
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.lo.rp_filter=0
+      - sysctl: net.ipv6.conf.all.disable_ipv6=0
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.seg6_enabled=1
+      - sysctl: net.ipv6.conf.default.seg6_enabled=1
+      - sysctl: net.ipv4.fib_multipath_hash_policy=1
+  - name: Vm2
+    image: akiranet24/frr
+    interfaces: [ { name: net1, type: direct, args: Leaf2#swp1 } ]
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.lo.rp_filter=0
+      - sysctl: net.ipv6.conf.all.disable_ipv6=0
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.forwarding=1
+      - sysctl: net.ipv6.conf.all.seg6_enabled=1
+      - sysctl: net.ipv6.conf.default.seg6_enabled=1
+      - sysctl: net.ipv4.fib_multipath_hash_policy=1
+
+node_configs:
+  - name: Spine1
+    cmds:
+      - cmd: /etc/init.d/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.0.0.1/32"
+          -c "int swp49" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "int swp50" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65020"
+          -c " bgp router-id 10.0.0.1"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC bfd"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor swp49 interface peer-group FABRIC"
+          -c " neighbor swp50 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.0.0.1/32"
+          -c " exit-address-family"
+          -c " address-family l2vpn evpn"
+          -c "  neighbor FABRIC activate"
+          -c " exit-address-family"
+  - name: Spine2
+    cmds:
+      - cmd: /etc/init.d/frr start
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.0.0.2/32"
+          -c "int swp49" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "int swp50" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65020"
+          -c " bgp router-id 10.0.0.2"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC bfd"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor swp49 interface peer-group FABRIC"
+          -c " neighbor swp50 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.0.0.2/32"
+          -c " exit-address-family"
+          -c " address-family l2vpn evpn"
+          -c "  neighbor FABRIC activate"
+          -c " exit-address-family"
+  - name: Leaf1
+    cmds:
+      - cmd: /etc/init.d/frr start
+      - cmd: ip link add br0 type bridge vlan_filtering 1
+      - cmd: ip link add link swp1 name swp1.100 type vlan id 100
+      - cmd: ip link add vni-10100 type vxlan id 10100 local 10.0.0.11 remote 10.0.0.12 dstport 4789 nolearning
+      - cmd: ip link set vni-10100 master br0
+      - cmd: ip link set swp1.100 master br0
+      - cmd: ip link set br0 up
+      - cmd: ip link set vni-10100 up
+      - cmd: ip link set swp1.100 up
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.0.0.11/32"
+          -c "int swp49" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "int swp50" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65011"
+          -c " bgp router-id 10.0.0.11"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC bfd"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor swp49 interface peer-group FABRIC"
+          -c " neighbor swp50 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.0.0.11/32"
+          -c " exit-address-family"
+          -c " address-family l2vpn evpn"
+          -c "  neighbor FABRIC activate"
+          -c "  advertise-all-vni"
+          -c " exit-address-family"
+  - name: Leaf2
+    cmds:
+      - cmd: /etc/init.d/frr start
+      - cmd: ip link add br0 type bridge vlan_filtering 1
+      - cmd: ip link add link swp1 name swp1.100 type vlan id 100
+      - cmd: ip link add vni-10100 type vxlan id 10100 local 10.0.0.12 remote 10.0.0.11 dstport 4789 nolearning
+      - cmd: ip link set vni-10100 master br0
+      - cmd: ip link set swp1.100 master br0
+      - cmd: ip link set br0 up
+      - cmd: ip link set vni-10100 up
+      - cmd: ip link set swp1.100 up
+      - cmd: >-
+          vtysh -c "conf t"
+          -c "int lo" -c "ip addr 10.0.0.12/32"
+          -c "int swp49" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "int swp50" -c "ipv6 nd ra-interval 10" -c "no ipv6 nd suppress-ra"
+          -c "router bgp 65012"
+          -c " bgp router-id 10.0.0.12"
+          -c " bgp bestpath as-path multipath-relax"
+          -c " neighbor FABRIC peer-group"
+          -c " neighbor FABRIC remote-as external"
+          -c " neighbor FABRIC bfd"
+          -c " neighbor FABRIC capability extended-nexthop"
+          -c " neighbor swp49 interface peer-group FABRIC"
+          -c " neighbor swp50 interface peer-group FABRIC"
+          -c " address-family ipv4 unicast"
+          -c "  network 10.0.0.12/32"
+          -c " exit-address-family"
+          -c " address-family l2vpn evpn"
+          -c "  neighbor FABRIC activate"
+          -c "  advertise-all-vni"
+          -c " exit-address-family"
+  - name: Vm1
+    cmds:
+      - cmd: /etc/init.d/frr start
+      - cmd: ip link add link net1 name net1.100 type vlan id 100
+      - cmd: ip addr add 172.16.100.10/24 dev net1.100
+      - cmd: ip link set net1.100 up
+  - name: Vm2
+    cmds:
+      - cmd: /etc/init.d/frr start
+      - cmd: ip link add link net1 name net1.100 type vlan id 100
+      - cmd: ip addr add 172.16.100.20/24 dev net1.100
+      - cmd: ip link set net1.100 up
+
+test:
+  - cmds:
+      - cmd: docker exec Vm1 ping -c2 172.16.100.20
