@@ -12,6 +12,14 @@ Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 - OpenvSwitch
 - graphviz (if you want to use `tn img`)
 
+## Quick Install
+```
+wget https://github.com/tinynetwork/tinet/releases/download/latest/tinet_latest_linux64_amd64.tar.gz -O /tmp/tinet.tgz
+tar xpf /tmp/tinet.tgz
+sudo mv tinet /usr/bin
+tinet --version
+```
+
 ## Build
 ```
 git clone https://github.com/tinynetwork/tinet tinet && cd $_
