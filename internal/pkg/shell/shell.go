@@ -139,7 +139,7 @@ func (node *Node) DeleteNode() (deleteNodeCmds []string) {
 	var deleteCmd string
 
 	if node.Type == "docker" || node.Type == "" {
-		deleteCmd = fmt.Sprintf("docker rm -f %s", node.Name)
+		deleteCmd = fmt.Sprintf("docker rm -f %s || true", node.Name)
 	} else if node.Type == "netns" {
 		deleteCmd = fmt.Sprintf("ip netns del %s", node.Name)
 	} else {
