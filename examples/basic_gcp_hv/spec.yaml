@@ -1,0 +1,36 @@
+---
+nodes:
+- name: HV1
+  image: slankdev/frr
+  interfaces:
+  - { name: tap1, type: direct, args: VM1#net0 }
+  - { name: tap2, type: direct, args: VM2#net0 }
+- name: VM1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: HV1#tap1 }
+- name: VM2
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: HV1#tap2 }
+
+node_configs:
+
+- name: HV1
+  cmds:
+  - cmd: ip addr add 10.0.0.1/32 dev tap1
+  - cmd: ip addr add 10.0.0.1/32 dev tap2
+  - cmd: ip route add 10.0.0.11/32 dev tap1
+  - cmd: ip route add 10.0.0.12/32 dev tap2
+
+- name: VM1
+  cmds:
+  - cmd: ip addr add 10.0.0.11/32 dev net0
+  - cmd: ip route add 10.0.0.1 dev net0 proto static scope link src 10.0.0.11 metric 100
+  - cmd: ip route add default via 10.0.0.1 dev net0 proto static src 10.0.0.11 metric 100
+
+- name: VM2
+  cmds:
+  - cmd: ip addr add 10.0.0.12/32 dev net0
+  - cmd: ip route add 10.0.0.1 dev net0 proto static scope link src 10.0.0.12 metric 100
+  - cmd: ip route add default via 10.0.0.1 dev net0 proto static src 10.0.0.12 metric 100
