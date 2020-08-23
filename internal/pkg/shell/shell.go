@@ -640,9 +640,8 @@ func (node *Node) MountTmpl() (mountTmplCmd []string, err error) {
 		}
 		tmplCmd := fmt.Sprintf("docker cp %s %s:%s", destfile, node.Name, tmpl.Dst)
 		mountTmplCmd = append(mountTmplCmd, tmplCmd)
-		if err := os.Remove(destfile); err != nil {
-			return nil, err
-		}
+		removeFileCmd := fmt.Sprintf("rm -rf %s", destfile)
+		mountTmplCmd = append(mountTmplCmd, removeFileCmd)
 	}
 
 	return mountTmplCmd, nil
