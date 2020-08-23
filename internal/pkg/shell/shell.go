@@ -3,7 +3,9 @@ package shell
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"text/template"
 
 	l "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -48,20 +50,22 @@ type PostFini struct {
 
 // Node
 type Node struct {
-	Name           string      `yaml:"name" mapstructure:"name"`
-	Type           string      `yaml:"type" mapstructure:"type"`
-	NetBase        string      `yaml:"net_base" mapstructure:"net_base"`
-	VolumeBase     string      `yaml:"volume" mapstructure:"volume"`
-	Image          string      `yaml:"image" mapstructure:"image"`
-	BuildFile      string      `yaml:"buildfile" mapstructure:"buildfile"`
-	Interfaces     []Interface `yaml:"interfaces" mapstructure:"interfaces"`
-	Sysctls        []Sysctl    `yaml:"sysctls" mapstructure:"sysctls"`
-	Mounts         []string    `yaml:"mounts,flow" mapstructure:"mounts,flow"`
-	DNS            []string    `yaml:"dns,flow" mapstructure:"dns,flow"`
-	DNSSearches    []string    `yaml:"dns_search,flow" mapstructure:"dns_search,flow"`
-	HostNameIgnore bool        `yaml:"hostname_ignore" mapstructure:"hostname_ignore"`
-	EntryPoint     string      `yaml:"entrypoint" mapstructure:"entrypoint"`
-	ExtraArgs      string      `yaml:"docker_run_extra_args" mapstructure:"docker_run_extra_args"`
+	Name           string                 `yaml:"name" mapstructure:"name"`
+	Type           string                 `yaml:"type" mapstructure:"type"`
+	NetBase        string                 `yaml:"net_base" mapstructure:"net_base"`
+	VolumeBase     string                 `yaml:"volume" mapstructure:"volume"`
+	Image          string                 `yaml:"image" mapstructure:"image"`
+	BuildFile      string                 `yaml:"buildfile" mapstructure:"buildfile"`
+	Interfaces     []Interface            `yaml:"interfaces" mapstructure:"interfaces"`
+	Sysctls        []Sysctl               `yaml:"sysctls" mapstructure:"sysctls"`
+	Mounts         []string               `yaml:"mounts,flow" mapstructure:"mounts,flow"`
+	DNS            []string               `yaml:"dns,flow" mapstructure:"dns,flow"`
+	DNSSearches    []string               `yaml:"dns_search,flow" mapstructure:"dns_search,flow"`
+	HostNameIgnore bool                   `yaml:"hostname_ignore" mapstructure:"hostname_ignore"`
+	EntryPoint     string                 `yaml:"entrypoint" mapstructure:"entrypoint"`
+	ExtraArgs      string                 `yaml:"docker_run_extra_args" mapstructure:"docker_run_extra_args"`
+	Vars           map[string]interface{} `yaml:"vars" mapstructure:"vars"`
+	Templates      []Template             `yaml:"templates" mapstructure:"templates"`
 }
 
 // Interface
@@ -75,6 +79,12 @@ type Interface struct {
 // Sysctl
 type Sysctl struct {
 	Sysctl string `yaml:"string"`
+}
+
+type Template struct {
+	Src     string `yaml:"src"`
+	Dst     string `yaml:"dst"`
+	Content string `yaml:"content"`
 }
 
 // Switch
@@ -598,4 +608,42 @@ func (node *Node) DelNsCmd() (delNsCmd string) {
 	delNsCmd = fmt.Sprintf("ip netns del %s", node.Name)
 
 	return delNsCmd
+}
+
+// MountTmpl
+func (node *Node) MountTmpl() (mountTmplCmd []string, err error) {
+	for _, tmpl := range node.Templates {
+		dest := strings.Split(tmpl.Dst, "/")
+		destfile := dest[len(dest)-1]
+		f, err := os.Create(destfile)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		if len(tmpl.Src) > 0 {
+			tpl := template.Must(template.ParseFiles(tmpl.Src))
+			// err := tpl.Execute(os.Stdout, node.Vars)
+			err := tpl.Execute(f, node.Vars)
+			if err != nil {
+				return nil, err
+			}
+		} else if len(tmpl.Content) > 0 {
+			tpl, err := template.New("").Parse(tmpl.Content)
+			if err != nil {
+				return nil, err
+			}
+			err = tpl.Execute(f, node.Vars)
+			if err != nil {
+				return nil, err
+			}
+		}
+		tmplCmd := fmt.Sprintf("docker cp %s %s:%s", destfile, node.Name, tmpl.Dst)
+		mountTmplCmd = append(mountTmplCmd, tmplCmd)
+		if err := os.Remove(destfile); err != nil {
+			return nil, err
+		}
+	}
+
+	return mountTmplCmd, nil
 }
