@@ -1,0 +1,41 @@
+postinit:
+- cmds:
+  - cmd: |
+      cat <<EOF > /tmp/Corefile
+      .:53 {
+        forward . 8.8.8.8
+        log
+        errors
+        cache
+      }
+      EOF
+  - cmd: docker cp /tmp/Corefile S1:/Corefile
+
+nodes:
+- name: S1
+  image: slankdev/coredns:centos-7
+  net_base: bridge
+  interfaces:
+  - { name: net0, type: direct, args: HV1#net0 }
+  - { name: net1, type: direct, args: HV1#net1 }
+- name: HV1
+  image: slankdev/coredns:centos-7
+  interfaces:
+  - { name: net0, type: direct, args: S1#net0 }
+  - { name: net1, type: direct, args: S1#net1 }
+
+node_configs:
+- name: S1
+  cmds:
+  - cmd: ip addr add 10.0.0.10/24 dev net0
+  - cmd: ip addr add 10.0.0.11/24 dev net1
+  - cmd: ip rule add prio 100 from 10.0.0.11 table 300
+  - cmd: ip route add default via 10.0.0.1 dev net1 table 300
+  - cmd: nohup coredns -conf /Corefile &
+
+- name: HV1
+  cmds:
+  - cmd: ip addr add 10.0.0.1/24 dev net0
+  - cmd: ip addr add 10.0.0.1/24 dev net1
+  - cmd: ip route add 10.0.0.10/32 dev net0
+  - cmd: ip route add 10.0.0.11/32 dev net1
