@@ -622,9 +622,12 @@ func (node *Node) MountTmpl() (mountTmplCmd []string, err error) {
 		defer f.Close()
 
 		if len(tmpl.Src) > 0 {
-			tpl := template.Must(template.ParseFiles(tmpl.Src))
-			// err := tpl.Execute(os.Stdout, node.Vars)
-			err := tpl.Execute(f, node.Vars)
+			tpl, err := template.ParseFiles(tmpl.Src)
+			if err != nil {
+				return nil, err
+			}
+
+			err = tpl.Execute(f, node.Vars)
 			if err != nil {
 				return nil, err
 			}
@@ -638,6 +641,7 @@ func (node *Node) MountTmpl() (mountTmplCmd []string, err error) {
 				return nil, err
 			}
 		}
+
 		tmplCmd := fmt.Sprintf("docker cp %s %s:%s", destfile, node.Name, tmpl.Dst)
 		mountTmplCmd = append(mountTmplCmd, tmplCmd)
 		removeFileCmd := fmt.Sprintf("rm -rf %s", destfile)
