@@ -218,6 +218,11 @@ func CmdUp(c *cli.Context) error {
 		if node.Type == "docker" || node.Type == "" {
 			delNsCmd := node.DelNsCmd()
 			utils.PrintCmd(os.Stdout, delNsCmd, verbose)
+			mountTmplCmd, err := node.MountTmpl()
+			utils.PrintCmds(os.Stdout, mountTmplCmd, verbose)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
