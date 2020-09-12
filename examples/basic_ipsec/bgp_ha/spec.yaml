@@ -1,0 +1,291 @@
+---
+postinit:
+  cmds:
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r1.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn2.r3.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r2.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn2.r2.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r1.conf
+      conn vpn1
+        authby=secret
+        left=10.91.0.2
+        right=10.92.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn2.r3.conf
+      conn vpn1
+        authby=secret
+        left=10.93.0.2
+        right=10.92.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r2.conf
+      conn vpn1
+        authby=secret
+        left=10.92.0.2
+        right=10.91.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn2.r2.conf
+      conn vpn2
+        authby=secret
+        left=10.92.0.2
+        right=10.93.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=101/0xffffffff
+        vti-interface=vti1
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: docker cp /tmp/vpn1.r1.secrets R1:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/vpn1.r2.secrets R2:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/vpn1.r1.conf R1:/etc/ipsec.d/vpn1.conf
+  - cmd: docker cp /tmp/vpn1.r2.conf R2:/etc/ipsec.d/vpn1.conf
+
+  - cmd: docker cp /tmp/vpn2.r3.secrets R3:/etc/ipsec.d/vpn2.secrets
+  - cmd: docker cp /tmp/vpn2.r2.secrets R2:/etc/ipsec.d/vpn2.secrets
+  - cmd: docker cp /tmp/vpn2.r3.conf R3:/etc/ipsec.d/vpn2.conf
+  - cmd: docker cp /tmp/vpn2.r2.conf R2:/etc/ipsec.d/vpn2.conf
+
+  - cmd: docker exec R1 chmod 600 /etc/ipsec.d/vpn1.conf
+  - cmd: docker exec R1 chmod 600 /etc/ipsec.d/vpn1.secrets
+  - cmd: docker exec R2 chmod 600 /etc/ipsec.d/vpn1.conf
+  - cmd: docker exec R2 chmod 600 /etc/ipsec.d/vpn1.secrets
+
+  - cmd: docker exec R3 chmod 600 /etc/ipsec.d/vpn2.conf
+  - cmd: docker exec R3 chmod 600 /etc/ipsec.d/vpn2.secrets
+  - cmd: docker exec R2 chmod 600 /etc/ipsec.d/vpn2.conf
+  - cmd: docker exec R2 chmod 600 /etc/ipsec.d/vpn2.secrets
+
+nodes:
+- name: R0
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R2#net0 }
+  - { name: net2, type: direct, args: R3#net0 }
+- name: R1
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R0#net0 }
+  - { name: net1, type: direct, args: N1#net0 }
+  sysctls:
+  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+- name: R2
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R0#net1 }
+  - { name: net1, type: direct, args: C2#net0 }
+  sysctls:
+  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+- name: R3
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R0#net2 }
+  - { name: net1, type: direct, args: N1#net1 }
+  sysctls:
+  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+- name: N1
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  - { name: net1, type: direct, args: R3#net1 }
+  - { name: net2, type: direct, args: C1#net0 }
+  sysctls:
+  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+- name: C1
+  image: slankdev/tmp
+  interfaces:
+  - { name: net0, type: direct, args: N1#net2 }
+- name: C2
+  image: slankdev/tmp
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+- name: R0
+  cmds:
+  - cmd: ip addr add 10.91.0.1/24 dev net0
+  - cmd: ip addr add 10.92.0.1/24 dev net1
+  - cmd: ip addr add 10.93.0.1/24 dev net2
+
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.91.0.2/24 dev net0
+  - cmd: ip addr add 10.1.0.101/24 dev net1
+  - cmd: ip route add 10.92.0.0/24 via 10.91.0.1
+
+  - cmd: ip link add vti0 type vti key 100 remote 10.92.0.2 local 10.91.0.2
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.0.1/30 remote 169.254.0.2/30 dev vti0
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+  - cmd: sed -i -e "s/bgpd=no/bgpd=yes/g" /etc/frr/daemons
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c 'conf t'
+      -c 'router bgp 65001'
+      -c ' bgp router-id 169.254.0.1'
+      -c ' neighbor 169.254.0.2 remote-as 65002'
+      -c ' neighbor 10.1.0.10   remote-as 65000'
+      -c ' !'
+      -c ' address-family ipv4 unicast'
+      -c '  network 10.1.0.0/24'
+      -c ' exit-address-family'
+      -c '!'
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.93.0.2/24 dev net0
+  - cmd: ip addr add 10.1.0.103/24 dev net1
+  - cmd: ip route add 10.92.0.0/24 via 10.93.0.1
+
+  - cmd: ip link add vti0 type vti key 100 remote 10.92.0.2 local 10.93.0.2
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.1.1/30 remote 169.254.1.2/30 dev vti0
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+  - cmd: sed -i -e "s/bgpd=no/bgpd=yes/g" /etc/frr/daemons
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c 'conf t'
+      -c 'router bgp 65001'
+      -c ' bgp router-id 169.254.1.1'
+      -c ' neighbor 169.254.1.2 remote-as 65002'
+      -c ' neighbor 10.1.0.11   remote-as 65000'
+      -c ' !'
+      -c ' address-family ipv4 unicast'
+      -c '  network 10.1.0.0/24'
+      -c ' exit-address-family'
+      -c '!'
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.92.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: ip route add 10.91.0.0/24 via 10.92.0.1
+  - cmd: ip route add 10.93.0.0/24 via 10.92.0.1
+
+  - cmd: ip link add vti0 type vti key 100 remote 10.91.0.2 local 10.92.0.2
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.0.2/30 remote 169.254.0.1/30 dev vti0
+
+  - cmd: ip link add vti1 type vti key 101 remote 10.93.0.2 local 10.92.0.2
+  - cmd: ip link set vti1 up
+  - cmd: sysctl -w net.ipv4.conf.vti1.disable_policy=1
+  - cmd: ip addr add 169.254.1.2/30 remote 169.254.1.1/30 dev vti1
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+  - cmd: sed -i -e "s/bgpd=no/bgpd=yes/g" /etc/frr/daemons
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c 'conf t'
+      -c 'router bgp 65002'
+      -c ' bgp router-id 169.254.0.2'
+      -c ' neighbor 169.254.0.1 remote-as 65001'
+      -c ' neighbor 169.254.1.1 remote-as 65001'
+      -c ' !'
+      -c ' address-family ipv4 unicast'
+      -c '  network 10.2.0.0/24'
+      -c ' exit-address-family'
+      -c '!'
+
+- name: N1
+  cmds:
+  - cmd: ip addr add 10.1.0.10/24 dev net0
+  - cmd: ip addr add 10.1.0.11/24 dev net1
+  - cmd: ip addr add 10.1.0.1/24 dev net2
+  - cmd: ip route add 10.1.0.101/32 dev net0
+  - cmd: ip route add 10.1.0.103/32 dev net1
+  - cmd: ip route add 10.1.0.2/32 dev net2
+
+  - cmd: sysctl -w net.ipv4.conf.net0.proxy_arp=1
+  - cmd: sysctl -w net.ipv4.conf.net1.proxy_arp=1
+  - cmd: sysctl -w net.ipv4.conf.net2.proxy_arp=1
+
+  - cmd: sed -i -e "s/bgpd=no/bgpd=yes/g" /etc/frr/daemons
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c 'conf t'
+      -c 'router bgp 65000'
+      -c ' bgp router-id 1.1.1.1'
+      -c ' neighbor 10.1.0.101 remote-as 65001'
+      -c ' neighbor 10.1.0.101 disable-connected-check'
+      -c ' neighbor 10.1.0.103 remote-as 65001'
+      -c ' neighbor 10.1.0.103 disable-connected-check'
+      -c ' !'
+      -c ' address-family ipv4 unicast'
+      -c ' exit-address-family'
+      -c '!'
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip route add default via 10.1.0.1
+
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
