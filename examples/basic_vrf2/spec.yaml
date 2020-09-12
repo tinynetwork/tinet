@@ -1,0 +1,118 @@
+
+nodes:
+- name: R1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+  - { name: net1, type: direct, args: C1#net0 }
+  - { name: net2, type: direct, args: C3#net0 }
+- name: R2
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: C2#net0 }
+  - { name: net2, type: direct, args: C4#net0 }
+  - { name: net3, type: direct, args: C0#net0 }
+
+- name: C0
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R2#net3 }
+
+- name: C1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+- name: C2
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+- name: C3
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R1#net2 }
+- name: C4
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip link add link net0 name net0.10 type vlan id 10
+  - cmd: ip link add link net0 name net0.20 type vlan id 20
+  - cmd: ip link set net0.10 up
+  - cmd: ip link set net0.20 up
+  - cmd: ip addr add 10.0.0.1/24 dev net0.10
+  - cmd: ip addr add 10.0.0.1/24 dev net0.20
+
+  - cmd: ip link add vrf10 type vrf table 10
+  - cmd: ip link add vrf20 type vrf table 20
+  - cmd: ip link set vrf10 up
+  - cmd: ip link set vrf20 up
+
+  - cmd: ip link set net0.10 vrf vrf10
+  - cmd: ip link set net1 vrf vrf10
+  - cmd: ip addr add 10.1.0.1/24 dev net1
+  - cmd: ip route add 10.2.0.0/24 via 10.0.0.2 dev net0.10 vrf vrf10
+
+  - cmd: ip link set net0.20 vrf vrf20
+  - cmd: ip link set net2 vrf vrf20
+  - cmd: ip addr add 10.1.0.1/24 dev net2
+  - cmd: ip route add 10.2.0.0/24 via 10.0.0.2 dev net0.20 vrf vrf20
+
+- name: R2
+  cmds:
+  - cmd: ip link add link net0 name net0.10 type vlan id 10
+  - cmd: ip link add link net0 name net0.20 type vlan id 20
+  - cmd: ip link set net0.10 up
+  - cmd: ip link set net0.20 up
+  - cmd: ip addr add 10.0.0.2/24 dev net0.10
+  - cmd: ip addr add 10.0.0.2/24 dev net0.20
+
+  - cmd: ip link add vrf10 type vrf table 10
+  - cmd: ip link add vrf20 type vrf table 20
+  - cmd: ip link set vrf10 up
+  - cmd: ip link set vrf20 up
+
+  - cmd: ip link set net0.10 vrf vrf10
+  - cmd: ip link set net1 vrf vrf10
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: ip route add 10.1.0.0/24 via 10.0.0.1 dev net0.10 vrf vrf10
+
+  - cmd: ip link set net0.20 vrf vrf20
+  - cmd: ip link set net2 vrf vrf20
+  - cmd: ip addr add 10.2.0.1/24 dev net2
+  - cmd: ip route add 10.1.0.0/24 via 10.0.0.1 dev net0.20 vrf vrf20
+
+  - cmd: ip link add vrf90 type vrf table 90
+  - cmd: ip link set vrf90 up
+  - cmd: ip link set net3 vrf vrf90
+  - cmd: ip link set net3 up
+  - cmd: ip addr add 10.2.0.1/24 dev net3
+  - cmd: iptables -t raw -A PREROUTING -s 10.1.0.2/32 -p udp --dport 1000 -j MARK --set-mark 0x10
+  - cmd: ip rule add prio 100 fwmark 0x10 lookup 90
+  - cmd: ip route add default dev vrf10
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip route add default via 10.1.0.1
+- name: C3
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip route add default via 10.1.0.1
+
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
+- name: C4
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
+
+- name: C0
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1

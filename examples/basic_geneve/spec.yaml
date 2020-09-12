@@ -1,0 +1,46 @@
+---
+nodes:
+- name: R1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+  - { name: net1, type: direct, args: C1#net0 }
+- name: R2
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: C2#net0 }
+- name: C1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+- name: C2
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.0.0.1/24 dev net0
+  - cmd: ip link add name geneve0 type geneve id 10 remote 10.0.0.2
+  - cmd: ip link set geneve0 up
+  - cmd: ip link add br0 type bridge
+  - cmd: ip link set br0 up
+  - cmd: ip link set geneve0 master br0
+  - cmd: ip link set net1 master br0
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip link add name geneve0 type geneve id 10 remote 10.0.0.1
+  - cmd: ip link set geneve0 up
+  - cmd: ip link add br0 type bridge
+  - cmd: ip link set br0 up
+  - cmd: ip link set geneve0 master br0
+  - cmd: ip link set net1 master br0
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.99.0.1/24 dev net0
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.99.0.2/24 dev net0
