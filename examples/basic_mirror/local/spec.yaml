@@ -1,0 +1,43 @@
+---
+nodes:
+- name: R1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+- name: R2
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R3#net0 }
+  - { name: net2, type: direct, args: M1#net0 }
+- name: R3
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+- name: M1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.1.0.1/24 dev net0
+  - cmd: ip route add default via 10.1.0.2
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+
+  - cmd: ip link add mon0 type dummy
+  - cmd: ip link set mon0 up
+  - cmd: "tc qdisc add dev net0 root handle 10: prio"
+  - cmd: "tc qdisc add dev net0 ingress"
+  - cmd: "tc filter add dev net0 parent 10: prio 10 protocol all u32 match u32 0 0 flowid 10:1 action mirred egress mirror dev mon0"
+  - cmd: "tc filter add dev net0 parent ffff: prio 10 protocol all u32 match u32 0 0 flowid ffff:1 action mirred egress mirror dev mon0"
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
