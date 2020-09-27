@@ -7,4 +7,3 @@ RUN yum -y install git autoconf automake libtool make \
 	sudo iproute traceroute iputils bash-completion tcpdump \
 	wireshark gdb wget vim libunwind libunwind-devel \
 	iptables-services
-RUN yum -y install libreswan
