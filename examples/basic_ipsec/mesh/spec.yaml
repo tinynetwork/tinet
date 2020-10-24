@@ -1,0 +1,356 @@
+---
+nodes:
+- name: R1
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: N1#net0 }
+- name: R2
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: N1#net1 }
+- name: R3
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: N2#net0 }
+- name: R4
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: N2#net1 }
+- name: N1
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  - { name: net1, type: direct, args: R2#net1 }
+  - { name: net2, type: direct, args: C1#net0 }
+  sysctls:
+  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+- name: N2
+  image: tinet/cloudvpn
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  - { name: net1, type: direct, args: R4#net1 }
+  - { name: net2, type: direct, args: C2#net0 }
+  sysctls:
+  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+- name: C1
+  image: slankdev/tmp
+  interfaces:
+  - { name: net0, type: direct, args: N1#net2 }
+- name: C2
+  image: slankdev/tmp
+  interfaces:
+  - { name: net0, type: direct, args: N2#net2 }
+
+switches:
+- name: B0
+  interfaces:
+  - { name: net0, type: container, args: R1 }
+  - { name: net0, type: container, args: R2 }
+  - { name: net0, type: container, args: R3 }
+  - { name: net0, type: container, args: R4 }
+
+node_configs:
+
+- name: R1
+  cmds:
+  - cmd: ip addr add 20.0.0.1/24 dev net0
+  - cmd: ip addr add 10.1.0.100/24 dev net1
+
+  - cmd: ip link add vti0 type vti key 100 remote 20.0.0.3 local 20.0.0.1
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.0.1/32 remote 169.254.0.3/32 dev vti0
+
+  - cmd: ip link add vti1 type vti key 101 remote 20.0.0.4 local 20.0.0.1
+  - cmd: ip link set vti1 up
+  - cmd: sysctl -w net.ipv4.conf.vti1.disable_policy=1
+  - cmd: ip addr add 169.254.0.1/32 remote 169.254.0.4/32 dev vti1
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 20.0.0.2/24 dev net0
+  - cmd: ip addr add 10.1.0.101/24 dev net1
+
+  - cmd: ip link add vti0 type vti key 100 remote 20.0.0.3 local 20.0.0.2
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.0.2/32 remote 169.254.0.3/32 dev vti0
+
+  - cmd: ip link add vti1 type vti key 101 remote 20.0.0.4 local 20.0.0.2
+  - cmd: ip link set vti1 up
+  - cmd: sysctl -w net.ipv4.conf.vti1.disable_policy=1
+  - cmd: ip addr add 169.254.0.2/32 remote 169.254.0.4/32 dev vti1
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 20.0.0.3/24 dev net0
+  - cmd: ip addr add 10.2.0.100/24 dev net1
+
+  - cmd: ip link add vti0 type vti key 100 remote 20.0.0.1 local 20.0.0.3
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.0.3/32 remote 169.254.0.1/32 dev vti0
+
+  - cmd: ip link add vti1 type vti key 101 remote 20.0.0.2 local 20.0.0.3
+  - cmd: ip link set vti1 up
+  - cmd: sysctl -w net.ipv4.conf.vti1.disable_policy=1
+  - cmd: ip addr add 169.254.0.3/32 remote 169.254.0.2/32 dev vti1
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+- name: R4
+  cmds:
+  - cmd: ip addr add 20.0.0.4/24 dev net0
+  - cmd: ip addr add 10.2.0.101/24 dev net1
+
+  - cmd: ip link add vti0 type vti key 100 remote 20.0.0.1 local 20.0.0.4
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip addr add 169.254.0.4/32 remote 169.254.0.1/32 dev vti0
+
+  - cmd: ip link add vti1 type vti key 101 remote 20.0.0.2 local 20.0.0.4
+  - cmd: ip link set vti1 up
+  - cmd: sysctl -w net.ipv4.conf.vti1.disable_policy=1
+  - cmd: ip addr add 169.254.0.4/32 remote 169.254.0.2/32 dev vti1
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+- name: N1
+  cmds:
+  - cmd: ip addr add 10.1.0.1/24 dev net0
+  - cmd: ip addr add 10.1.0.1/24 dev net1
+  - cmd: ip addr add 10.1.0.1/24 dev net2
+  - cmd: ip route add 10.1.0.100/32 dev net0
+  - cmd: ip route add 10.1.0.101/32 dev net1
+  - cmd: ip route add 10.1.0.10/32 dev net2
+  - cmd: sysctl -w net.ipv4.conf.net0.proxy_arp=1
+  - cmd: sysctl -w net.ipv4.conf.net1.proxy_arp=1
+  - cmd: sysctl -w net.ipv4.conf.net2.proxy_arp=1
+
+- name: N1
+  cmds:
+  - cmd: ip addr add 10.2.0.1/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: ip addr add 10.2.0.1/24 dev net2
+  - cmd: ip route add 10.2.0.100/32 dev net0
+  - cmd: ip route add 10.2.0.101/32 dev net1
+  - cmd: ip route add 10.2.0.10/32 dev net2
+  - cmd: sysctl -w net.ipv4.conf.net0.proxy_arp=1
+  - cmd: sysctl -w net.ipv4.conf.net1.proxy_arp=1
+  - cmd: sysctl -w net.ipv4.conf.net2.proxy_arp=1
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.1.0.10/24 dev net0
+  - cmd: ip route add default via 10.1.0.1
+
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.2.0.10/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
+
+postinit:
+  cmds:
+  - cmd: |
+      cat <<EOF >/tmp/r1_vpn1.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r1_vpn2.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r1_vpn1.conf
+      conn vpn1
+        authby=secret
+        left=20.0.0.1
+        right=20.0.0.3
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r1_vpn2.conf
+      conn vpn2
+        authby=secret
+        left=20.0.0.1
+        right=20.0.0.4
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=101/0xffffffff
+        vti-interface=vti1
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: docker cp /tmp/r1_vpn1.secrets R1:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/r1_vpn2.secrets R1:/etc/ipsec.d/vpn2.secrets
+  - cmd: docker cp /tmp/r1_vpn1.conf    R1:/etc/ipsec.d/vpn1.conf
+  - cmd: docker cp /tmp/r1_vpn2.conf    R1:/etc/ipsec.d/vpn2.conf
+
+  - cmd: |
+      cat <<EOF >/tmp/r2_vpn1.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r2_vpn2.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r2_vpn1.conf
+      conn vpn1
+        authby=secret
+        left=20.0.0.2
+        right=20.0.0.3
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r2_vpn2.conf
+      conn vpn2
+        authby=secret
+        left=20.0.0.2
+        right=20.0.0.4
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=101/0xffffffff
+        vti-interface=vti1
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: docker cp /tmp/r2_vpn1.secrets R2:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/r2_vpn2.secrets R2:/etc/ipsec.d/vpn2.secrets
+  - cmd: docker cp /tmp/r2_vpn1.conf    R2:/etc/ipsec.d/vpn1.conf
+  - cmd: docker cp /tmp/r2_vpn2.conf    R2:/etc/ipsec.d/vpn2.conf
+
+  - cmd: |
+      cat <<EOF >/tmp/r3_vpn1.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r3_vpn2.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r3_vpn1.conf
+      conn vpn1
+        authby=secret
+        left=20.0.0.3
+        right=20.0.0.1
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r3_vpn2.conf
+      conn vpn2
+        authby=secret
+        left=20.0.0.3
+        right=20.0.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=101/0xffffffff
+        vti-interface=vti1
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: docker cp /tmp/r3_vpn1.secrets R3:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/r3_vpn2.secrets R3:/etc/ipsec.d/vpn2.secrets
+  - cmd: docker cp /tmp/r3_vpn1.conf    R3:/etc/ipsec.d/vpn1.conf
+  - cmd: docker cp /tmp/r3_vpn2.conf    R3:/etc/ipsec.d/vpn2.conf
+
+  - cmd: |
+      cat <<EOF >/tmp/r4_vpn1.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r4_vpn2.secrets
+      : PSK "sekainoichihara"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r4_vpn1.conf
+      conn vpn1
+        authby=secret
+        left=20.0.0.4
+        right=20.0.0.1
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/r4_vpn2.conf
+      conn vpn2
+        authby=secret
+        left=20.0.0.4
+        right=20.0.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=101/0xffffffff
+        vti-interface=vti1
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: docker cp /tmp/r4_vpn1.secrets R4:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/r4_vpn2.secrets R4:/etc/ipsec.d/vpn2.secrets
+  - cmd: docker cp /tmp/r4_vpn1.conf    R4:/etc/ipsec.d/vpn1.conf
+  - cmd: docker cp /tmp/r4_vpn2.conf    R4:/etc/ipsec.d/vpn2.conf
