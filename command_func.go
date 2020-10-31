@@ -207,13 +207,6 @@ func CmdUp(c *cli.Context) error {
 		return err
 	}
 
-	if len(tnconfig.PostInit) != 0 {
-		for _, postInitCmds := range tnconfig.PostInit {
-			postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
-			utils.PrintCmds(os.Stdout, postExecInitCmds, verbose)
-		}
-	}
-
 	for _, node := range tnconfig.Nodes {
 		if node.Type == "docker" || node.Type == "" {
 			delNsCmd := node.DelNsCmd()
@@ -223,6 +216,13 @@ func CmdUp(c *cli.Context) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	if len(tnconfig.PostInit) != 0 {
+		for _, postInitCmds := range tnconfig.PostInit {
+			postExecInitCmds := shell.ExecCmd(postInitCmds.Cmds)
+			utils.PrintCmds(os.Stdout, postExecInitCmds, verbose)
 		}
 	}
 
