@@ -7,21 +7,22 @@
 #   N2: nodeID
 nodes:
 - name: M1
-  image: slankdev/ubuntu:18.04
+  image: slankdev/iproute2:5.8
   interfaces:
   - { name: net0, type: direct, args: R1#net0 }
 - name: R1
-  image: slankdev/ubuntu:18.04
+  image: slankdev/iproute2:5.8
   interfaces:
   - { name: net0, type: direct, args: M1#net0 }
   - { name: net1, type: direct, args: R2#net0 }
 - name: R2
-  image: slankdev/ubuntu:18.04
+  image: slankdev/iproute2:5.8
+  interfaces:
   interfaces:
   - { name: net0, type: direct, args: R1#net1 }
   - { name: net1, type: direct, args: R3#net0 }
 - name: R3
-  image: slankdev/ubuntu:18.04
+  image: slankdev/iproute2:5.8
   interfaces:
   - { name: net0, type: direct, args: R2#net1 }
 
