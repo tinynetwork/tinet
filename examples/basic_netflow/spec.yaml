@@ -1,7 +1,7 @@
 ---
 nodes:
 - name: R1
-  image: slankdev/ubuntu:18.04
+  image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R2#net0 }
   - { name: net1, type: direct, args: R3#net0 }
