@@ -39,18 +39,30 @@ switches:
 node_configs:
 - name: R1
   cmds:
-  - cmd: ip addr add 10.2.0.1/24 dev net0
-  - cmd: ip addr add 10.3.0.1/24 dev net1
-  - cmd: ip addr add 10.4.0.1/24 dev net2
+  - cmd: ip addr add 10.1.0.1/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
 - name: R2
   cmds:
-  - cmd: ip addr add 10.2.0.2/24 dev net0
-  - cmd: ip route add default via 10.2.0.1
-- name: R3
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.2/24 dev net1
+- name: C1
   cmds:
-  - cmd: ip addr add 10.3.0.2/24 dev net0
-  - cmd: ip route add default via 10.3.0.1
-- name: R4
+  - cmd: ip addr add 10.1.0.3/24 dev net0
+  - cmd: >-
+      ip route add default
+      nexthop via 10.1.0.1
+      nexthop via 10.1.0.2
+- name: C2
   cmds:
-  - cmd: ip addr add 10.4.0.2/24 dev net0
-  - cmd: ip route add default via 10.4.0.1
+  - cmd: ip addr add 10.2.0.3/24 dev net0
+  - cmd: >-
+      ip route add default
+      nexthop via 10.2.0.1
+      nexthop via 10.2.0.2
+- name: C3
+  cmds:
+  - cmd: ip addr add 10.2.0.4/24 dev net0
+  - cmd: >-
+      ip route add default
+      nexthop via 10.2.0.1
+      nexthop via 10.2.0.2
