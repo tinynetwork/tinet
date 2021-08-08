@@ -11,8 +11,12 @@ flowstats:
 	docker exec C3 pmacct -s -p /tmp/collect.pipe
 reset:
 	docker exec C3 pmacct -e -p /tmp/collect.pipe
+	docker exec R1 pmacct -e -p /tmp/collect.pipe
+	docker exec R2 pmacct -e -p /tmp/collect.pipe
+	docker exec R3 pmacct -e -p /tmp/collect.pipe
+	docker exec R4 pmacct -e -p /tmp/collect.pipe
 test-iperf:
-	docker exec C2 iperf3 -c 10.1.0.10 -P8 -t 2
+	docker exec C2 iperf3 -c 10.1.0.10 -P5 -t 5
 test-vegeta:
-	@#docker exec C2 sh -c "cat /vegeta.conf | vegeta attack -keepalive=false -duration=5s | tee results.bin | vegeta report"
-	docker exec C2 sh -c "cat /vegeta.conf | vegeta attack -duration=5s | tee results.bin | vegeta report"
+	docker exec C2 sh -c "cat /vegeta.conf | vegeta attack -keepalive=false -duration=5s | tee results.bin | vegeta report"
+	#docker exec C2 sh -c "cat /vegeta.conf | vegeta attack -duration=5s | tee results.bin | vegeta report"
