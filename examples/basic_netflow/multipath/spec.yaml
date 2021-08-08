@@ -82,7 +82,7 @@ postinit:
   cmds:
   - cmd: |
       cat <<EOF >/tmp/pmacctd.conf
-      !daemonize:          true
+      daemonize:          true
       aggregate:          src_host,dst_host,proto,src_port,dst_port
 
       !plugins: memory
