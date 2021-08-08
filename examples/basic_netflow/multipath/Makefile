@@ -16,7 +16,8 @@ reset:
 	docker exec R3 pmacct -e -p /tmp/collect.pipe
 	docker exec R4 pmacct -e -p /tmp/collect.pipe
 test-iperf:
-	docker exec -it C2 iperf3 -c 10.1.0.10 -P5 -t 5
+	#docker exec -it C2 iperf3 -c 10.1.0.10 -P5 -t 5
+	docker exec -it C2 iperf3 -c 10.1.0.10 -n 5G
 test-vegeta:
 	docker exec -it C2 sh -c "cat /vegeta.conf | vegeta attack -keepalive=false -duration=5s | tee results.bin | vegeta report"
 	#docker exec -it C2 sh -c "cat /vegeta.conf | vegeta attack -duration=5s | tee results.bin | vegeta report"

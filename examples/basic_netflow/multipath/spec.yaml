@@ -106,7 +106,8 @@ node_configs:
       nexthop via 10.2.0.2
       nexthop via 10.2.0.3
       nexthop via 10.2.0.4
-  - cmd: nfacctd -f /nfacctd.conf
+  #- cmd: nfacctd -f /nfacctd.conf
+  - cmd: nfcapd -l /tmp -p 2100 -t 10 -D
 postinit:
   cmds:
   - cmd: |
@@ -115,13 +116,15 @@ postinit:
       aggregate:          src_host,dst_host,proto,src_port,dst_port
       logfile:            /var/log/pmacctd.log
       interface:          net0
-      plugins:            memory
-      ! plugins:            nfprobe
-      ! plugin_buffer_size: 3520000
-      ! plugin_pipe_size:   409600000
-      ! nfprobe_receiver:   10.2.0.11:2100
-      ! nfprobe_version:    9
-      ! nfprobe_timeouts:   maxlife=1
+      plugin_buffer_size: 3520000
+      plugin_pipe_size:   409600000
+
+      !plugins:            memory
+
+      plugins:            nfprobe
+      nfprobe_receiver:   10.2.0.11:2100
+      nfprobe_version:    9
+      nfprobe_timeouts:   maxlife=1
       EOF
   - cmd: |
       cat <<EOF >/tmp/nfacctd.conf
