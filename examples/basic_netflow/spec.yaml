@@ -7,15 +7,15 @@ nodes:
   - { name: net1, type: direct, args: R3#net0 }
   - { name: net2, type: direct, args: R4#net0 }
 - name: R2
-  image: slankdev/ubuntu:18.04
+  image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net0 }
 - name: R3
-  image: slankdev/ubuntu:18.04
+  image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net1 }
 - name: R4
-  image: slankdev/ubuntu:18.04
+  image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net2 }
 
