@@ -51,10 +51,12 @@ node_configs:
   cmds:
   - cmd: ip addr add 10.1.0.1/24 dev net0
   - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
 - name: R2
   cmds:
   - cmd: ip addr add 10.1.0.2/24 dev net0
   - cmd: ip addr add 10.2.0.2/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
 - name: C1
   cmds:
   - cmd: ip addr add 10.1.0.3/24 dev net0
@@ -76,3 +78,20 @@ node_configs:
       ip route add default
       nexthop via 10.2.0.1
       nexthop via 10.2.0.2
+postinit:
+  cmds:
+  - cmd: |
+      cat <<EOF >/tmp/pmacctd.conf
+      daemonize:          true
+      plugins:            memory
+      aggregate:          src_host,dst_host,proto,src_port,dst_port
+      plugin_buffer_size: 35200
+      plugin_pipe_size:   409600000
+      EOF
+  - cmd: docker cp /tmp/pmacctd.conf R1:/pmacctd.conf
+  - cmd: docker cp /tmp/pmacctd.conf R2:/pmacctd.conf
+test:
+- name: clear
+  cmds:
+  - cmd: docker exec R1 pmacct -e -p /tmp/collect.pipe
+  - cmd: docker exec R2 pmacct -e -p /tmp/collect.pipe
