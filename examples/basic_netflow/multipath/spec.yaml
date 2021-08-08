@@ -88,6 +88,7 @@ node_configs:
       nexthop via 10.1.0.3
       nexthop via 10.1.0.4
   - cmd: nginx
+  - cmd: iperf3 -s -D
 - name: C2
   cmds:
   - cmd: ip addr add 10.2.0.10/24 dev net0
