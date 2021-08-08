@@ -5,33 +5,26 @@ nodes:
   interfaces:
   - { name: net0, type: bridge, args: B1 }
   - { name: net1, type: bridge, args: B2 }
-  sysctls:
-  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
 - name: R2
   image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: bridge, args: B1 }
   - { name: net1, type: bridge, args: B2 }
-  sysctls:
-  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+
 - name: C1
   image: tinynetwork/pmacctd:develop
-  interfaces:
-  - { name: net0, type: bridge, args: B1 }
-  sysctls:
-  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+  interfaces: [{ name: net0, type: bridge, args: B1 }]
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
 - name: C2
   image: tinynetwork/pmacctd:develop
-  interfaces:
-  - { name: net0, type: bridge, args: B2 }
-  sysctls:
-  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+  interfaces: [{ name: net0, type: bridge, args: B2 }]
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
 - name: C3
   image: tinynetwork/pmacctd:develop
-  interfaces:
-  - { name: net0, type: bridge, args: B2 }
-  sysctls:
-  - { sysctl: net.ipv4.fib_multipath_hash_policy=1 }
+  interfaces: [{ name: net0, type: bridge, args: B2 }]
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
 
 switches:
 - name: B1
