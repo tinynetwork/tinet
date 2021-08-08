@@ -1,4 +1,6 @@
 # NetFlow/IPFIX using pmacctd
+
+## pmacct
 ref: https://github.com/linsomniac/pmacct/blob/master/EXAMPLES
 
 ```
@@ -18,4 +20,9 @@ plugins:            memory
 aggregate:          src_host,dst_host,proto,src_port,dst_port
 plugin_buffer_size: 35200
 plugin_pipe_size:   409600000
+```
+
+## nfcapd/nfdump
+```
+nfcapd -w -l /tmp -p 2100
 ```
