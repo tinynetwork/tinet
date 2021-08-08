@@ -82,11 +82,21 @@ postinit:
   cmds:
   - cmd: |
       cat <<EOF >/tmp/pmacctd.conf
-      daemonize:          true
-      plugins:            memory
+      !daemonize:          true
       aggregate:          src_host,dst_host,proto,src_port,dst_port
+
+      !plugins: memory
+      !plugin_buffer_size: 35200
+      !plugin_pipe_size:   409600000
+
+      plugins: nfprobe
       plugin_buffer_size: 35200
-      plugin_pipe_size:   409600000
+      plugin_pipe_size:   4096000
+      nfprobe_receiver: 10.2.0.4:2100
+      nfprobe_version: 9
+      nfprobe_timeouts: maxlife=1
+      !nfprobe_timeouts: tcp=10:tcp.rst=10:tcp.fin=10:icmp=10:expint=20:maxlife=1
+
       EOF
   - cmd: docker cp /tmp/pmacctd.conf R1:/pmacctd.conf
   - cmd: docker cp /tmp/pmacctd.conf R2:/pmacctd.conf
