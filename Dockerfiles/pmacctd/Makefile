@@ -4,3 +4,5 @@ build:
 push:
 	docker push $(IMG)
 all: build push
+run:
+	docker run --rm -it $(IMG) bash
