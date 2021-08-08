@@ -1,0 +1,56 @@
+---
+nodes:
+- name: R1
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+  - { name: net1, type: bridge, args: B2 }
+- name: R2
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+  - { name: net1, type: bridge, args: B2 }
+- name: C1
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+- name: C2
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B2 }
+- name: C3
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B2 }
+
+switches:
+- name: B1
+  interfaces:
+  - { name: net0, type: container, args: R1 }
+  - { name: net0, type: container, args: R2 }
+  - { name: net0, type: container, args: C1 }
+- name: B2
+  interfaces:
+  - { name: net1, type: container, args: R1 }
+  - { name: net1, type: container, args: R2 }
+  - { name: net0, type: container, args: C2 }
+  - { name: net0, type: container, args: C3 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.2.0.1/24 dev net0
+  - cmd: ip addr add 10.3.0.1/24 dev net1
+  - cmd: ip addr add 10.4.0.1/24 dev net2
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.3.0.2/24 dev net0
+  - cmd: ip route add default via 10.3.0.1
+- name: R4
+  cmds:
+  - cmd: ip addr add 10.4.0.2/24 dev net0
+  - cmd: ip route add default via 10.4.0.1
