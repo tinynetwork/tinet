@@ -3,18 +3,18 @@ nodes:
 - name: R1
   image: tinynetwork/pmacctd:develop
   interfaces:
-  - { name: net0, type: direct, args: R2#net0 }
-  - { name: net1, type: direct, args: R3#net0 }
-  - { name: net2, type: direct, args: R4#net0 }
-- name: R2
+  - { name: net0, type: direct, args: S1#net0 }
+  - { name: net1, type: direct, args: S2#net0 }
+  - { name: net2, type: direct, args: C1#net0 }
+- name: S1
   image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net0 }
-- name: R3
+- name: S2
   image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net1 }
-- name: R4
+- name: C1
   image: tinynetwork/pmacctd:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net2 }
@@ -25,15 +25,15 @@ node_configs:
   - cmd: ip addr add 10.2.0.1/24 dev net0
   - cmd: ip addr add 10.3.0.1/24 dev net1
   - cmd: ip addr add 10.4.0.1/24 dev net2
-- name: R2
+- name: S1
   cmds:
   - cmd: ip addr add 10.2.0.2/24 dev net0
   - cmd: ip route add default via 10.2.0.1
-- name: R3
+- name: S2
   cmds:
   - cmd: ip addr add 10.3.0.2/24 dev net0
   - cmd: ip route add default via 10.3.0.1
-- name: R4
+- name: C1
   cmds:
   - cmd: ip addr add 10.4.0.2/24 dev net0
   - cmd: ip route add default via 10.4.0.1
