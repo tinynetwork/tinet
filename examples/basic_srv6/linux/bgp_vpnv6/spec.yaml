@@ -1,0 +1,191 @@
+postinit:
+  cmds:
+  - cmd: |
+      cat <<EOF >/tmp/daemons
+      zebra=yes
+      bgpd=yes
+      sharpd=yes
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/frr.r1.conf
+      !
+      log file /tmp/frr.log
+      debug bgp neighbor-events
+      debug bgp zebra
+      debug bgp vnc verbose
+      debug bgp update-groups
+      debug bgp updates in
+      debug bgp updates out
+      debug bgp vpn label
+      debug bgp vpn leak-from-vrf
+      debug bgp vpn leak-to-vrf
+      debug bgp vpn rmap-event
+      !
+      segment-routing
+       srv6
+        locators
+         locator default
+           prefix 2001:1111::/64
+         !
+        !
+       !
+      !
+      router bgp 1
+       bgp router-id 1.1.1.1
+       no bgp ebgp-requires-policy
+       no bgp default ipv4-unicast
+       neighbor 2001:ffff::2 remote-as 2
+       neighbor 2001:ffff::2 timers 3 10
+       neighbor 2001:ffff::2 timers connect 1
+       !
+       address-family ipv6 vpn
+        neighbor 2001:ffff::2 activate
+       exit-address-family
+       !
+       segment-routing srv6
+        locator default
+       !
+      !
+      router bgp 1 vrf vrf100
+       bgp router-id 1.1.1.1
+       no bgp ebgp-requires-policy
+       no bgp default ipv4-unicast
+       !
+       address-family ipv6 unicast
+        sid vpn export auto
+        rd vpn export 1:100
+        rt vpn export 99:99
+        rt vpn import 99:99
+        import vpn
+        export vpn
+        redistribute connected
+       exit-address-family
+      !
+      ipv6 route 2001:2222::/64 2001:ffff::2
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/frr.r2.conf
+      !
+      !debug bgp neighbor-events
+      !debug bgp zebra
+      !debug bgp vnc verbose
+      !debug bgp update-groups
+      !debug bgp updates in
+      !debug bgp updates out
+      !debug bgp vpn label
+      !debug bgp vpn leak-from-vrf
+      !debug bgp vpn leak-to-vrf
+      !debug bgp vpn rmap-event
+      !
+      segment-routing
+       srv6
+        locators
+         locator default
+           prefix 2001:2222::/64
+         !
+        !
+       !
+      !
+      router bgp 2
+       bgp router-id 2.2.2.2
+       no bgp ebgp-requires-policy
+       no bgp default ipv4-unicast
+       neighbor 2001:ffff::1 remote-as 1
+       neighbor 2001:ffff::1 timers 3 10
+       neighbor 2001:ffff::1 timers connect 1
+       !
+       address-family ipv6 vpn
+        neighbor 2001:ffff::1 activate
+       exit-address-family
+       !
+       segment-routing srv6
+        locator default
+       !
+      !
+      router bgp 2 vrf vrf100
+       bgp router-id 2.2.2.2
+       no bgp ebgp-requires-policy
+       no bgp default ipv4-unicast
+       !
+       address-family ipv6 unicast
+        sid vpn export auto
+        rd vpn export 2:100
+        rt vpn export 99:99
+        rt vpn import 99:99
+        import vpn
+        export vpn
+        redistribute connected
+       exit-address-family
+      !
+      ipv6 route 2001:1111::/64 2001:ffff::1
+      EOF
+  - cmd: docker cp /tmp/daemons R1:/etc/frr/daemons
+  - cmd: docker cp /tmp/frr.r1.conf R1:/etc/frr/frr.conf
+  - cmd: docker cp /tmp/frr.r2.conf R2:/etc/frr/frr.conf
+
+nodes:
+- name: R1
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+  - { name: net1, type: direct, args: C1#net0 }
+- name: R2
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: C2#net0 }
+- name: C1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+- name: C2
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+  - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+  - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+  - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+  - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+  - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+  - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+  - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+
+  - cmd: ip addr add 2001:ffff::1/64 dev net0
+  - cmd: ip link add vrf100 type vrf table 100
+  - cmd: ip link set vrf100 up
+  - cmd: ip link set dev net1 vrf vrf100
+  - cmd: ip addr add 2001:bb11::1/64 dev net1
+  - cmd: /usr/lib/frr/frrinit.sh start
+
+- name: R2
+  cmds:
+  - cmd: sysctl -w 'net.ipv6.conf.all.forwarding=1'
+  - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+  - cmd: sysctl -w 'net.ipv6.conf.all.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.default.forwarding=1'
+  - cmd: sysctl -w 'net.ipv6.conf.default.disable_ipv6=0'
+  - cmd: sysctl -w 'net.ipv6.conf.default.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.lo.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.net0.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv6.conf.net1.seg6_enabled=1'
+  - cmd: sysctl -w 'net.ipv4.conf.all.rp_filter=0'
+  - cmd: sysctl -w 'net.ipv4.conf.lo.rp_filter=0'
+  - cmd: sysctl -w 'net.ipv4.conf.net0.rp_filter=0'
+  - cmd: sysctl -w 'net.ipv4.conf.net1.rp_filter=0'
+
+  - cmd: ip addr add 2001:ffff::2/64 dev net0
+  - cmd: ip link add vrf100 type vrf table 100
+  - cmd: ip link set vrf100 up
+  - cmd: ip link set dev net1 vrf vrf100
+  - cmd: ip addr add 2001:bb22::1/64 dev net1
+  - cmd: /usr/lib/frr/frrinit.sh start
