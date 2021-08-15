@@ -67,18 +67,6 @@ postinit:
       EOF
   - cmd: |
       cat <<EOF >/tmp/frr.r2.conf
-      !
-      !debug bgp neighbor-events
-      !debug bgp zebra
-      !debug bgp vnc verbose
-      !debug bgp update-groups
-      !debug bgp updates in
-      !debug bgp updates out
-      !debug bgp vpn label
-      !debug bgp vpn leak-from-vrf
-      !debug bgp vpn leak-to-vrf
-      !debug bgp vpn rmap-event
-      !
       segment-routing
        srv6
         locators
