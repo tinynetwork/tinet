@@ -120,8 +120,12 @@ postinit:
       ipv6 route 2001:1111::/64 2001:ffff::1
       EOF
   - cmd: docker cp /tmp/daemons R1:/etc/frr/daemons
+  - cmd: docker cp /tmp/daemons R2:/etc/frr/daemons
+  - cmd: docker cp /tmp/daemons C1:/etc/frr/daemons
+  - cmd: docker cp /tmp/daemons C2:/etc/frr/daemons
   - cmd: docker cp /tmp/frr.r1.conf R1:/etc/frr/frr.conf
   - cmd: docker cp /tmp/frr.r2.conf R2:/etc/frr/frr.conf
+  - cmd: docker cp /tmp/frr.c1.conf C1:/etc/frr/frr.conf
 
 nodes:
 - name: R1
@@ -135,11 +139,11 @@ nodes:
   - { name: net0, type: direct, args: R1#net0 }
   - { name: net1, type: direct, args: C2#net0 }
 - name: C1
-  image: slankdev/frr
+  image: tinynetwork/frr:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net1 }
 - name: C2
-  image: slankdev/frr
+  image: tinynetwork/frr:develop
   interfaces:
   - { name: net0, type: direct, args: R2#net1 }
 
@@ -188,4 +192,16 @@ node_configs:
   - cmd: ip link set vrf100 up
   - cmd: ip link set dev net1 vrf vrf100
   - cmd: ip addr add 2001:bb22::1/64 dev net1
+  - cmd: /usr/lib/frr/frrinit.sh start
+
+- name: C1
+  cmds:
+  - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+  - cmd: ip addr add 2001:bb11::2/64 dev net0
+  - cmd: /usr/lib/frr/frrinit.sh start
+
+- name: C2
+  cmds:
+  - cmd: sysctl -w 'net.ipv6.conf.all.disable_ipv6=0'
+  - cmd: ip addr add 2001:bb22::2/64 dev net0
   - cmd: /usr/lib/frr/frrinit.sh start
