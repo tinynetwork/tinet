@@ -17,36 +17,64 @@ nodes:
   image: slankdev/frr
   interfaces:
   - { name: net0, type: bridge, args: B0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 
 - name: R1
   image: slankdev/frr
   interfaces:
   - { name: net0, type: bridge, args: B0 }
   - { name: net1, type: direct, args: C1#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 - name: C1
   image: slankdev/ubuntu:16.04
   interfaces:
   - { name: net0, type: direct, args: R1#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 
 - name: R2
   image: slankdev/frr
   interfaces:
   - { name: net0, type: bridge, args: B0 }
   - { name: net1, type: direct, args: C2#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 - name: C2
   image: slankdev/ubuntu:16.04
   interfaces:
   - { name: net0, type: direct, args: R2#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 
 - name: R3
   image: slankdev/frr
   interfaces:
   - { name: net0, type: bridge, args: B0 }
   - { name: net1, type: direct, args: C3#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 - name: C3
   image: slankdev/ubuntu:16.04
   interfaces:
   - { name: net0, type: direct, args: R3#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
 
 switches:
 - name: B0
@@ -77,46 +105,85 @@ node_configs:
       -c "  !neighbor 10.255.0.12 next-hop-self"
       -c "  !neighbor 10.255.0.13 next-hop-self"
       -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 10.255.0.11 activate"
+      -c "  neighbor 10.255.0.12 activate"
+      -c "  neighbor 10.255.0.13 activate"
+      -c "  neighbor 10.255.0.11 route-server-client"
+      -c "  neighbor 10.255.0.12 route-server-client"
+      -c "  neighbor 10.255.0.13 route-server-client"
+      -c " exit-address-family"
       -c "!"
 
 - name: R1
   cmds:
   - cmd: ip addr add 10.255.0.11/24 dev net0
   - cmd: ip addr add 192.168.11.1/24 dev net1
+  - cmd: ip -6 addr add 2001:11::1/64 dev net1
   - cmd: /usr/lib/frr/frr start
   - cmd: >-
       vtysh -c "conf t"
       -c "router bgp 11"
-      -c "  bgp router-id 10.255.0.11"
-      -c "  neighbor 10.255.0.1 remote-as 1"
-      -c "  network 192.168.11.0/24"
-      -c "exit"
+      -c " bgp router-id 10.255.0.11"
+      -c " neighbor 10.255.0.1 remote-as 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c "!"
 
 - name: R2
   cmds:
   - cmd: ip addr add 10.255.0.12/24 dev net0
   - cmd: ip addr add 192.168.12.1/24 dev net1
+  - cmd: ip -6 addr add 2001:12::1/64 dev net1
   - cmd: /usr/lib/frr/frr start
   - cmd: >-
       vtysh -c "conf t"
       -c "router bgp 12"
-      -c "  bgp router-id 10.255.0.12"
-      -c "  neighbor 10.255.0.1 remote-as 1"
-      -c "  network 192.168.12.0/24"
-      -c "exit"
+      -c " bgp router-id 10.255.0.12"
+      -c " neighbor 10.255.0.1 remote-as 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c "!"
 
 - name: R3
   cmds:
   - cmd: ip addr add 10.255.0.13/24 dev net0
   - cmd: ip addr add 192.168.13.1/24 dev net1
+  - cmd: ip -6 addr add 2001:13::1/64 dev net1
   - cmd: /usr/lib/frr/frr start
   - cmd: >-
       vtysh -c "conf t"
       -c "router bgp 13"
-      -c "  bgp router-id 10.255.0.13"
-      -c "  neighbor 10.255.0.1 remote-as 1"
-      -c "  network 192.168.13.0/24"
-      -c "exit"
+      -c " bgp router-id 10.255.0.13"
+      -c " neighbor 10.255.0.1 remote-as 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c "!"
 
 - name: C1
   cmds:
