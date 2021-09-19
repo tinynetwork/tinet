@@ -49,7 +49,7 @@ nodes:
   - sysctl: net.ipv6.conf.all.forwarding=1
 
 - name: C1
-  image: slankdev/ubuntu:16.04
+  image: tinynetwork/frr:develop
   interfaces:
   - { name: net0, type: direct, args: R1#net1 }
   sysctls:
@@ -57,7 +57,7 @@ nodes:
   - sysctl: net.ipv6.conf.default.disable_ipv6=0
   - sysctl: net.ipv6.conf.all.forwarding=1
 - name: C2
-  image: slankdev/ubuntu:16.04
+  image: tinynetwork/frr:develop
   interfaces:
   - { name: net0, type: direct, args: R2#net1 }
   sysctls:
@@ -65,7 +65,7 @@ nodes:
   - sysctl: net.ipv6.conf.default.disable_ipv6=0
   - sysctl: net.ipv6.conf.all.forwarding=1
 - name: C3
-  image: slankdev/ubuntu:16.04
+  image: tinynetwork/frr:develop
   interfaces:
   - { name: net0, type: direct, args: R3#net1 }
   sysctls:
@@ -192,8 +192,11 @@ node_configs:
       -c "!"
       -c "router bgp 11 vrf vrf1"
       -c " bgp router-id 11.11.11.11"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:11::2 remote-as external"
       -c " !"
       -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:11::2 activate"
       -c "  sid vpn export auto"
       -c "  rd vpn export 11:1001"
       -c "  rt vpn export 1:1001"
@@ -260,8 +263,11 @@ node_configs:
       -c "!"
       -c "router bgp 12 vrf vrf1"
       -c " bgp router-id 12.12.12.12"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:12::2 remote-as external"
       -c " !"
       -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:12::2 activate"
       -c "  sid vpn export auto"
       -c "  rd vpn export 12:1001"
       -c "  rt vpn export 1:1001"
@@ -328,6 +334,7 @@ node_configs:
       -c "!"
       -c "router bgp 13 vrf vrf1"
       -c " bgp router-id 13.13.13.13"
+      -c " no bgp ebgp-requires-policy"
       -c " !"
       -c " address-family ipv6 unicast"
       -c "  sid vpn export auto"
@@ -344,11 +351,40 @@ node_configs:
   cmds:
   - cmd: ip -6 addr add 2001:11::2/64 dev net0
   - cmd: ip -6 route replace default via 2001:11::1
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "ipv6 route 0::/0 Null0"
+      -c "!"
+      -c "router bgp 101"
+      -c " bgp router-id 101.101.101.101"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:11::1 remote-as external"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:11::1 activate"
+      -c "  network 0::/0"
+      -c " exit-address-family"
 - name: C2
   cmds:
   - cmd: ip -6 addr add 2001:12::2/64 dev net0
   - cmd: ip -6 route replace default via 2001:12::1
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "ipv6 route 0::/0 Null0"
+      -c "!"
+      -c "router bgp 102"
+      -c " bgp router-id 102.102.102.102"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:12::1 remote-as external"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:12::1 activate"
+      -c "  network 0::/0"
+      -c " exit-address-family"
 - name: C3
   cmds:
   - cmd: ip -6 addr add 2001:13::2/64 dev net0
   - cmd: ip -6 route replace default via 2001:13::1
+  - cmd: /usr/lib/frr/frrinit.sh start
