@@ -77,6 +77,7 @@ node_configs:
 - name: RS1
   cmds:
   - cmd: ip addr add 10.255.0.1/32 dev lo
+  - cmd: ip addr add 2001:db8:e:1::0/128 dev lo
   - cmd: /usr/lib/frr/frrinit.sh start
   - cmd: >-
       vtysh -c "conf t"
@@ -91,9 +92,7 @@ node_configs:
       -c " neighbor PE peer-group"
       -c " neighbor PE remote-as external"
       -c " neighbor PE ebgp-multihop 255"
-      -c " neighbor 10.255.0.11 peer-group PE"
-      -c " neighbor 10.255.0.12 peer-group PE"
-      -c " neighbor 10.255.0.13 peer-group PE"
+      -c " bgp listen range 2001:db8:e::/48 peer-group PE"
       -c " !"
       -c " address-family ipv4 unicast"
       -c "  redistribute connected"
@@ -140,6 +139,7 @@ node_configs:
 - name: R1
   cmds:
   - cmd: ip addr add 10.255.0.11/32 dev lo
+  - cmd: ip addr add 2001:db8:e:11::0/128 dev lo
   - cmd: ip link add vrf1 type vrf table 1001
   - cmd: ip link set vrf1 up
   - cmd: ip link set net1 master vrf1
@@ -170,7 +170,7 @@ node_configs:
       -c " neighbor PE peer-group"
       -c " neighbor PE remote-as external"
       -c " neighbor PE ebgp-multihop 255"
-      -c " neighbor 10.255.0.1 peer-group PE"
+      -c " neighbor 2001:db8:e:1:: peer-group PE"
       -c " !"
       -c " segment-routing srv6"
       -c "  locator default"
@@ -181,6 +181,7 @@ node_configs:
       -c " exit-address-family"
       -c " !"
       -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
       -c "  network 2001:db8:f:1::/64"
       -c "  neighbor PEER activate"
       -c " exit-address-family"
@@ -206,6 +207,7 @@ node_configs:
 - name: R2
   cmds:
   - cmd: ip addr add 10.255.0.12/32 dev lo
+  - cmd: ip addr add 2001:db8:e:12::0/128 dev lo
   - cmd: ip link add vrf1 type vrf table 1001
   - cmd: ip link set vrf1 up
   - cmd: ip link set net1 master vrf1
@@ -236,7 +238,7 @@ node_configs:
       -c " neighbor PE peer-group"
       -c " neighbor PE remote-as external"
       -c " neighbor PE ebgp-multihop 255"
-      -c " neighbor 10.255.0.1 peer-group PE"
+      -c " neighbor 2001:db8:e:1:: peer-group PE"
       -c " !"
       -c " segment-routing srv6"
       -c "  locator default"
@@ -247,6 +249,7 @@ node_configs:
       -c " exit-address-family"
       -c " !"
       -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
       -c "  network 2001:db8:f:2::/64"
       -c "  neighbor PEER activate"
       -c " exit-address-family"
@@ -272,6 +275,7 @@ node_configs:
 - name: R3
   cmds:
   - cmd: ip addr add 10.255.0.13/32 dev lo
+  - cmd: ip addr add 2001:db8:e:13::0/128 dev lo
   - cmd: ip link add vrf1 type vrf table 1001
   - cmd: ip link set vrf1 up
   - cmd: ip link set net1 master vrf1
@@ -302,7 +306,7 @@ node_configs:
       -c " neighbor PE peer-group"
       -c " neighbor PE remote-as external"
       -c " neighbor PE ebgp-multihop 255"
-      -c " neighbor 10.255.0.1 peer-group PE"
+      -c " neighbor 2001:db8:e:1:: peer-group PE"
       -c " !"
       -c " segment-routing srv6"
       -c "  locator default"
@@ -313,6 +317,7 @@ node_configs:
       -c " exit-address-family"
       -c " !"
       -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
       -c "  network 2001:db8:f:3::/64"
       -c "  neighbor PEER activate"
       -c " exit-address-family"
