@@ -17,7 +17,7 @@ later.
 
 ## Quick Install
 ```
-curl -LO /usr/bin/tinet https://github.com/tinynetwork/tinet/releases/download/v0.0.2/tinet
+curl -Lo /usr/bin/tinet https://github.com/tinynetwork/tinet/releases/download/v0.0.2/tinet
 chmod +x /usr/bin/tinet
 tinet --version
 ```
