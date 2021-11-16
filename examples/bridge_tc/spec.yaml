@@ -1,0 +1,157 @@
+---
+nodes:
+- name: N1
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: B1#net0 }
+- name: N2
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: B1#net1 }
+- name: N3
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: B1#net2 }
+- name: B1
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: N1#net0 }
+  - { name: net1, type: direct, args: N2#net0 }
+  - { name: net2, type: direct, args: N3#net0 }
+
+
+node_configs:
+- name: N1
+  cmds:
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip route add default via 10.0.0.1
+- name: N2
+  cmds:
+  - cmd: ip addr add 10.0.0.3/24 dev net0
+  - cmd: ip route add default via 10.0.0.1
+- name: N3
+  cmds:
+  - cmd: ip addr add 10.0.1.2/24 dev net0
+  - cmd: ip route add default via 10.0.1.1
+- name: B1
+  cmds:
+  - cmd: ip link add br0 type bridge
+  - cmd: ip link set br0 up
+  - cmd: ip addr add 10.0.0.1/24 dev br0
+  - cmd: ip link set net0 master br0
+  - cmd: ip link set net1 master br0
+  - cmd: ip addr add 10.0.1.1/24 dev net2
+  - cmd: sysctl -w net.ipv4.ip_forward=1
+
+test:
+- cmds:
+  - cmd: echo "=========================================="
+  - cmd: echo "Connectivity test from N1 (10.0.0.2)"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N1 ping -c 1 10.0.0.1
+  - cmd: docker exec N1 ping -c 1 10.0.0.3
+  - cmd: docker exec N1 ping -c 1 10.0.1.1
+  - cmd: docker exec N1 ping -c 1 10.0.1.2
+  - cmd: echo "=========================================="
+  - cmd: echo "Connectivity test from N2 (10.0.0.3)"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 ping -c 1 10.0.0.1
+  - cmd: docker exec N2 ping -c 1 10.0.0.2
+  - cmd: docker exec N1 ping -c 1 10.0.1.1
+  - cmd: docker exec N1 ping -c 1 10.0.1.2
+  - cmd: echo "=========================================="
+  - cmd: echo "Connectivity test from N3 (10.0.1.2)"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N3 ping -c 1 10.0.1.1
+  - cmd: docker exec N3 ping -c 1 10.0.0.1
+  - cmd: docker exec N3 ping -c 1 10.0.0.2
+  - cmd: docker exec N3 ping -c 1 10.0.0.3
+
+  # 帯域制限が効いているかを確認するためにベースラインを見ておきます
+  - cmd: echo "=========================================="
+  - cmd: echo "Baseline iperf number on server side"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec N1 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  
+  # bridgeデバイスそのものにtcで帯域制限をかけた場合host -> bridge networkとforward -> bridgeのケースで帯域制限が効きます。bridgeデバイスに向かってパケットが入っていくトラフィックに対して帯域制限がかかるイメージです。
+  - cmd: echo "=========================================="
+  - cmd: echo "Case1 Attach tc to bridge device itself"
+  - cmd: echo "=========================================="
+  - cmd: echo "tc qdisc add dev br0 root netem rate 100kbit"
+  - cmd: docker exec B1 tc qdisc add dev br0 root netem rate 100kbit
+  - cmd: echo "=========================================="
+  - cmd: echo "Case1-1 iperf from N1 to N2"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec N1 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "Case1-2 iperf from B1 to N2"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec B1 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "Case1-3 iperf from N3 to N2"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec N3 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "End of Case1"
+  - cmd: echo "=========================================="
+  - cmd: echo "tc qdisc del dev br0 root"
+  - cmd: docker exec B1 tc qdisc del dev br0 root
+
+  # bridgeにenslaveされたデバイスにtcで帯域制限をかけた場合bridge経由でそのデバイスに向かっていくすべてのパケットに対して帯域制限が効きます。
+  - cmd: echo "=========================================="
+  - cmd: echo "Case2 Attach tc to enslaved veth"
+  - cmd: echo "=========================================="
+  - cmd: echo "tc qdisc add dev net1 root netem rate 100kbit"
+  - cmd: docker exec B1 tc qdisc add dev net1 root netem rate 100kbit
+  - cmd: echo "=========================================="
+  - cmd: echo "Case2-1 iperf from N1 to N2"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec N1 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "Case2-2 iperf from B1 to N2"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec B1 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "Case2-3 iperf from N3 to N2"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N2 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec N3 iperf -c 10.0.0.3 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N2 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "Case2-4 iperf from N3 to N1"
+  - cmd: echo "=========================================="
+  - cmd: docker exec N1 iperf -s -i 1 &
+  - cmd: sleep 3
+  - cmd: docker exec N3 iperf -c 10.0.0.2 -t 3 2>&1 > /dev/null
+  - cmd: docker exec N1 pkill -KILL iperf
+  - cmd: sleep 3
+  - cmd: echo "=========================================="
+  - cmd: echo "End of Case2"
+  - cmd: echo "=========================================="
+  - cmd: echo "tc qdisc del dev br0 root"
+  - cmd: docker exec B1 tc qdisc del dev net1 root
