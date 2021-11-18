@@ -25,7 +25,6 @@ nodes:
       - { name: net3, type: direct, args: C4#net0 }  
   
 
-
 node_configs:
 
   - name: C1
