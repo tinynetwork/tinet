@@ -1,6 +1,6 @@
 nodes:
 - name: R1
-  image: slankdev/frr:alpine-4e7923e163
+  image: frrouting/frr:v8.1.0
   docker_run_extra_args: --entrypoint bash
   interfaces:
   - { name: net0, type: direct, args: R2#net0 }
@@ -9,7 +9,7 @@ nodes:
   - sysctl: net.ipv6.conf.default.disable_ipv6=0
   - sysctl: net.ipv4.ip_forward=1
 - name: R2
-  image: slankdev/frr:alpine-4e7923e163
+  image: frrouting/frr:v8.1.0
   docker_run_extra_args: --entrypoint bash
   interfaces:
   - { name: net0, type: direct, args: R1#net0 }
