@@ -1,0 +1,151 @@
+---
+nodes:
+- name: R1
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+  - { name: net1, type: bridge, args: B2 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: R2
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+  - { name: net1, type: bridge, args: B2 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: R3
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+  - { name: net1, type: bridge, args: B2 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: R4
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: bridge, args: B1 }
+  - { name: net1, type: bridge, args: B2 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+
+- name: C1
+  image: tinynetwork/nginx:develop
+  interfaces: [{ name: net0, type: bridge, args: B1 }]
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: C2
+  image: tinynetwork/pmacctd:develop
+  interfaces: [{ name: net0, type: bridge, args: B2 }]
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: C3
+  image: tinynetwork/pmacctd:develop
+  interfaces: [{ name: net0, type: bridge, args: B2 }]
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+
+switches:
+- name: B1
+  interfaces:
+  - { name: net0, type: container, args: R1 }
+  - { name: net0, type: container, args: R2 }
+  - { name: net0, type: container, args: R3 }
+  - { name: net0, type: container, args: R4 }
+  - { name: net0, type: container, args: C1 }
+- name: B2
+  interfaces:
+  - { name: net1, type: container, args: R1 }
+  - { name: net1, type: container, args: R2 }
+  - { name: net1, type: container, args: R3 }
+  - { name: net1, type: container, args: R4 }
+  - { name: net0, type: container, args: C2 }
+  - { name: net0, type: container, args: C3 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.1.0.1/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.2/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.1.0.3/24 dev net0
+  - cmd: ip addr add 10.2.0.3/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+- name: R4
+  cmds:
+  - cmd: ip addr add 10.1.0.4/24 dev net0
+  - cmd: ip addr add 10.2.0.4/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.1.0.10/24 dev net0
+  - cmd: >-
+      ip route replace default
+      nexthop via 10.1.0.1
+      nexthop via 10.1.0.2
+      nexthop via 10.1.0.3
+      nexthop via 10.1.0.4
+  - cmd: nginx
+  - cmd: iperf3 -s -D
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.2.0.10/24 dev net0
+  - cmd: >-
+      ip route replace default
+      nexthop via 10.2.0.1
+      nexthop via 10.2.0.2
+      nexthop via 10.2.0.3
+      nexthop via 10.2.0.4
+- name: C3
+  cmds:
+  - cmd: ip addr add 10.2.0.11/24 dev net0
+  - cmd: >-
+      ip route replace default
+      nexthop via 10.2.0.1
+      nexthop via 10.2.0.2
+      nexthop via 10.2.0.3
+      nexthop via 10.2.0.4
+  #- cmd: nfacctd -f /nfacctd.conf
+  - cmd: nfcapd -l /tmp -p 2100 -t 10 -D
+postinit:
+  cmds:
+  - cmd: |
+      cat <<EOF >/tmp/pmacctd.conf
+      daemonize:          true
+      aggregate:          src_host,dst_host,proto,src_port,dst_port
+      logfile:            /var/log/pmacctd.log
+      interface:          net0
+      plugin_buffer_size: 3520000
+      plugin_pipe_size:   409600000
+
+      !plugins:            memory
+
+      plugins:            nfprobe
+      nfprobe_receiver:   10.2.0.11:2100
+      nfprobe_version:    9
+      nfprobe_timeouts:   maxlife=1
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/nfacctd.conf
+      daemonize:          true
+      aggregate:          src_host,dst_host,proto,src_port,dst_port
+      nfacctd_port:       2100
+      plugins:            memory
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vegeta.conf
+      GET http://10.1.0.10
+      EOF
+  - cmd: docker cp /tmp/pmacctd.conf R1:/pmacctd.conf
+  - cmd: docker cp /tmp/pmacctd.conf R2:/pmacctd.conf
+  - cmd: docker cp /tmp/pmacctd.conf R3:/pmacctd.conf
+  - cmd: docker cp /tmp/pmacctd.conf R4:/pmacctd.conf
+  - cmd: docker cp /tmp/nfacctd.conf C3:/nfacctd.conf
+  - cmd: docker cp /tmp/vegeta.conf  C2:/vegeta.conf
+
+test:
+- name: clear
+  cmds:
+  - cmd: docker exec R1 pmacct -e -p /tmp/collect.pipe
+  - cmd: docker exec R2 pmacct -e -p /tmp/collect.pipe

@@ -1,0 +1,390 @@
+nodes:
+- name: RS1
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: S1#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+- name: S1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: RS1#net0 }
+  - { name: net1, type: direct, args: R1#net0 }
+  - { name: net2, type: direct, args: R2#net0 }
+  - { name: net3, type: direct, args: R3#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+- name: R1
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: S1#net1 }
+  - { name: net1, type: direct, args: C1#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: R2
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: S1#net2 }
+  - { name: net1, type: direct, args: C2#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: R3
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: S1#net3 }
+  - { name: net1, type: direct, args: C3#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+- name: C1
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: C2
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: C3
+  image: tinynetwork/frr:develop
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+node_configs:
+- name: RS1
+  cmds:
+  - cmd: ip addr add 10.255.0.1/32 dev lo
+  - cmd: ip addr add 2001:db8:e:1::0/128 dev lo
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 1"
+      -c " bgp router-id 1.1.1.1"
+      -c " no bgp ebgp-requires-policy"
+      -c " !"
+      -c " neighbor PEER peer-group"
+      -c " neighbor PEER remote-as external"
+      -c " neighbor net0 interface peer-group PEER"
+      -c " !"
+      -c " neighbor PE peer-group"
+      -c " neighbor PE remote-as external"
+      -c " neighbor PE ebgp-multihop 255"
+      -c " bgp listen range 2001:db8:e::/48 peer-group PE"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor PEER activate"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 vpn"
+      -c "  neighbor PE activate"
+      -c " exit-address-family"
+      -c "!"
+
+- name: S1
+  cmds:
+  - cmd: ip addr add 10.255.0.100/32 dev lo
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 100"
+      -c " bgp router-id 100.100.100.100"
+      -c " !"
+      -c " neighbor PEER peer-group"
+      -c " neighbor PEER remote-as external"
+      -c " neighbor net0 interface peer-group PEER"
+      -c " neighbor net1 interface peer-group PEER"
+      -c " neighbor net2 interface peer-group PEER"
+      -c " neighbor net3 interface peer-group PEER"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor PEER activate"
+      -c "  network 0::/0"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.255.0.11/32 dev lo
+  - cmd: ip addr add 2001:db8:e:11::0/128 dev lo
+  - cmd: ip link add vrf1 type vrf table 1001
+  - cmd: ip link set vrf1 up
+  - cmd: ip link set net1 master vrf1
+  - cmd: ip -6 addr add 2001:11::1/64 dev net1
+  - cmd: ip sr tunsrc set 2001:db8:f:1::0
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "segment-routing"
+      -c " srv6"
+      -c "  locators"
+      -c "   locator default"
+      -c "     prefix 2001:db8:f:1::/64"
+      -c "   !"
+      -c "  !"
+      -c " !"
+      -c "!"
+      -c "ipv6 route 2001:db8:f:1::/64 Null0"
+      -c "!"
+      -c "router bgp 11"
+      -c " bgp router-id 11.11.11.11"
+      -c " no bgp ebgp-requires-policy"
+      -c " !"
+      -c " neighbor PEER peer-group"
+      -c " neighbor PEER remote-as external"
+      -c " neighbor net0 interface peer-group PEER"
+      -c " !"
+      -c " neighbor PE peer-group"
+      -c " neighbor PE remote-as external"
+      -c " neighbor PE ebgp-multihop 255"
+      -c " neighbor 2001:db8:e:1:: peer-group PE"
+      -c " !"
+      -c " segment-routing srv6"
+      -c "  locator default"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  network 2001:db8:f:1::/64"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 vpn"
+      -c "  neighbor PE activate"
+      -c " exit-address-family"
+      -c "!"
+      -c "router bgp 11 vrf vrf1"
+      -c " bgp router-id 11.11.11.11"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:11::2 remote-as external"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:11::2 activate"
+      -c "  sid vpn export auto"
+      -c "  rd vpn export 11:1001"
+      -c "  rt vpn export 1:1001"
+      -c "  rt vpn import 1:1001"
+      -c "  import vpn"
+      -c "  export vpn"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.255.0.12/32 dev lo
+  - cmd: ip addr add 2001:db8:e:12::0/128 dev lo
+  - cmd: ip link add vrf1 type vrf table 1001
+  - cmd: ip link set vrf1 up
+  - cmd: ip link set net1 master vrf1
+  - cmd: ip -6 addr add 2001:12::1/64 dev net1
+  - cmd: ip sr tunsrc set 2001:db8:f:2::0
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "segment-routing"
+      -c " srv6"
+      -c "  locators"
+      -c "   locator default"
+      -c "     prefix 2001:db8:f:2::/64"
+      -c "   !"
+      -c "  !"
+      -c " !"
+      -c "!"
+      -c "ipv6 route 2001:db8:f:2::/64 Null0"
+      -c "!"
+      -c "router bgp 12"
+      -c " bgp router-id 12.12.12.12"
+      -c " no bgp ebgp-requires-policy"
+      -c " !"
+      -c " neighbor PEER peer-group"
+      -c " neighbor PEER remote-as external"
+      -c " neighbor net0 interface peer-group PEER"
+      -c " !"
+      -c " neighbor PE peer-group"
+      -c " neighbor PE remote-as external"
+      -c " neighbor PE ebgp-multihop 255"
+      -c " neighbor 2001:db8:e:1:: peer-group PE"
+      -c " !"
+      -c " segment-routing srv6"
+      -c "  locator default"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  network 2001:db8:f:2::/64"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 vpn"
+      -c "  neighbor PE activate"
+      -c " exit-address-family"
+      -c "!"
+      -c "router bgp 12 vrf vrf1"
+      -c " bgp router-id 12.12.12.12"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:12::2 remote-as external"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:12::2 activate"
+      -c "  sid vpn export auto"
+      -c "  rd vpn export 12:1001"
+      -c "  rt vpn export 1:1001"
+      -c "  rt vpn import 1:1001"
+      -c "  import vpn"
+      -c "  export vpn"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.255.0.13/32 dev lo
+  - cmd: ip addr add 2001:db8:e:13::0/128 dev lo
+  - cmd: ip link add vrf1 type vrf table 1001
+  - cmd: ip link set vrf1 up
+  - cmd: ip link set net1 master vrf1
+  - cmd: ip -6 addr add 2001:13::1/64 dev net1
+  - cmd: ip sr tunsrc set 2001:db8:f:3::0
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "segment-routing"
+      -c " srv6"
+      -c "  locators"
+      -c "   locator default"
+      -c "     prefix 2001:db8:f:3::/64"
+      -c "   !"
+      -c "  !"
+      -c " !"
+      -c "!"
+      -c "ipv6 route 2001:db8:f:3::/64 Null0"
+      -c "!"
+      -c "router bgp 13"
+      -c " bgp router-id 13.13.13.13"
+      -c " no bgp ebgp-requires-policy"
+      -c " !"
+      -c " neighbor PEER peer-group"
+      -c " neighbor PEER remote-as external"
+      -c " neighbor net0 interface peer-group PEER"
+      -c " !"
+      -c " neighbor PE peer-group"
+      -c " neighbor PE remote-as external"
+      -c " neighbor PE ebgp-multihop 255"
+      -c " neighbor 2001:db8:e:1:: peer-group PE"
+      -c " !"
+      -c " segment-routing srv6"
+      -c "  locator default"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  network 2001:db8:f:3::/64"
+      -c "  neighbor PEER activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 vpn"
+      -c "  neighbor PE activate"
+      -c " exit-address-family"
+      -c "!"
+      -c "router bgp 13 vrf vrf1"
+      -c " bgp router-id 13.13.13.13"
+      -c " no bgp ebgp-requires-policy"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  sid vpn export auto"
+      -c "  rd vpn export 13:1001"
+      -c "  rt vpn export 1:1001"
+      -c "  rt vpn import 1:1001"
+      -c "  import vpn"
+      -c "  export vpn"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+
+- name: C1
+  cmds:
+  - cmd: ip -6 addr add 2001:11::2/64 dev net0
+  - cmd: ip -6 route replace default via 2001:11::1
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "ipv6 route 0::/0 Null0"
+      -c "!"
+      -c "router bgp 101"
+      -c " bgp router-id 101.101.101.101"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:11::1 remote-as external"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:11::1 activate"
+      -c "  network 0::/0"
+      -c " exit-address-family"
+- name: C2
+  cmds:
+  - cmd: ip -6 addr add 2001:12::2/64 dev net0
+  - cmd: ip -6 route replace default via 2001:12::1
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "ipv6 route 0::/0 Null0"
+      -c "!"
+      -c "router bgp 102"
+      -c " bgp router-id 102.102.102.102"
+      -c " no bgp ebgp-requires-policy"
+      -c " neighbor 2001:12::1 remote-as external"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 2001:12::1 activate"
+      -c "  network 0::/0"
+      -c " exit-address-family"
+- name: C3
+  cmds:
+  - cmd: ip -6 addr add 2001:13::2/64 dev net0
+  - cmd: ip -6 route replace default via 2001:13::1
+  - cmd: /usr/lib/frr/frrinit.sh start

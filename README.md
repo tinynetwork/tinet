@@ -1,11 +1,14 @@
-# tinet-go
+# tinet
 
 ![test](https://github.com/tinynetwork/tinet/workflows/test/badge.svg) ![release](https://github.com/tinynetwork/tinet/workflows/release/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/tinynetwork/tinet)](https://goreportcard.com/report/github.com/tinynetwork/tinet)
 
-Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
-
-## Release
-[release](https://github.com/tinynetwork/tinet/releases)
+An instant virtual network on your laptop with
+light-weight virtualization. Here we introduce the
+Container Network Simulation tools. Users can generate,
+from the YAML configuration file, the script to build
+the L2 container network. Quickstart guide is provided
+in QUICKSTART.md. It is tested on Ubuntu 16.04 LTS and
+later.
 
 ## Requirements
 - docker
@@ -14,9 +17,8 @@ Go implement of [slankdev/tinet](https://github.com/slankdev/tinet).
 
 ## Quick Install
 ```
-wget https://github.com/tinynetwork/tinet/releases/download/latest/tinet_latest_linux64_amd64.tar.gz -O /tmp/tinet.tgz
-tar xpf /tmp/tinet.tgz
-sudo mv tinet /usr/bin
+curl -Lo /usr/bin/tinet https://github.com/tinynetwork/tinet/releases/download/v0.0.2/tinet
+chmod +x /usr/bin/tinet
 tinet --version
 ```
 
