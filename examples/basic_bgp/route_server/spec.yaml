@@ -1,0 +1,201 @@
+# DESCRIPTION: eBGP RS test
+# TOPO:
+#        10.0.0.0/24                             .1(net0)
+#     B0----+-----------------+-----------------+------RS1(10.255.0.1)
+#           |                 |                 |
+#           |.10(net0)        |.11(net0)        |.12(net0)
+#          R1                R2                R3
+#           |.1(net1)         |.1(net1)         |.1(net1)
+#           |                 |                 |
+#           |192.168.1.0/24  |192.168.2.0/24  |192.168.3.0/24
+#           |                 |                 |
+#           |.2(net0)         |.2(net0)         |.2(net0)
+#          C1                C2                C3
+
+nodes:
+- name: RS1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+- name: R1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: C1#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: C1
+  image: slankdev/ubuntu:16.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+- name: R2
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: C2#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: C2
+  image: slankdev/ubuntu:16.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+- name: R3
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: bridge, args: B0 }
+  - { name: net1, type: direct, args: C3#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+- name: C3
+  image: slankdev/ubuntu:16.04
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+
+switches:
+- name: B0
+  interfaces:
+  - { name: net0, type: container, args: RS1 }
+  - { name: net0, type: container, args: R1 }
+  - { name: net0, type: container, args: R2 }
+  - { name: net0, type: container, args: R3 }
+
+node_configs:
+- name: RS1
+  cmds:
+  - cmd: ip addr add 10.255.0.1/24 dev net0
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 1"
+      -c " bgp router-id 10.255.0.1"
+      -c " neighbor 10.255.0.11 remote-as 11"
+      -c " neighbor 10.255.0.12 remote-as 12"
+      -c " neighbor 10.255.0.13 remote-as 13"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  neighbor 10.255.0.11 route-server-client"
+      -c "  neighbor 10.255.0.12 route-server-client"
+      -c "  neighbor 10.255.0.13 route-server-client"
+      -c "  !neighbor 10.255.0.11 next-hop-self"
+      -c "  !neighbor 10.255.0.12 next-hop-self"
+      -c "  !neighbor 10.255.0.13 next-hop-self"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  neighbor 10.255.0.11 activate"
+      -c "  neighbor 10.255.0.12 activate"
+      -c "  neighbor 10.255.0.13 activate"
+      -c "  neighbor 10.255.0.11 route-server-client"
+      -c "  neighbor 10.255.0.12 route-server-client"
+      -c "  neighbor 10.255.0.13 route-server-client"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.255.0.11/24 dev net0
+  - cmd: ip addr add 192.168.11.1/24 dev net1
+  - cmd: ip -6 addr add 2001:11::1/64 dev net1
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 11"
+      -c " bgp router-id 10.255.0.11"
+      -c " neighbor 10.255.0.1 remote-as 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.255.0.12/24 dev net0
+  - cmd: ip addr add 192.168.12.1/24 dev net1
+  - cmd: ip -6 addr add 2001:12::1/64 dev net1
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 12"
+      -c " bgp router-id 10.255.0.12"
+      -c " neighbor 10.255.0.1 remote-as 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.255.0.13/24 dev net0
+  - cmd: ip addr add 192.168.13.1/24 dev net1
+  - cmd: ip -6 addr add 2001:13::1/64 dev net1
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 13"
+      -c " bgp router-id 10.255.0.13"
+      -c " neighbor 10.255.0.1 remote-as 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c " !"
+      -c " address-family ipv6 unicast"
+      -c "  redistribute connected"
+      -c "  neighbor 10.255.0.1 activate"
+      -c " exit-address-family"
+      -c "!"
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 192.168.11.2/24 dev net0
+  - cmd: ip route replace default via 192.168.11.1
+
+- name: C2
+  cmds:
+  - cmd: ip addr add 192.168.12.2/24 dev net0
+  - cmd: ip route replace default via 192.168.12.1
+
+- name: C3
+  cmds:
+  - cmd: ip addr add 192.168.13.2/24 dev net0
+  - cmd: ip route replace default via 192.168.13.1

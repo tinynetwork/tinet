@@ -1,0 +1,115 @@
+---
+postinit:
+  cmds:
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r1.secrets
+      : PSK "vpn1"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r2.secrets
+      : PSK "vpn1"
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r1.conf
+      conn vpn1
+        authby=secret
+        left=10.0.0.1
+        right=10.0.0.2
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: |
+      cat <<EOF >/tmp/vpn1.r2.conf
+      conn vpn1
+        left=10.0.0.2
+        right=10.0.0.1
+        leftsubnet=0.0.0.0/0
+        rightsubnet=0.0.0.0/0
+        auto=start
+        authby=secret
+        mark=100/0xffffffff
+        vti-interface=vti0
+        vti-routing=no
+        dpddelay=10
+        dpdtimeout=5
+        dpdaction=restart
+      EOF
+  - cmd: docker cp /tmp/vpn1.r1.secrets R1:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/vpn1.r2.secrets R2:/etc/ipsec.d/vpn1.secrets
+  - cmd: docker cp /tmp/vpn1.r1.conf R1:/etc/ipsec.d/vpn1.conf
+  - cmd: docker cp /tmp/vpn1.r2.conf R2:/etc/ipsec.d/vpn1.conf
+  - cmd: docker exec R1 chmod 600 /etc/ipsec.d/vpn1.conf
+  - cmd: docker exec R1 chmod 600 /etc/ipsec.d/vpn1.secrets
+  - cmd: docker exec R2 chmod 600 /etc/ipsec.d/vpn1.conf
+  - cmd: docker exec R2 chmod 600 /etc/ipsec.d/vpn1.secrets
+
+nodes:
+- name: R1
+  image: tinet/centos:centos7
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+  - { name: net1, type: direct, args: C1#net0 }
+- name: R2
+  image: tinet/centos:centos7
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: C2#net0 }
+- name: C1
+  image: tinet/centos:centos7
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+- name: C2
+  image: tinet/centos:centos7
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.0.0.1/24 dev net0
+  - cmd: ip addr add 10.1.0.1/24 dev net1
+
+  - cmd: ip link add vti0 type vti key 100 remote 10.0.0.2 local 10.0.0.1
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip route add 10.2.0.0/24 dev vti0
+  - cmd: ip addr add 169.254.0.1/30 remote 169.254.0.2/30 dev vti0
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+
+  - cmd: ip link add vti0 type vti key 100 remote 10.0.0.1 local 10.0.0.2
+  - cmd: ip link set vti0 up
+  - cmd: sysctl -w net.ipv4.conf.vti0.disable_policy=1
+  - cmd: ip route add 10.1.0.0/24 dev vti0
+  - cmd: ip addr add 169.254.0.2/30 remote 169.254.0.1/30 dev vti0
+
+  - cmd: /usr/libexec/ipsec/addconn --config /etc/ipsec.conf --checkconfig
+  - cmd: /usr/libexec/ipsec/_stackmanager start
+  - cmd: /usr/sbin/ipsec --checknss
+  - cmd: /usr/sbin/ipsec --checknflog
+  - cmd: /usr/libexec/ipsec/pluto --leak-detective --config /etc/ipsec.conf
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip route add default via 10.1.0.1
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1

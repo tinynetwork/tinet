@@ -1,0 +1,63 @@
+nodes:
+
+  - name: C1
+    image: ip6tables:test
+    interfaces:
+      - { name: net0, type: direct, args: R1#net0 }
+  - name: C4
+    image: ip6tables:test
+    interfaces:
+      - { name: net0, type: direct, args: R1#net3 }    
+  - name: C2
+    image: ip6tables:test
+    interfaces:
+      - { name: net0, type: direct, args: R1#net1 }
+  - name: C3
+    image: ip6tables:test
+    interfaces:
+      - { name: net0, type: direct, args: R1#net2 }    
+  - name: R1
+    image: ip6tables:test
+    interfaces:
+      - { name: net0, type: direct, args: C1#net0 }
+      - { name: net1, type: direct, args: C2#net0 }
+      - { name: net2, type: direct, args: C3#net0 }
+      - { name: net3, type: direct, args: C4#net0 }  
+  
+
+node_configs:
+
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip route replace default via 10.0.0.1
+  - name: C4
+    cmds:
+      - cmd: ip addr add 10.0.0.12/24 dev net0
+      - cmd: ip route replace default via 10.0.0.1  
+  - name: C2
+    cmds:
+      - cmd: ip addr add 10.1.0.2/24 dev net0
+      - cmd: ip route replace default via 10.1.0.1
+  - name: C3
+    cmds:
+      - cmd: ip addr add 10.2.0.2/24 dev net0
+      - cmd: ip route replace default via 10.2.0.1  
+  - name: R1
+    cmds:
+      - cmd: ip link add br0 type bridge
+      - cmd: ip link set br0 up  
+      - cmd: ip addr add 10.0.0.1/24 dev br0
+      - cmd: ip addr add 10.1.0.1/24 dev net1
+      - cmd: ip addr add 10.2.0.1/24 dev net2
+      - cmd: ip link set net0 master br0
+      - cmd: ip link set net3 master br0
+      - cmd: tc qdisc add dev net0 root tbf limit 1Mb buffer 200Kb rate 1Mbps
+      - cmd: tc qdisc add dev net2 root tbf limit 1Mb buffer 200Kb rate 1Mbps
+      - cmd: ethtool -K net0 tso off gso off
+      - cmd: ethtool -K net2 tso off gso off
+      - cmd: tc qdisc replace dev net0 root netem delay 10ms
+      - cmd: tc qdisc replace dev net1 root netem delay 10ms
+      - cmd: tc qdisc replace dev net2 root netem delay 10ms
+      - cmd: tc qdisc replace dev net3 root netem delay 10ms  
+      - cmd: sysctl -w net.ipv4.ip_forward=1

@@ -1,0 +1,183 @@
+nodes:
+- name: RS1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: S1#net0 }
+
+- name: S1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: RS1#net0 }
+  - { name: net1, type: direct, args: R1#net0 }
+  - { name: net2, type: direct, args: R2#net0 }
+  - { name: net3, type: direct, args: R3#net0 }
+
+- name: R1
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: S1#net1 }
+  - { name: net1, type: direct, args: C1#net0 }
+
+- name: R2
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: S1#net2 }
+  - { name: net1, type: direct, args: C2#net0 }
+- name: R3
+  image: slankdev/frr
+  interfaces:
+  - { name: net0, type: direct, args: S1#net3 }
+  - { name: net1, type: direct, args: C3#net0 }
+
+- name: C1
+  image: slankdev/ubuntu:16.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+- name: C2
+  image: slankdev/ubuntu:16.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+- name: C3
+  image: slankdev/ubuntu:16.04
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+
+node_configs:
+- name: RS1
+  cmds:
+  - cmd: ip addr add 10.255.1.1/24 dev net0
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 1"
+      -c " bgp router-id 1.1.1.1"
+      -c " neighbor 10.255.1.2 remote-as 100"
+      -c " neighbor 10.255.11.1 remote-as 11"
+      -c " neighbor 10.255.11.1 ebgp-multihop 64"
+      -c " neighbor 10.255.12.1 remote-as 12"
+      -c " neighbor 10.255.12.1 ebgp-multihop 64"
+      -c " neighbor 10.255.13.1 remote-as 13"
+      -c " neighbor 10.255.13.1 ebgp-multihop 64"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+
+- name: S1
+  cmds:
+  - cmd: ip addr add 10.255.1.2/24 dev net0
+  - cmd: ip addr add 10.255.11.2/24 dev net1
+  - cmd: ip addr add 10.255.12.2/24 dev net2
+  - cmd: ip addr add 10.255.13.2/24 dev net3
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 100"
+      -c " bgp router-id 100.100.100.100"
+      -c " neighbor 10.255.1.1 remote-as 1"
+      -c " neighbor 10.255.11.1 remote-as 11"
+      -c " neighbor 10.255.12.1 remote-as 12"
+      -c " neighbor 10.255.13.1 remote-as 13"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.255.11.1/24 dev net0
+  - cmd: ip addr add 192.168.11.1/24 dev net1
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 11"
+      -c " bgp router-id 11.11.11.11"
+      -c " neighbor 10.255.11.2 remote-as 100"
+      -c " neighbor 10.255.1.1 remote-as 1"
+      -c " neighbor 10.255.1.1 ebgp-multihop 64"
+      -c " neighbor 10.255.1.1 timer connect 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  neighbor 10.255.11.2 prefix-list core-out out"
+      -c "  neighbor 10.255.11.2 prefix-list core-in in"
+      -c "  neighbor 10.255.1.1 prefix-list rs-out out"
+      -c "  neighbor 10.255.1.1 prefix-list rs-in in"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+      -c "ip prefix-list core-out permit 10.255.0.0/16 le 32"
+      -c "ip prefix-list core-in permit 10.255.0.0/16 le 32"
+      -c "ip prefix-list rs-out permit 192.168.0.0/16 le 32"
+      -c "ip prefix-list rs-in permit 192.168.0.0/16 le 32"
+
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.255.12.1/24 dev net0
+  - cmd: ip addr add 192.168.12.1/24 dev net1
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 12"
+      -c " bgp router-id 12.12.12.12"
+      -c " neighbor 10.255.12.2 remote-as 100"
+      -c " neighbor 10.255.1.1 remote-as 1"
+      -c " neighbor 10.255.1.1 ebgp-multihop 64"
+      -c " neighbor 10.255.1.1 timer connect 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  neighbor 10.255.12.2 prefix-list core-out out"
+      -c "  neighbor 10.255.12.2 prefix-list core-in in"
+      -c "  neighbor 10.255.1.1 prefix-list rs-out out"
+      -c "  neighbor 10.255.1.1 prefix-list rs-in in"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+      -c "ip prefix-list core-out permit 10.255.0.0/16 le 32"
+      -c "ip prefix-list core-in permit 10.255.0.0/16 le 32"
+      -c "ip prefix-list rs-out permit 192.168.0.0/16 le 32"
+      -c "ip prefix-list rs-in permit 192.168.0.0/16 le 32"
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.255.13.1/24 dev net0
+  - cmd: ip addr add 192.168.13.1/24 dev net1
+  - cmd: /usr/lib/frr/frr start
+  - cmd: >-
+      vtysh -c "conf t"
+      -c "router bgp 13"
+      -c " bgp router-id 13.13.13.13"
+      -c " neighbor 10.255.13.2 remote-as 100"
+      -c " neighbor 10.255.1.1 remote-as 1"
+      -c " neighbor 10.255.1.1 ebgp-multihop 64"
+      -c " neighbor 10.255.1.1 timer connect 1"
+      -c " !"
+      -c " address-family ipv4 unicast"
+      -c "  neighbor 10.255.13.2 prefix-list core-out out"
+      -c "  neighbor 10.255.13.2 prefix-list core-in in"
+      -c "  neighbor 10.255.1.1 prefix-list rs-out out"
+      -c "  neighbor 10.255.1.1 prefix-list rs-in in"
+      -c "  redistribute connected"
+      -c " exit-address-family"
+      -c "!"
+      -c "ip prefix-list core-out permit 10.255.0.0/16 le 32"
+      -c "ip prefix-list core-in permit 10.255.0.0/16 le 32"
+      -c "ip prefix-list rs-out permit 192.168.0.0/16 le 32"
+      -c "ip prefix-list rs-in permit 192.168.0.0/16 le 32"
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 192.168.11.2/24 dev net0
+  - cmd: ip route replace default via 192.168.11.1
+
+- name: C2
+  cmds:
+  - cmd: ip addr add 192.168.12.2/24 dev net0
+  - cmd: ip route replace default via 192.168.12.1
+
+- name: C3
+  cmds:
+  - cmd: ip addr add 192.168.13.2/24 dev net0
+  - cmd: ip route replace default via 192.168.13.1

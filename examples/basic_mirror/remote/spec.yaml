@@ -1,0 +1,70 @@
+---
+nodes:
+- name: R1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+- name: R2
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R3#net0 }
+  - { name: net2, type: direct, args: R4#net0 }
+- name: R3
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+- name: R4
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+  - { name: net1, type: direct, args: R5#net0 }
+- name: R5
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R4#net1 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.1.0.1/24 dev net0
+  - cmd: ip route add default via 10.1.0.2
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: ip addr add 10.3.0.1/24 dev net2
+  - cmd: ip route add 10.4.0.0/24 via 10.3.0.2
+
+  # - cmd: ip link add mon0 type dummy
+  # - cmd: ip link set mon0 up
+  # - cmd: "tc qdisc add dev net0 root handle 10: prio"
+  # - cmd: "tc qdisc add dev net0 ingress"
+  # - cmd: "tc filter add dev net0 parent 10: prio 10 protocol all u32 match u32 0 0 flowid 10:1 action mirred egress mirror dev mon0"
+  # - cmd: "tc filter add dev net0 parent ffff: prio 10 protocol all u32 match u32 0 0 flowid ffff:1 action mirred egress mirror dev mon0"
+
+  - cmd: ip link add mon0 type gretap remote 10.4.0.2 local 10.3.0.1 ttl 10
+  - cmd: ip link set mon0 up
+
+  - cmd: "tc qdisc add dev net0 root handle 10: prio"
+  - cmd: "tc filter add dev net0 parent 10: prio 10 protocol all u32 match u32 0 0 flowid 10:1 action mirred egress mirror dev mon0"
+  - cmd: "tc qdisc add dev net0 ingress"
+  - cmd: "tc filter add dev net0 parent ffff: prio 10 protocol all u32 match u32 0 0 flowid ffff:1 action mirred egress mirror dev mon0"
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.2.0.2/24 dev net0
+  - cmd: ip route add default via 10.2.0.1
+
+- name: R4
+  cmds:
+  - cmd: ip addr add 10.3.0.2/24 dev net0
+  - cmd: ip addr add 10.4.0.1/24 dev net1
+
+- name: R5
+  cmds:
+  - cmd: ip addr add 10.4.0.2/24 dev net0
+  - cmd: ip route add default via 10.4.0.1
+  - cmd: ip link add mon0 type gretap remote 10.3.0.1 local 10.4.0.2 ttl 10
+  - cmd: ip link set mon0 up
