@@ -1,0 +1,85 @@
+nodes:
+- name: C0
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - name: net0
+    type: direct
+    args: R0#net0
+- name: R0
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - name: net0
+    type: direct
+    args: C0#net0
+  - name: net1
+    type: direct
+    args: R1#net1
+- name: R1
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - name: net0
+    type: direct
+    args: C1#net0
+  - name: net1
+    type: direct
+    args: R0#net1
+- name: C1
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - name: net0
+    type: direct
+    args: R1#net0
+node_configs:
+- name: C0
+  cmds:
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip route add default via 10.0.0.1
+- name: R0
+  cmds:
+  - cmd: ip addr add 10.0.0.1/24 dev net0
+  - cmd: ip addr add 192.168.0.1/24 dev net1
+  - cmd: ip route add 10.0.1.0/24 via 192.168.0.2
+  - cmd: ip xfrm state add src 192.168.0.2 dst 192.168.0.1 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel
+  - cmd: ip xfrm state add src 192.168.0.1 dst 192.168.0.2 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.0.2/32 dst 10.0.1.2/32 dir out tmpl src 192.168.0.1 dst 192.168.0.2 proto esp spi 1 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.1.2/32 dst 10.0.0.2/32 dir in tmpl src 192.168.0.2 dst 192.168.0.1 proto esp spi 1 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.1.2/32 dst 10.0.0.2/32 dir fwd tmpl src 192.168.0.2 dst 192.168.0.1 proto esp spi 1 mode tunnel
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.0.1.1/24 dev net0
+  - cmd: ip addr add 192.168.0.2/24 dev net1
+  - cmd: ip route add 10.0.0.0/24 via 192.168.0.1
+  - cmd: ip xfrm state add src 192.168.0.1 dst 192.168.0.2 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel
+  - cmd: ip xfrm state add src 192.168.0.2 dst 192.168.0.1 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.1.2/32 dst 10.0.0.2/32 dir out tmpl src 192.168.0.2 dst 192.168.0.1 proto esp spi 1 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.0.2/32 dst 10.0.1.2/32 dir in tmpl src 192.168.0.1 dst 192.168.0.2 proto esp spi 1 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.0.2/32 dst 10.0.1.2/32 dir fwd tmpl src 192.168.0.1 dst 192.168.0.2 proto esp spi 1 mode tunnel
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.0.1.2/24 dev net0
+  - cmd: ip route add default via 10.0.1.1
+test:
+  - cmds:
+    - cmd: echo "==================================================="
+    - cmd: echo "Starting packet capture on R0 (net1) and R1 (net1)"
+    - cmd: echo "==================================================="
+    - cmd: docker exec R0 tcpdump -nni net1 -w /tmp/record.pcap 2>&1 > /dev/null &
+    - cmd: docker exec R1 tcpdump -nni net1 -w /tmp/record.pcap 2>&1 > /dev/null &
+    - cmd: sleep 3
+    - cmd: echo "==================================================="
+    - cmd: echo "ping from C0 to C1"
+    - cmd: echo "==================================================="
+    - cmd: docker exec C0 ping -c 1 10.0.1.2
+    - cmd: echo "==================================================="
+    - cmd: echo "Stopping packet capture on R0 (net1) and R1 (net1)"
+    - cmd: echo "==================================================="
+    - cmd: docker exec R0 pkill tcpdump
+    - cmd: docker exec R1 pkill tcpdump
+    - cmd: echo "==================================================="
+    - cmd: echo "Packet capture on R0 (net1)"
+    - cmd: echo "==================================================="
+    - cmd: docker exec R0 tcpdump -nnr /tmp/record.pcap
+    - cmd: echo "==================================================="
+    - cmd: echo "Packet capture on R1 (net1)"
+    - cmd: echo "==================================================="
+    - cmd: docker exec R1 tcpdump -nnr /tmp/record.pcap
