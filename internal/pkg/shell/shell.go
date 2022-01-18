@@ -56,6 +56,7 @@ type Node struct {
 	VolumeBase     string                 `yaml:"volume" mapstructure:"volume"`
 	Image          string                 `yaml:"image" mapstructure:"image"`
 	BuildFile      string                 `yaml:"buildfile" mapstructure:"buildfile"`
+	BuildContext   string                 `yaml:"buildcontext" mapstructure:"buildcontext"`
 	Interfaces     []Interface            `yaml:"interfaces" mapstructure:"interfaces"`
 	Sysctls        []Sysctl               `yaml:"sysctls" mapstructure:"sysctls"`
 	Mounts         []string               `yaml:"mounts,flow" mapstructure:"mounts,flow"`
@@ -113,8 +114,13 @@ type Test struct {
 // BuildCmd
 func (node *Node) BuildCmd() (buildCmd string) {
 
+	buildContext := "."
+	if node.BuildContext != "" {
+		buildContext = node.BuildContext
+	}
+
 	if node.BuildFile != "" {
-		buildCmd = fmt.Sprintf("docker build -t %s %s", node.Image, node.BuildFile)
+		buildCmd = fmt.Sprintf("docker build -t %s -f %s %s", node.Image, node.BuildFile, buildContext)
 	}
 
 	return buildCmd
