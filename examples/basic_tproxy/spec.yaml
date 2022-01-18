@@ -1,0 +1,84 @@
+nodes:
+- name: C0
+  image: nicolaka/netshoot
+  interfaces:
+  - name: net0
+    type: direct
+    args: R0#net0
+- name: R0
+  image: tproxy:latest
+  buildfile: Dockerfile
+  buildcontext: .
+  interfaces:
+  - name: net0
+    type: direct
+    args: C0#net0
+  - name: net1
+    type: direct
+    args: R1#net1
+- name: R1
+  image: nicolaka/netshoot
+  interfaces:
+  - name: net0
+    type: direct
+    args: C1#net0
+  - name: net1
+    type: direct
+    args: R0#net1
+- name: C1
+  image: nicolaka/netshoot
+  interfaces:
+  - name: net0
+    type: direct
+    args: R1#net0
+node_configs:
+- name: C0
+  cmds:
+  - cmd: ip link set net0 up
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip route add default via 10.0.0.1
+- name: R0
+  cmds:
+  - cmd: ip link set net0 up
+  - cmd: ip link set net1 up
+  - cmd: ip addr add 10.0.0.1/24 dev net0
+  - cmd: ip addr add 192.168.0.1/24 dev net1
+  - cmd: ip route add 10.0.1.0/24 via 192.168.0.2
+  - cmd: ip rule add fwmark 0x1 table 100
+  - cmd: ip route add local 0.0.0.0/0 dev lo table 100
+  - cmd: iptables -t mangle -A PREROUTING -p tcp -m socket --transparent -j MARK --set-mark 0x1
+  - cmd: iptables -t mangle -A PREROUTING -p tcp --dport 80 -j TPROXY --on-port 80 --tproxy-mark 0x1
+- name: R1
+  cmds:
+  - cmd: ip link set net0 up
+  - cmd: ip link set net1 up
+  - cmd: ip addr add 10.0.1.1/24 dev net0
+  - cmd: ip addr add 192.168.0.2/24 dev net1
+  - cmd: ip route add 10.0.0.0/24 via 192.168.0.1
+- name: C1
+  cmds:
+  - cmd: ip link set net0 up
+  - cmd: ip addr add 10.0.1.2/24 dev net0
+  - cmd: ip route add default via 10.0.1.1
+test:
+- cmds:
+  - cmd: echo "==============================================="
+  - cmd: echo "Starting HTTP server on C1"
+  - cmd: echo "==============================================="
+  - cmd: docker exec C1 python3 -m http.server 80 &
+  - cmd: sleep 10
+  - cmd: echo "==============================================="
+  - cmd: echo "curl'ing from C0 to C1"
+  - cmd: echo "==============================================="
+  - cmd: docker exec C0 curl -s http://10.0.1.2
+  - cmd: echo "==============================================="
+  - cmd: echo "Stopping HTTP server on C1"
+  - cmd: echo "==============================================="
+  - cmd: docker exec C1 pkill python3
+  - cmd: echo "==============================================="
+  - cmd: echo "Below shows the log of the proxy server on R0"
+  - cmd: echo "==============================================="
+  - cmd: docker logs R0
+  - cmd: echo "==============================================="
+  - cmd: echo "You should see the proxy surely intercepts"
+  - cmd: echo "==============================================="
