@@ -11,9 +11,9 @@ in QUICKSTART.md. It is tested on Ubuntu 16.04 LTS and
 later.
 
 ## Requirements
-- docker
-- OpenvSwitch
-- graphviz (if you want to use `tn img`)
+- Docker
+- OpenvSwitch (optional)
+- graphviz (optional)
 
 ## Quick Install
 ```
