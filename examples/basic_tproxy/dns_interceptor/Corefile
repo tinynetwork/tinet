@@ -1,0 +1,8 @@
+.:53 {
+	hosts {
+		1.1.1.1 one.example.com
+		2.2.2.2 two.example.com
+		3.3.3.3 three.example.com
+		log
+	}
+}

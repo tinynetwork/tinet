@@ -120,7 +120,7 @@ func (node *Node) BuildCmd() (buildCmd string) {
 	}
 
 	if node.BuildFile != "" {
-		buildCmd = fmt.Sprintf("docker build -t %s -f %s %s", node.Image, node.BuildFile, buildContext)
+		buildCmd = fmt.Sprintf("docker build -t %s -f %s %s\n", node.Image, node.BuildFile, buildContext)
 	}
 
 	return buildCmd

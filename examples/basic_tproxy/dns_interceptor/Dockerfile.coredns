@@ -1,0 +1,12 @@
+FROM coredns/coredns
+
+# Use debian-based image just for installing iproute2
+FROM debian:stretch
+
+COPY --from=0 /coredns /coredns
+
+RUN apt-get update
+RUN apt-get -y install iproute2
+
+EXPOSE 53 53/udp
+ENTRYPOINT ["/coredns"]
