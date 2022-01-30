@@ -6,7 +6,7 @@ nodes:
     type: direct
     args: R0#net0
 - name: R0
-  image: tproxy:latest
+  image: http-interceptor:latest
   buildfile: Dockerfile
   buildcontext: .
   interfaces:
