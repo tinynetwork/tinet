@@ -1,9 +1,13 @@
-FROM debian:stretch-slim
+FROM golang:stretch
 
 RUN apt-get update
-RUN apt-get install -y gcc iproute2 iptables
+RUN apt-get install -y iproute2 iptables
 
-ADD http_interceptor.c /tmp
-RUN gcc -o /usr/local/bin/http-interceptor /tmp/http_interceptor.c
+WORKDIR /opt
+
+ADD go.mod /opt
+ADD go.sum /opt
+ADD http_interceptor.go /opt
+RUN go build -o /usr/local/bin/http-interceptor
 
 CMD http-interceptor
