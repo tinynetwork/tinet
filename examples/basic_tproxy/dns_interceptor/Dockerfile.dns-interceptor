@@ -1,0 +1,14 @@
+FROM golang:stretch
+
+RUN apt-get update
+RUN apt-get install -y gcc iproute2 iptables curl tcpdump
+
+WORKDIR /opt
+
+ADD go.mod /opt
+ADD go.sum /opt
+ADD session-udp.go /opt
+ADD main.go /opt
+RUN go build -o /usr/local/bin/dns-interceptor
+
+CMD dns-interceptor
