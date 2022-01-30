@@ -47,8 +47,6 @@ func setupTransparentSocket(network, address string, c syscall.RawConn) error {
 }
 
 type DNSInterceptor struct {
-	udpClient *dns.Client
-	tcpClient *dns.Client
 }
 
 func (di *DNSInterceptor) NewFQDNFirewall() {
@@ -92,12 +90,12 @@ func main() {
 		Control: setupTransparentSocket,
 	}
 
-	tcpListener, err := listenConf.Listen(context.Background(), "tcp4", "10.0.0.1:53")
+	tcpListener, err := listenConf.Listen(context.Background(), "tcp4", ":53")
 	if err != nil {
 		panic(err)
 	}
 
-	udpListener, err := listenConf.ListenPacket(context.Background(), "udp4", "10.0.0.1:53")
+	udpListener, err := listenConf.ListenPacket(context.Background(), "udp4", ":53")
 	if err != nil {
 		panic(err)
 	}
