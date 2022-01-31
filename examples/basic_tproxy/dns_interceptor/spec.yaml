@@ -6,7 +6,7 @@ nodes:
     type: direct
     args: R0#net0
 - name: R0
-  image: fqdn-firewall:latest
+  image: dns-interceptor:latest
   buildfile: Dockerfile.dns-interceptor
   buildcontext: .
   interfaces:
