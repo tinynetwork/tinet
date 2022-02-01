@@ -1,0 +1,85 @@
+nodes:
+- name: C1
+  image: alpine:latest
+  interfaces:
+  - { name: net1, type: direct, args: R1#net1 }
+- name: R1
+  image: frrouting/frr:v8.1.0
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+  - { name: net1, type: direct, args: C1#net1 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv4.ip_forward=1
+- name: R2
+  image: frrouting/frr:v8.1.0
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv4.ip_forward=1
+node_configs:
+- name: R1
+  cmds:
+  - cmd: sed -i -e 's/bgpd=no/bgpd=yes/g' /etc/frr/daemons
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c 'conf t'
+      -c 'interface net0'
+      -c ' ip address 10.255.0.1/16'
+      -c '!'
+      -c 'interface net1'
+      -c ' ip address 192.168.10.1/16'
+      -c '!'
+      -c 'ip prefix-list PL1 permit 192.168.0.0/16'
+      -c '!'
+      -c 'route-map RM1 permit 10'
+      -c ' match ip address prefix-list PL1'
+      -c '!'
+      -c 'router bgp 65001'
+      -c ' bgp router-id 10.255.0.1'
+      -c ' bgp graceful-restart'
+      -c ' bgp graceful-restart preserve-fw-state'
+      -c ' bgp graceful-restart restart-time 1800'
+      -c ' bgp graceful-restart stalepath-time 1800'
+      -c ' neighbor 10.255.0.2 remote-as 65002'
+      -c ' neighbor 10.255.0.2 route-map RM1 out'
+      -c ' address-family ipv4 unicast'
+      -c '  redistribute connected' 
+      -c ' exit-address-family'
+  - cmd: vtysh -c 'write mem'
+- name: R2
+  cmds:
+  - cmd: sed -i -e 's/bgpd=no/bgpd=yes/g' /etc/frr/daemons
+  - cmd: /usr/lib/frr/frrinit.sh start
+  - cmd: >-
+      vtysh -c 'conf t'
+      -c 'interface net0'
+      -c ' ip address 10.255.0.2/16'
+      -c '!'
+      -c 'ip prefix-list PL1 permit 192.168.0.0/16'
+      -c '!'
+      -c 'route-map RM1 permit 10'
+      -c ' match ip address prefix-list PL1'
+      -c '!'
+      -c 'router bgp 65002'
+      -c ' bgp router-id 10.255.0.2'
+      -c ' bgp graceful-restart'
+      -c ' bgp graceful-restart preserve-fw-state'
+      -c ' bgp graceful-restart restart-time 1800'
+      -c ' bgp graceful-restart stalepath-time 1800'
+      -c ' neighbor 10.255.0.1 remote-as 65001'
+      -c ' neighbor 10.255.0.1 route-map RM1 in'
+  - cmd: vtysh -c 'write mem'
+- name: C1
+  cmds:
+  - cmd: ip addr add 192.168.10.254/16 dev net1
+  - cmd: route add default gw 192.168.10.1
+test:
+- cmds:
+  - cmd: docker exec R1 ping -c2 192.168.10.254
+  - cmd: docker exec R2 ping -c2 192.168.10.254
