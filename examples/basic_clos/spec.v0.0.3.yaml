@@ -267,14 +267,14 @@ nodes:
     interfaces:
       - { name: up1, type: direct, args: Tor7#dn3 }
       - { name: up2, type: direct, args: Tor8#dn3 }
-      - { name: dn1, type: direct, args: Vm15b#net0 }
+      - { name: dn1, type: direct, args: Vm15a#net0 }
       - { name: dn2, type: direct, args: Vm15b#net0 }
   - name: Serv16
     image: slankdev/frr
     interfaces:
       - { name: up1, type: direct, args: Tor7#dn4 }
       - { name: up2, type: direct, args: Tor8#dn4 }
-      - { name: dn1, type: direct, args: Vm16b#net0 }
+      - { name: dn1, type: direct, args: Vm16a#net0 }
       - { name: dn2, type: direct, args: Vm16b#net0 }
 
   - name: Vm1a
