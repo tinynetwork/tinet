@@ -1,0 +1,55 @@
+---
+nodes:
+- name: C0
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - { name: net0, type: direct, args: R0#net0 }
+- name: R0
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - { name: net0, type: direct, args: C0#net0 }
+  - { name: net1, type: direct, args: R1#net1 }
+- name: R1
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - { name: net1, type: direct, args: R0#net1 }
+  - { name: net0, type: direct, args: C1#net0 }
+- name: C1
+  image: nicolaka/netshoot:latest
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+
+node_configs:
+- name: C0
+  cmds:
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip route add default via 10.0.0.1
+- name: R0
+  cmds:
+  - cmd: ip addr add 10.0.0.1/24 dev net0
+  - cmd: ip addr add 192.168.0.1/24 dev net1
+  - cmd: ip link add type xfrm dev net1 if_id 1
+  # if_id 1 are important in below. We need to match it to the if_id 1 passed in above. So that the policies/states
+  # are not evaluated in the regular xfrm path (which lies in the middle of routing and device) and only evaluated
+  # inside the XFRM device.
+  - cmd: ip xfrm state add src 192.168.0.2 dst 192.168.0.1 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel if_id 1
+  - cmd: ip xfrm state add src 192.168.0.1 dst 192.168.0.2 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel if_id 1
+  - cmd: ip xfrm policy add src 10.0.0.0/24 dst 10.0.1.0/24 dir out if_id 1 tmpl src 192.168.0.1 dst 192.168.0.2 proto esp spi 1 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.1.0/24 dst 10.0.0.0/24 dir fwd if_id 1 tmpl src 192.168.0.2 dst 192.168.0.1 proto esp spi 1 mode tunnel
+  - cmd: ip link set xfrm0 up
+  - cmd: ip route add 10.0.1.0/24 dev xfrm0
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.0.1.1/24 dev net0
+  - cmd: ip addr add 192.168.0.2/24 dev net1
+  - cmd: ip link add type xfrm dev net1 if_id 1
+  - cmd: ip xfrm state add src 192.168.0.1 dst 192.168.0.2 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel if_id 1
+  - cmd: ip xfrm state add src 192.168.0.2 dst 192.168.0.1 proto esp spi 0x1 aead "rfc4106(gcm(aes))" 0x0000000000112233445566778899aabbccddeeff 128 mode tunnel if_id 1
+  - cmd: ip xfrm policy add src 10.0.1.0/24 dst 10.0.0.0/24 dir out if_id 1 tmpl src 192.168.0.2 dst 192.168.0.1 proto esp spi 1 mode tunnel
+  - cmd: ip xfrm policy add src 10.0.0.0/24 dst 10.0.1.0/24 dir fwd if_id 1 tmpl src 192.168.0.1 dst 192.168.0.2 proto esp spi 1 mode tunnel
+  - cmd: ip link set xfrm0 up
+  - cmd: ip route add 10.0.0.0/24 dev xfrm0
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.0.1.2/24 dev net0
+  - cmd: ip route add default via 10.0.1.1
