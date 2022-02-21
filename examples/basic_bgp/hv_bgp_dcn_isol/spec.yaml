@@ -60,9 +60,9 @@ node_configs:
       - cmd: ip link set dn1 vrf vrf1
       - cmd: ip link set dn2 vrf vrf1
       - cmd: ip link set dn3 vrf vrf1
-      - cmd: ip addr add 10.0.0.1/24 dev dn1
-      - cmd: ip addr add 10.0.0.1/24 dev dn2
-      - cmd: ip addr add 10.0.0.1/24 dev dn3
+      - cmd: ip addr add 10.0.0.1/24 dev dn1 noprefixroute
+      - cmd: ip addr add 10.0.0.1/24 dev dn2 noprefixroute
+      - cmd: ip addr add 10.0.0.1/24 dev dn3 noprefixroute
       - cmd: ip route add 10.0.0.11 dev dn1 vrf vrf1
       - cmd: ip route add 10.0.0.12 dev dn2 vrf vrf1
       - cmd: ip route add 10.0.0.13 dev dn3 vrf vrf1
