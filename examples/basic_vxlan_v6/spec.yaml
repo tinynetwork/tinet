@@ -53,19 +53,24 @@ node_configs:
       - cmd: ip link set net1 address 52:54:00:aa:01:01
       - cmd: ip link set net2 address 52:54:00:aa:01:02
 
+      - cmd: ip addr add 2001:aaa::1 dev lo
+      - cmd: ip addr add 2001::1/64 dev net0
+      - cmd: ip route add 2001:bbb::1 via 2001::2 dev net0
+      - cmd: ip route add 2001:ccc::1 via 2001::3 dev net0
+
       - cmd: ip link add br100 type bridge
       - cmd: ip link set dev br100 up
       - cmd: ip addr add 2001:111::1/64 dev br100
       - cmd: >-
           ip link add vxlan100 type vxlan id 100
-          dstport 4789 group ff08::1 dev net0
+          dstport 4789 local 2001:aaa::1
 
       - cmd: ip link add br200 type bridge
       - cmd: ip link set dev br200 up
       - cmd: ip addr add 2001:222::1/64 dev br200
       - cmd: >-
           ip link add vxlan200 type vxlan id 200
-          dstport 4789 group ff08::2 dev net0
+          dstport 4789 local 2001:aaa::1
 
       - cmd: ip link set dev net1 master br100
       - cmd: ip link set dev net1 promisc on
@@ -80,6 +85,11 @@ node_configs:
       - cmd: ip link set dev vxlan200 master br200
       - cmd: ip link set dev vxlan200 promisc on
       - cmd: ip link set dev vxlan200 up
+
+      - cmd: bridge fdb add 00:00:00:00:00:00 dev vxlan100 self dst 2001:bbb::1 vni 100 port 4789
+      - cmd: bridge fdb append 00:00:00:00:00:00 dev vxlan100 self dst 2001:ccc::1 vni 100 port 4789
+      - cmd: bridge fdb add 00:00:00:00:00:00 dev vxlan200 self dst 2001:bbb::1 vni 200 port 4789
+      - cmd: bridge fdb append 00:00:00:00:00:00 dev vxlan200 self dst 2001:ccc::1 vni 200 port 4789
 
   - name: R2
     cmds:
@@ -88,19 +98,24 @@ node_configs:
       - cmd: ip link set net1 address 52:54:00:aa:02:01
       - cmd: ip link set net2 address 52:54:00:aa:02:02
 
+      - cmd: ip addr add 2001:bbb::1 dev lo
+      - cmd: ip addr add 2001::2/64 dev net0
+      - cmd: ip route add 2001:aaa::1 via 2001::1 dev net0
+      - cmd: ip route add 2001:ccc::1 via 2001::3 dev net0
+
       - cmd: ip link add br100 type bridge
       - cmd: ip link set dev br100 up
       - cmd: ip addr add 2001:111::2/64 dev br100
       - cmd: >-
           ip link add vxlan100 type vxlan id 100
-          dstport 4789 group ff08::1 dev net0
+          dstport 4789 local 2001:bbb::1
 
       - cmd: ip link add br200 type bridge
       - cmd: ip link set dev br200 up
       - cmd: ip addr add 2001:222::2/64 dev br200
       - cmd: >-
           ip link add vxlan200 type vxlan id 200
-          dstport 4789 group ff08::2 dev net0
+          dstport 4789 local 2001:bbb::1
 
       - cmd: ip link set dev net1 master br100
       - cmd: ip link set dev net1 promisc on
@@ -115,6 +130,11 @@ node_configs:
       - cmd: ip link set dev vxlan200 master br200
       - cmd: ip link set dev vxlan200 promisc on
       - cmd: ip link set dev vxlan200 up
+
+      - cmd: bridge fdb add 00:00:00:00:00:00 dev vxlan100 self dst 2001:aaa::1 vni 100 port 4789
+      - cmd: bridge fdb append 00:00:00:00:00:00 dev vxlan100 self dst 2001:ccc::1 vni 100 port 4789
+      - cmd: bridge fdb add 00:00:00:00:00:00 dev vxlan200 self dst 2001:aaa::1 vni 200 port 4789
+      - cmd: bridge fdb append 00:00:00:00:00:00 dev vxlan200 self dst 2001:ccc::1 vni 200 port 4789
 
   - name: R3
     cmds:
@@ -123,19 +143,24 @@ node_configs:
       - cmd: ip link set net1 address 52:54:00:aa:03:01
       - cmd: ip link set net2 address 52:54:00:aa:03:02
 
+      - cmd: ip addr add 2001:ccc::1 dev lo
+      - cmd: ip addr add 2001::3/64 dev net0
+      - cmd: ip route add 2001:aaa::1 via 2001::1 dev net0
+      - cmd: ip route add 2001:bbb::1 via 2001::2 dev net0
+
       - cmd: ip link add br100 type bridge
       - cmd: ip link set dev br100 up
       - cmd: ip addr add 2001:111::3/64 dev br100
       - cmd: >-
           ip link add vxlan100 type vxlan id 100
-          dstport 4789 group ff08::1 dev net0
+          dstport 4789 local 2001:ccc::1
 
       - cmd: ip link add br200 type bridge
       - cmd: ip link set dev br200 up
       - cmd: ip addr add 2001:222::3/64 dev br200
       - cmd: >-
           ip link add vxlan200 type vxlan id 200
-          dstport 4789 group ff08::2 dev net0
+          dstport 4789 local 2001:ccc::1
 
       - cmd: ip link set dev net1 master br100
       - cmd: ip link set dev net1 promisc on
@@ -150,6 +175,11 @@ node_configs:
       - cmd: ip link set dev vxlan200 master br200
       - cmd: ip link set dev vxlan200 promisc on
       - cmd: ip link set dev vxlan200 up
+
+      - cmd: bridge fdb add 00:00:00:00:00:00 dev vxlan100 self dst 2001:aaa::1 vni 100 port 4789
+      - cmd: bridge fdb append 00:00:00:00:00:00 dev vxlan100 self dst 2001:bbb::1 vni 100 port 4789
+      - cmd: bridge fdb add 00:00:00:00:00:00 dev vxlan200 self dst 2001:aaa::1 vni 200 port 4789
+      - cmd: bridge fdb append 00:00:00:00:00:00 dev vxlan200 self dst 2001:bbb::1 vni 200 port 4789
 
   - name: C1
     cmds:
@@ -190,5 +220,4 @@ test:
     - cmd: docker exec C2 ping -c2 2001:222::c4
     - cmd: docker exec C2 ping -c2 2001:222::c6
     - cmd: docker exec C4 ping -c2 2001:222::c6
-
 
