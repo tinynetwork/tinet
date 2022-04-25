@@ -48,7 +48,6 @@ switches:
 node_configs:
   - name: R1
     cmds:
-
       - cmd: bash -c "enable_seg6_router.py | sh"
       - cmd: ip link set net0 address 52:54:00:aa:01:00
       - cmd: ip link set net1 address 52:54:00:aa:01:01
@@ -84,7 +83,6 @@ node_configs:
 
   - name: R2
     cmds:
-
       - cmd: bash -c "enable_seg6_router.py | sh"
       - cmd: ip link set net0 address 52:54:00:aa:02:00
       - cmd: ip link set net1 address 52:54:00:aa:02:01
@@ -120,7 +118,6 @@ node_configs:
 
   - name: R3
     cmds:
-
       - cmd: bash -c "enable_seg6_router.py | sh"
       - cmd: ip link set net0 address 52:54:00:aa:03:00
       - cmd: ip link set net1 address 52:54:00:aa:03:01
@@ -184,7 +181,6 @@ node_configs:
       - cmd: bash -c "enable_seg6_router.py | sh"
       - cmd: ip link set net0 address 52:54:00:bb:06:00
       - cmd: ip addr add 2001:222::c6/64 dev net0
-
 
 test:
   - cmds:
