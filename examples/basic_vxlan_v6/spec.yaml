@@ -60,14 +60,12 @@ node_configs:
 
       - cmd: ip link add br100 type bridge
       - cmd: ip link set dev br100 up
-      - cmd: ip addr add 2001:111::1/64 dev br100
       - cmd: >-
           ip link add vxlan100 type vxlan id 100
           dstport 4789 local 2001:aaa::1
 
       - cmd: ip link add br200 type bridge
       - cmd: ip link set dev br200 up
-      - cmd: ip addr add 2001:222::1/64 dev br200
       - cmd: >-
           ip link add vxlan200 type vxlan id 200
           dstport 4789 local 2001:aaa::1
@@ -105,14 +103,12 @@ node_configs:
 
       - cmd: ip link add br100 type bridge
       - cmd: ip link set dev br100 up
-      - cmd: ip addr add 2001:111::2/64 dev br100
       - cmd: >-
           ip link add vxlan100 type vxlan id 100
           dstport 4789 local 2001:bbb::1
 
       - cmd: ip link add br200 type bridge
       - cmd: ip link set dev br200 up
-      - cmd: ip addr add 2001:222::2/64 dev br200
       - cmd: >-
           ip link add vxlan200 type vxlan id 200
           dstport 4789 local 2001:bbb::1
@@ -150,14 +146,12 @@ node_configs:
 
       - cmd: ip link add br100 type bridge
       - cmd: ip link set dev br100 up
-      - cmd: ip addr add 2001:111::3/64 dev br100
       - cmd: >-
           ip link add vxlan100 type vxlan id 100
           dstport 4789 local 2001:ccc::1
 
       - cmd: ip link add br200 type bridge
       - cmd: ip link set dev br200 up
-      - cmd: ip addr add 2001:222::3/64 dev br200
       - cmd: >-
           ip link add vxlan200 type vxlan id 200
           dstport 4789 local 2001:ccc::1
