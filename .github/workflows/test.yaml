@@ -8,14 +8,16 @@ on:
 
 jobs:
   build:
-    name: all
+    name: Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.12.x, 1.13.x, 1.14.x, 1.15.x, 1.16.x, 1.17.x]
     steps:
       - name: set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: 1.13
-        id: go
+          version: ${{ matrix.go-version }}
 
       - name: checkout
         uses: actions/checkout@v2
@@ -24,13 +26,17 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: go mod download
 
-      - name: Running golangci-lint
+      - name: Install golangci-lint
         env:
+          GOPATH: /home/runner/work
           GO111MODULE: on
-          GOPATH: /home/runner/work/
         run: |
-            go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-            ${GOPATH}/bin/golangci-lint run
+          curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.45.2
 
-      - name: test
-        run: go test ./... -v
+      - name: Run golangci-lint and test
+        env:
+          GOPATH: /home/runner/work
+          GO111MODULE: on
+        run: |
+          golangci-lint run
+          go test ./... -v
