@@ -7,30 +7,38 @@ on:
   pull_request: {}
 
 jobs:
-  build:
-    name: all
+  lint:
+    name: lint
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.12.x, 1.13.x, 1.14.x, 1.15.x, 1.16.x, 1.17.x]
     steps:
-      - name: set up Go
-        uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
-          go-version: 1.13
-        id: go
-
+          go-version: ${{ matrix.go-version }}
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+            version: v1.45.2
 
-      - name: download modules
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: go mod download
-
-      - name: Running golangci-lint
+  test:
+    name: go test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [1.12.x, 1.13.x, 1.14.x, 1.15.x, 1.16.x, 1.17.x]
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          version: ${{ matrix.go-version }}
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Run go tests
         env:
           GO111MODULE: on
-          GOPATH: /home/runner/work/
         run: |
-            go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-            ${GOPATH}/bin/golangci-lint run
-
-      - name: test
-        run: go test ./... -v
+          go test ./... -v

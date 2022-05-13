@@ -1110,6 +1110,7 @@ func TestNode_BuildCmd(t *testing.T) {
 		VolumeBase     string
 		Image          string
 		BuildFile      string
+		BuildContext   string
 		Interfaces     []Interface
 		Sysctls        []Sysctl
 		Mounts         []string
@@ -1118,6 +1119,8 @@ func TestNode_BuildCmd(t *testing.T) {
 		HostNameIgnore bool
 		EntryPoint     string
 		ExtraArgs      string
+		Vars           map[string]interface{}
+		Templates      []Template
 	}
 	tests := []struct {
 		name         string
@@ -1127,10 +1130,11 @@ func TestNode_BuildCmd(t *testing.T) {
 		{
 			name: "docker build",
 			fields: fields{
-				Name:      "R1",
-				Type:      "docker",
-				Image:     "ak1ra24/testimage",
-				BuildFile: "`pwd`/dockerfile/Dockerfile",
+				Name:         "R1",
+				Type:         "docker",
+				Image:        "ak1ra24/testimage",
+				BuildFile:    "`pwd`/dockerfile/Dockerfile",
+				BuildContext: "",
 				Interfaces: []Interface{
 					Interface{
 						Name: "net0",
@@ -1139,7 +1143,7 @@ func TestNode_BuildCmd(t *testing.T) {
 					},
 				},
 			},
-			wantBuildCmd: "docker build -t ak1ra24/testimage `pwd`/dockerfile/Dockerfile",
+			wantBuildCmd: "docker build -t ak1ra24/testimage -f `pwd`/dockerfile/Dockerfile .\n",
 		},
 	}
 	for _, tt := range tests {
@@ -1151,6 +1155,7 @@ func TestNode_BuildCmd(t *testing.T) {
 				VolumeBase:     tt.fields.VolumeBase,
 				Image:          tt.fields.Image,
 				BuildFile:      tt.fields.BuildFile,
+				BuildContext:   tt.fields.BuildContext,
 				Interfaces:     tt.fields.Interfaces,
 				Sysctls:        tt.fields.Sysctls,
 				Mounts:         tt.fields.Mounts,
@@ -1159,6 +1164,8 @@ func TestNode_BuildCmd(t *testing.T) {
 				HostNameIgnore: tt.fields.HostNameIgnore,
 				EntryPoint:     tt.fields.EntryPoint,
 				ExtraArgs:      tt.fields.ExtraArgs,
+				Vars:           tt.fields.Vars,
+				Templates:      tt.fields.Templates,
 			}
 			if gotBuildCmd := node.BuildCmd(); gotBuildCmd != tt.wantBuildCmd {
 				t.Errorf("Node.BuildCmd() = %v, want %v", gotBuildCmd, tt.wantBuildCmd)
