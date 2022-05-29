@@ -70,6 +70,11 @@ switches:
 node_configs:
   - name: RR0
     cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
+      - cmd: /usr/lib/frr/frrinit.sh restart
+      - cmd: sysctl -w net.ipv4.ip_forward=1
+
       - cmd: >-
           vtysh -c "conf t"
           -c "interface lo" -c "ip address 10.255.0.1/32" -c "exit"
@@ -95,6 +100,11 @@ node_configs:
 
   - name: R0
     cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
+      - cmd: /usr/lib/frr/frrinit.sh restart
+      - cmd: sysctl -w net.ipv4.ip_forward=1
+
       - cmd: >-
           vtysh -c "conf t"
           -c "interface lo" -c "ip address 10.255.0.10/32" -c "exit"
@@ -113,6 +123,11 @@ node_configs:
 
   - name: R1
     cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
+      - cmd: /usr/lib/frr/frrinit.sh restart
+      - cmd: sysctl -w net.ipv4.ip_forward=1
+
       - cmd: >-
           vtysh -c "conf t"
           -c "interface lo" -c "ip address 10.255.0.11/32" -c "exit"
@@ -131,6 +146,11 @@ node_configs:
 
   - name: R2
     cmds:
+      - cmd: /usr/lib/frr/frr start
+      - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
+      - cmd: /usr/lib/frr/frrinit.sh restart
+      - cmd: sysctl -w net.ipv4.ip_forward=1
+
       - cmd: >-
           vtysh -c "conf t"
           -c "interface lo" -c "ip address 10.255.0.12/32" -c "exit"
