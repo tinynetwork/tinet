@@ -6,11 +6,13 @@ postinit:
 nodes:
   - name: R1
     image: slankdev/vpp:19.08
+    # image: ligato/vpp-base:master
     interfaces:
       - { name: net0, type: direct, args: R2#net0 }
       - { name: net1, type: direct, args: R3#net0 }
   - name: R2
     image: slankdev/vpp:19.08
+    # image: ligato/vpp-base:master
     interfaces:
       - { name: net0, type: direct, args: R1#net0 }
       - { name: net1, type: direct, args: R4#net0 }
