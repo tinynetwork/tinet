@@ -1,0 +1,84 @@
+---
+nodes:
+- name: R1
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: direct, args: R2 }
+  - { name: net1, type: direct, args: R3 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: R2
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: direct, args: R1 }
+  - { name: net1, type: direct, args: R4 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: R3
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: direct, args: R1 }
+  - { name: net1, type: direct, args: R4 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+- name: R4
+  image: tinynetwork/pmacctd:develop
+  interfaces:
+  - { name: net0, type: direct, args: R2 }
+  - { name: net1, type: direct, args: R3 }
+  sysctls: [{ sysctl: net.ipv4.fib_multipath_hash_policy=1 }]
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.1.0.1/24 dev net0
+  - cmd: ip addr add 10.2.0.1/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.1.0.2/24 dev net0
+  - cmd: ip addr add 10.2.0.2/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+- name: R3
+  cmds:
+  - cmd: ip addr add 10.1.0.3/24 dev net0
+  - cmd: ip addr add 10.2.0.3/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+- name: R4
+  cmds:
+  - cmd: ip addr add 10.1.0.4/24 dev net0
+  - cmd: ip addr add 10.2.0.4/24 dev net1
+  - cmd: pmacctd -f /pmacctd.conf
+
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.1.0.10/24 dev net0
+  - cmd: >-
+      ip route replace default
+      nexthop via 10.1.0.1
+      nexthop via 10.1.0.2
+      nexthop via 10.1.0.3
+      nexthop via 10.1.0.4
+  - cmd: nginx
+  - cmd: iperf3 -s -D
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.2.0.10/24 dev net0
+  - cmd: >-
+      ip route replace default
+      nexthop via 10.2.0.1
+      nexthop via 10.2.0.2
+      nexthop via 10.2.0.3
+      nexthop via 10.2.0.4
+- name: C3
+  cmds:
+  - cmd: ip addr add 10.2.0.11/24 dev net0
+  - cmd: >-
+      ip route replace default
+      nexthop via 10.2.0.1
+      nexthop via 10.2.0.2
+      nexthop via 10.2.0.3
+      nexthop via 10.2.0.4
+
+test:
+- name: test
+  cmds:
+  - cmd: docker exec R1 ping 
+  - cmd: docker exec R2 pmacct -e -p /tmp/collect.pipe
