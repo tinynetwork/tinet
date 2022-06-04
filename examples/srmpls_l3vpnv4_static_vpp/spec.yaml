@@ -1,0 +1,186 @@
+postinit:
+  cmds:
+  - cmd: modprobe vrf
+  - cmd: modprobe mpls_router
+  - cmd: modprobe mpls_gso
+  - cmd: modprobe mpls_iptunnel
+  - cmd: |
+      cat <<EOF > /tmp/r1_exec.vpp
+      create host-interface name net0
+      create host-interface name net1
+      create host-interface name net2
+      create host-interface name net3
+      mpls table add 0
+      set interface mpls host-net0 enable
+      set interface mpls host-net1 enable
+      set int state host-net0 up
+      set int state host-net1 up
+      set int state host-net2 up
+      set int state host-net3 up
+      ip table add 10
+      ip table add 20
+      set int ip table host-net2 10
+      set int ip table host-net3 20
+
+      set int ip addr host-net0 10.0.0.1/30
+      set int ip addr host-net1 10.0.0.9/30
+      set int ip addr host-net2 192.168.0.1/24
+      set int ip addr host-net3 192.168.0.1/24
+
+      mpls local-label add 80 eos via ip4-lookup-in-table 10
+      mpls local-label add 81 eos via ip4-lookup-in-table 20
+      ip route add 192.168.1.0/24 table 10 via 10.0.0.2 host-net0 out-labels 17002 80
+      ip route add 192.168.1.0/24 table 20 via 10.0.0.2 host-net0 out-labels 17002 81
+      EOF
+  - cmd: |
+      cat <<EOF > /tmp/r2_exec.vpp
+      EOF
+  - cmd: docker exec R1 mkdir -p /etc/vpp
+  - cmd: docker exec R2 mkdir -p /etc/vpp
+  - cmd: docker cp /tmp/r1_exec.vpp R1:/etc/vpp/exec.vpp
+  - cmd: docker cp /tmp/r2_exec.vpp R2:/etc/vpp/exec.vpp
+
+nodes:
+- name: R1
+  image: slankdev/vpp:19.04
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R3#net0 }
+  - { name: net1, type: direct, args: R4#net0 }
+  - { name: net2, type: direct, args: HostA1#net0 }
+  - { name: net3, type: direct, args: HostB1#net0 }
+- name: R2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  - { name: net1, type: direct, args: R4#net1 }
+  - { name: net2, type: direct, args: HostA2#net0 }
+  - { name: net3, type: direct, args: HostB2#net0 }
+- name: R3
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R2#net0 }
+  - { name: net2, type: direct, args: R4#net2 }
+- name: R4
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  - { name: net1, type: direct, args: R2#net1 }
+  - { name: net2, type: direct, args: R3#net2 }
+- name: HostA1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R1#net2 }
+- name: HostA2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+- name: HostB1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R1#net3 }
+- name: HostB2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R2#net3 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: nohup vpp -c /etc/vpp/startup.conf &
+
+- name: R2
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: ip link add CUST-A type vrf table 10
+  - cmd: ip link add CUST-B type vrf table 20
+  - cmd: ip link set CUST-A up
+  - cmd: ip link set CUST-B up
+  - cmd: ip link set net2 master CUST-A
+  - cmd: ip link set net3 master CUST-B
+  - cmd: ip addr add 10.0.0.6/30 dev net0
+  - cmd: ip addr add 10.0.0.17/30 dev net1
+  - cmd: ip addr add 192.168.1.1/24 dev net2
+  - cmd: ip addr add 192.168.1.1/24 dev net3
+  - cmd: ip -M route add 80 dev CUST-A
+  - cmd: ip -M route add 81 dev CUST-B
+  - cmd: >
+      ip -M route add 17001 as 17001
+      nexthop via inet 10.0.0.5 dev net0
+      nexthop via inet 10.0.0.18 dev net1
+  - cmd: ip -M route add 17003 via inet 10.0.0.5 dev net0
+  - cmd: ip -M route add 17004 via inet 10.0.0.18 dev net1
+  - cmd: ip route add 192.168.0.0/24 vrf CUST-A
+      nexthop encap mpls 17001/80 via inet 10.0.0.5 dev net0
+      nexthop encap mpls 17001/80 via inet 10.0.0.18 dev net1
+  - cmd: ip route add 192.168.0.0/24 vrf CUST-B
+      nexthop encap mpls 17001/81 via inet 10.0.0.5 dev net0
+      nexthop encap mpls 17001/81 via inet 10.0.0.18 dev net1
+
+- name: R3
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: sysctl -w net.mpls.conf.net2.input=1
+  - cmd: ip addr add 10.0.0.2/30 dev net0
+  - cmd: ip addr add 10.0.0.5/30 dev net1
+  - cmd: ip addr add 10.0.0.13/30 dev net2
+  - cmd: ip -M route add 17001 via inet 10.0.0.1 dev net0
+  - cmd: ip -M route add 17002 via inet 10.0.0.6 dev net1
+  - cmd: ip -M route add 17004 via inet 10.0.0.14 dev net2
+
+- name: R4
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: sysctl -w net.mpls.conf.net2.input=1
+  - cmd: ip addr add 10.0.0.10/30 dev net0
+  - cmd: ip addr add 10.0.0.18/30 dev net1
+  - cmd: ip addr add 10.0.0.14/30 dev net2
+  - cmd: ip -M route add 17001 via inet 10.0.0.9 dev net0
+  - cmd: ip -M route add 17002 via inet 10.0.0.17 dev net1
+  - cmd: ip -M route add 17003 via inet 10.0.0.13 dev net2
+
+- name: HostA1
+  cmds:
+  - cmd: ip addr add 192.168.0.2/24 dev net0
+  - cmd: ip route add default via 192.168.0.1
+- name: HostA2
+  cmds:
+  - cmd: ip addr add 192.168.1.2/24 dev net0
+  - cmd: ip route add default via 192.168.1.1
+- name: HostB1
+  cmds:
+  - cmd: ip addr add 192.168.0.2/24 dev net0
+  - cmd: ip route add default via 192.168.0.1
+- name: HostB2
+  cmds:
+  - cmd: ip addr add 192.168.1.2/24 dev net0
+  - cmd: ip route add default via 192.168.1.1
