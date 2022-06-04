@@ -1,0 +1,203 @@
+postinit:
+  cmds:
+  - cmd: modprobe vrf
+  - cmd: |
+      cat <<EOF > /tmp/r1_exec.vpp
+      create host-interface name net0
+      create host-interface name net1
+      create host-interface name net2
+      create host-interface name net3
+      set int state host-net0 up
+      set int state host-net1 up
+      set int state host-net2 up
+      set int state host-net3 up
+
+      set int ip addr host-net0 2001:13::1/64
+      set int ip addr host-net1 2001:14::1/64
+      ip route add fc00:2::/64 via 2001:13::3
+      ip route add fc00:2::/64 via 2001:14::4
+      ip route add fc00:3::/64 via 2001:13::3
+      ip route add fc00:4::/64 via 2001:14::4
+
+      sr localsid address fc00:1:: behavior end
+      sr localsid address fc00:1::10 behavior end.dx2 host-net2
+      sr localsid address fc00:1::20 behavior end.dx2 host-net3
+      set sr encaps source addr fc00:1::
+
+      sr policy add bsid cafe::10 next fc00:2::10 fib-table 0
+      sr policy add bsid cafe::20 next fc00:2::20 fib-table 0
+      sr steer l2 host-net2 via bsid cafe::10
+      sr steer l2 host-net3 via bsid cafe::20
+      EOF
+  - cmd: |
+      cat <<EOF > /tmp/r2_exec.vpp
+      create host-interface name net0
+      create host-interface name net1
+      create host-interface name net2
+      create host-interface name net3
+      set int state host-net0 up
+      set int state host-net1 up
+      set int state host-net2 up
+      set int state host-net3 up
+
+      set int ip addr host-net0 2001:23::2/64
+      set int ip addr host-net1 2001:24::2/64
+      ip route add fc00:1::/64 via 2001:23::3
+      ip route add fc00:1::/64 via 2001:24::4
+      ip route add fc00:3::/64 via 2001:23::3
+      ip route add fc00:4::/64 via 2001:24::4
+
+      sr localsid address fc00:2:: behavior end
+      sr localsid address fc00:2::10 behavior end.dx2 host-net2
+      sr localsid address fc00:2::20 behavior end.dx2 host-net3
+      set sr encaps source addr fc00:2::
+
+      sr policy add bsid cafe::10 next fc00:1::10 fib-table 0
+      sr policy add bsid cafe::20 next fc00:1::20 fib-table 0
+      sr steer l2 host-net2 via bsid cafe::10
+      sr steer l2 host-net3 via bsid cafe::20
+      EOF
+  - cmd: docker exec R1 mkdir -p /etc/vpp
+  - cmd: docker exec R2 mkdir -p /etc/vpp
+  - cmd: docker cp /tmp/r1_exec.vpp R1:/etc/vpp/exec.vpp
+  - cmd: docker cp /tmp/r2_exec.vpp R2:/etc/vpp/exec.vpp
+
+nodes:
+- name: R1
+  image: slankdev/vpp:19.04 # ligato/vpp-base:master
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R3#net0 }
+  - { name: net1, type: direct, args: R4#net0 }
+  - { name: net2, type: direct, args: HostA1#net0 }
+  - { name: net3, type: direct, args: HostB1#net0 }
+- name: R2
+  image: slankdev/vpp:19.04 # ligato/vpp-base:master
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  - { name: net1, type: direct, args: R4#net1 }
+  - { name: net2, type: direct, args: HostA2#net0 }
+  - { name: net3, type: direct, args: HostB2#net0 }
+- name: R3
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.seg6_enabled=1
+  - sysctl: net.ipv6.conf.default.forwarding=1
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.seg6_enabled=1
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R2#net0 }
+  - { name: net2, type: direct, args: R4#net2 }
+- name: R4
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.seg6_enabled=1
+  - sysctl: net.ipv6.conf.default.forwarding=1
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.seg6_enabled=1
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  - { name: net1, type: direct, args: R2#net1 }
+  - { name: net2, type: direct, args: R3#net2 }
+- name: HostA1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R1#net2 }
+- name: HostA2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+- name: HostB1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R1#net3 }
+- name: HostB2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R2#net3 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: nohup vpp -c /etc/vpp/startup.conf &
+
+- name: R2
+  cmds:
+  - cmd: nohup vpp -c /etc/vpp/startup.conf &
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 2001:13::3/64 dev net0
+  - cmd: ip addr add 2001:23::3/64 dev net1
+  - cmd: ip addr add 2001:34::3/64 dev net2
+  - cmd: ip route add fc00:1::/64 via 2001:13::1 dev net0
+  - cmd: ip route add fc00:2::/64 via 2001:23::2 dev net1
+  - cmd: ip route add fc00:4::/64 via 2001:34::4 dev net2
+
+- name: R4
+  cmds:
+  - cmd: ip addr add 2001:14::4/64 dev net0
+  - cmd: ip addr add 2001:24::4/64 dev net1
+  - cmd: ip addr add 2001:34::4/64 dev net2
+  - cmd: ip route add fc00:1::/64 via 2001:14::1 dev net0
+  - cmd: ip route add fc00:2::/64 via 2001:24::2 dev net1
+  - cmd: ip route add fc00:3::/64 via 2001:34::3 dev net2
+
+- name: HostA1
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:00:00:A1
+  - cmd: ip link set net0 up
+  - cmd: ip addr add 2001:db8::1/64 dev net0
+  - cmd: ip nei replace 2001:db8::2 lladdr 52:54:00:00:00:A2 dev net0
+- name: HostA2
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:00:00:A2
+  - cmd: ip link set net0 up
+  - cmd: ip addr add 2001:db8::2/64 dev net0
+  - cmd: ip nei replace 2001:db8::1 lladdr 52:54:00:00:00:A1 dev net0
+- name: HostB1
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:00:00:B1
+  - cmd: ip link set net0 up
+  - cmd: ip addr add 2001:db8::1/64 dev net0
+  - cmd: ip nei replace 2001:db8::2 lladdr 52:54:00:00:00:A2 dev net0
+- name: HostB2
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:00:00:B2
+  - cmd: ip link set net0 up
+  - cmd: ip addr add 2001:db8::2/64 dev net0
+  - cmd: ip nei replace 2001:db8::1 lladdr 52:54:00:00:00:A1 dev net0

@@ -1,0 +1,193 @@
+preinit:
+- cmds:
+  - cmd: modprobe mpls_router
+  - cmd: modprobe mpls_gso
+  - cmd: modprobe mpls_iptunnel
+
+nodes:
+- name: R1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R3#net0 }
+  - { name: net1, type: direct, args: R4#net0 }
+  - { name: net2, type: direct, args: HostA1#net0 }
+  - { name: net3, type: direct, args: HostB1#net0 }
+- name: R2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  - { name: net1, type: direct, args: R4#net1 }
+  - { name: net2, type: direct, args: HostA2#net0 }
+  - { name: net3, type: direct, args: HostB2#net0 }
+- name: R3
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R2#net0 }
+  - { name: net2, type: direct, args: R4#net2 }
+- name: R4
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.mpls.platform_labels=1048575
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  - { name: net1, type: direct, args: R2#net1 }
+  - { name: net2, type: direct, args: R3#net2 }
+- name: HostA1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net2 }
+- name: HostA2
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+- name: HostB1
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R1#net3 }
+- name: HostB2
+  image: slankdev/ubuntu:18.04
+  interfaces:
+  - { name: net0, type: direct, args: R2#net3 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: ip addr add 10.255.0.1/32 dev lo
+  - cmd: ip addr add 10.0.0.1/30 dev net0
+  - cmd: ip addr add 10.0.0.9/30 dev net1
+  - cmd: >-
+      ip -M route add 17002 as 17002
+      nexthop via inet 10.0.0.2 dev net0
+      nexthop via inet 10.0.0.10 dev net1
+  - cmd: ip -M route add 17003 via inet 10.0.0.2 dev net0
+  - cmd: ip -M route add 17004 via inet 10.0.0.10 dev net1
+  - cmd: >-
+      ip route add 10.255.0.2/32
+      nexthop encap mpls 17002 via inet 10.0.0.2 dev net0
+      nexthop encap mpls 17002 via inet 10.0.0.10 dev net1
+  - cmd: ip route add 10.255.0.3/32 via 10.0.0.2 dev net0
+  - cmd: ip route add 10.255.0.4/32 via 10.0.0.10 dev net1
+
+  ## L2VPN Base Interface Configuration
+  - cmd: ip link add CUST-A type bridge
+  - cmd: ip link add CUST-B type bridge
+  - cmd: ip link set CUST-A up
+  - cmd: ip link set CUST-B up
+  - cmd: ip link set net2 master CUST-A
+  - cmd: ip link set net3 master CUST-B
+
+  ## L2VPN Encap/Decap Configuration
+  ## TODO(slankdev): there is no l2 encap configurability in MPLS
+  - cmd: ip -M route add 80 dev CUST-A
+  - cmd: ip -M route add 81 dev CUST-B
+
+- name: R2
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: ip addr add 10.255.0.2/32 dev lo
+  - cmd: ip addr add 10.0.0.6/30 dev net0
+  - cmd: ip addr add 10.0.0.17/30 dev net1
+  - cmd: >-
+      ip -M route add 17001 as 17001
+      nexthop via inet 10.0.0.5 dev net0
+      nexthop via inet 10.0.0.18 dev net1
+  - cmd: ip -M route add 17003 via inet 10.0.0.5 dev net0
+  - cmd: ip -M route add 17004 via inet 10.0.0.18 dev net1
+  - cmd: >-
+      ip route add 10.255.0.1/32
+      nexthop encap mpls 17001 via inet 10.0.0.5 dev net0
+      nexthop encap mpls 17001 via inet 10.0.0.18 dev net1
+  - cmd: ip route add 10.255.0.3/32 via 10.0.0.5 dev net0
+  - cmd: ip route add 10.255.0.4/32 via 10.0.0.18 dev net1
+
+  ## L2VPN Base Interface Configuration
+  - cmd: ip link add CUST-A type bridge
+  - cmd: ip link add CUST-B type bridge
+  - cmd: ip link set CUST-A up
+  - cmd: ip link set CUST-B up
+  - cmd: ip link set net2 master CUST-A
+  - cmd: ip link set net3 master CUST-B
+
+  ## L2VPN Encap/Decap Configuration
+  ## TODO(slankdev): there is no l2 encap configurability in MPLS
+  - cmd: ip -M route add 80 dev CUST-A
+  - cmd: ip -M route add 81 dev CUST-B
+
+- name: R3
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: sysctl -w net.mpls.conf.net2.input=1
+  - cmd: ip addr add 10.255.0.3/32 dev lo
+  - cmd: ip addr add 10.0.0.2/30 dev net0
+  - cmd: ip addr add 10.0.0.5/30 dev net1
+  - cmd: ip addr add 10.0.0.13/30 dev net2
+  - cmd: ip -M route add 17001 via inet 10.0.0.1 dev net0
+  - cmd: ip -M route add 17002 via inet 10.0.0.6 dev net1
+  - cmd: ip -M route add 17004 via inet 10.0.0.14 dev net2
+  - cmd: ip route add 10.255.0.1/32 via 10.0.0.1 dev net0
+  - cmd: ip route add 10.255.0.2/32 via 10.0.0.6 dev net1
+  - cmd: ip route add 10.255.0.4/32 via 10.0.0.14 dev net2
+
+- name: R4
+  cmds:
+  - cmd: sysctl -w net.mpls.conf.lo.input=1
+  - cmd: sysctl -w net.mpls.conf.net0.input=1
+  - cmd: sysctl -w net.mpls.conf.net1.input=1
+  - cmd: sysctl -w net.mpls.conf.net2.input=1
+  - cmd: ip addr add 10.255.0.4/32 dev lo
+  - cmd: ip addr add 10.0.0.10/30 dev net0
+  - cmd: ip addr add 10.0.0.18/30 dev net1
+  - cmd: ip addr add 10.0.0.14/30 dev net2
+  - cmd: ip -M route add 17001 via inet 10.0.0.9 dev net0
+  - cmd: ip -M route add 17002 via inet 10.0.0.17 dev net1
+  - cmd: ip -M route add 17003 via inet 10.0.0.13 dev net2
+  - cmd: ip route add 10.255.0.1/32 via 10.0.0.9 dev net0
+  - cmd: ip route add 10.255.0.2/32 via 10.0.0.17 dev net1
+  - cmd: ip route add 10.255.0.3/32 via 10.0.0.13 dev net2
+
+- name: HostA1
+  cmds:
+  - cmd: ip addr add 192.168.0.2/24 dev net0
+  - cmd: ip route add default via 192.168.0.1
+- name: HostA2
+  cmds:
+  - cmd: ip addr add 192.168.1.2/24 dev net0
+  - cmd: ip route add default via 192.168.1.1
+- name: HostB1
+  cmds:
+  - cmd: ip addr add 192.168.0.2/24 dev net0
+  - cmd: ip route add default via 192.168.0.1
+- name: HostB2
+  cmds:
+  - cmd: ip addr add 192.168.1.2/24 dev net0
+  - cmd: ip route add default via 192.168.1.1

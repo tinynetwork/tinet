@@ -22,6 +22,31 @@ chmod +x /usr/bin/tinet
 tinet --version
 ```
 
+for ubuntu user
+```
+sudo apt update
+sudo apt install -y linux-image-extra-virtual
+sudo reboot
+```
+
+upgrading the kernel
+```
+$ sudo apt list "linux-image-5.15.*-generic"
+linux-image-5.15.0-33-generic/focal-updates,focal-security 5.15.0-33.34~20.04.1 amd64
+$ sudo apt install linux-image-5.15.0-33-generic linux-modules-5.15.0-33-generic linux-modules-extra-5.15.0-33-generic
+$ sudo reboot
+```
+```
+$ sudo grep 'menuentry ' $(sudo find /boot -name "grub.cfg") | cut -f 2 -d "'" | nl -v 0
+     0  Ubuntu
+     1  Ubuntu, with Linux 5.15.0-33-generic
+     2  Ubuntu, with Linux 5.15.0-33-generic (recovery mode)
+     3  Ubuntu, with Linux 5.4.0-113-generic
+     4  Ubuntu, with Linux 5.4.0-113-generic (recovery mode)
+$ sudo grub-set-default 3
+$ sudo reboot
+```
+
 ## Build
 ```
 git clone https://github.com/tinynetwork/tinet tinet && cd $_
@@ -36,6 +61,7 @@ tinet up -c spec.yaml | sudo sh -x
 tinet conf -c spec.yaml | sudo sh -x
 tinet test -c spec.yaml | sudo sh -x
 tinet down -c spec.yaml | sudo sh -x
+docker run -it --rm --privileged --net=container:R1 nicolaka/netshoot bash
 ```
 
 ## Command Options

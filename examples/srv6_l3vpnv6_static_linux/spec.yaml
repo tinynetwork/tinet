@@ -1,0 +1,209 @@
+preinit:
+- cmds:
+  - cmd: modprobe vrf
+
+nodes:
+- name: R1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.vrf.strict_mode=1
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.seg6_enabled=1
+  - sysctl: net.ipv6.conf.default.forwarding=1
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.seg6_enabled=1
+  interfaces:
+  - { name: net0, type: direct, args: R3#net0 }
+  - { name: net1, type: direct, args: R4#net0 }
+  - { name: net2, type: direct, args: HostA1#net0 }
+  - { name: net3, type: direct, args: HostB1#net0 }
+- name: R2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.vrf.strict_mode=1
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.seg6_enabled=1
+  - sysctl: net.ipv6.conf.default.forwarding=1
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.seg6_enabled=1
+  interfaces:
+  - { name: net0, type: direct, args: R3#net1 }
+  - { name: net1, type: direct, args: R4#net1 }
+  - { name: net2, type: direct, args: HostA2#net0 }
+  - { name: net3, type: direct, args: HostB2#net0 }
+- name: R3
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.seg6_enabled=1
+  - sysctl: net.ipv6.conf.default.forwarding=1
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.seg6_enabled=1
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: R2#net0 }
+  - { name: net2, type: direct, args: R4#net2 }
+- name: R4
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv4.conf.all.rp_filter=0
+  - sysctl: net.ipv4.conf.default.rp_filter=0
+  - sysctl: net.ipv6.conf.all.forwarding=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.all.seg6_enabled=1
+  - sysctl: net.ipv6.conf.default.forwarding=1
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.seg6_enabled=1
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+  - { name: net1, type: direct, args: R2#net1 }
+  - { name: net2, type: direct, args: R3#net2 }
+- name: HostA1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R1#net2 }
+- name: HostA2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+- name: HostB1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R1#net3 }
+- name: HostB2
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
+  interfaces:
+  - { name: net0, type: direct, args: R2#net3 }
+
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 2001:13::1/64 dev net0
+  - cmd: ip addr add 2001:14::1/64 dev net1
+  - cmd: >-
+      ip route add fc00:2::/64
+      nexthop via 2001:13::3 dev net0
+      nexthop via 2001:14::4 dev net1
+  - cmd: ip route add fc00:3::/64 via 2001:13::3 dev net0
+  - cmd: ip route add fc00:4::/64 via 2001:14::4 dev net1
+
+  ## L2VPN Base Interface Configuration
+  - cmd: ip link add CUST-A type vrf table 10
+  - cmd: ip link add CUST-B type vrf table 20
+  - cmd: ip link set CUST-A up
+  - cmd: ip link set CUST-B up
+  - cmd: ip link set net2 master CUST-A
+  - cmd: ip link set net3 master CUST-B
+  - cmd: ip addr add 2001:db8:1::1/64 dev net2
+  - cmd: ip addr add 2001:db8:1::1/64 dev net3
+
+  - cmd: ip route add fc00:1::10/128 encap seg6local action End.DT6 table 10 dev CUST-A
+  - cmd: ip route add fc00:1::20/128 encap seg6local action End.DT6 table 20 dev CUST-B
+  - cmd: >-
+      ip route add 2001:db8:2::/64 vrf CUST-A
+      nexthop encap seg6 mode encap segs fc00:2::10 via 2001:13::3 dev net0
+      nexthop encap seg6 mode encap segs fc00:2::10 via 2001:14::4 dev net1
+  - cmd: >-
+      ip route add 2001:db8:2::/64 vrf CUST-B
+      nexthop encap seg6 mode encap segs fc00:2::20 via 2001:13::3 dev net0
+      nexthop encap seg6 mode encap segs fc00:2::20 via 2001:14::4 dev net1
+
+- name: R2
+  cmds:
+  - cmd: ip addr add 2001:23::2/64 dev net0
+  - cmd: ip addr add 2001:24::2/64 dev net1
+  - cmd: >-
+      ip route add fc00:1::/64
+      nexthop via 2001:23::3 dev net0
+      nexthop via 2001:24::4 dev net1
+  - cmd: ip route add fc00:3::/64 via 2001:23::3 dev net0
+  - cmd: ip route add fc00:4::/64 via 2001:24::4 dev net1
+
+  # ## L2VPN Base Interface Configuration
+  - cmd: ip link add CUST-A type vrf table 10
+  - cmd: ip link add CUST-B type vrf table 20
+  - cmd: ip link set CUST-A up
+  - cmd: ip link set CUST-B up
+  - cmd: ip link set net2 master CUST-A
+  - cmd: ip link set net3 master CUST-B
+  - cmd: ip addr add 2001:db8:2::1/64 dev net2
+  - cmd: ip addr add 2001:db8:2::1/64 dev net3
+
+  - cmd: ip route add fc00:2::10/128 encap seg6local action End.DT6 table 10 dev CUST-A
+  - cmd: ip route add fc00:2::20/128 encap seg6local action End.DT6 table 20 dev CUST-B
+  - cmd: >-
+      ip route add 2001:db8:1::/64 vrf CUST-A
+      nexthop encap seg6 mode encap segs fc00:1::10 via 2001:23::3 dev net0
+      nexthop encap seg6 mode encap segs fc00:1::10 via 2001:24::4 dev net1
+  - cmd: >-
+      ip route add 2001:db8:1::/64 vrf CUST-B
+      nexthop encap seg6 mode encap segs fc00:1::20 via 2001:23::3 dev net0
+      nexthop encap seg6 mode encap segs fc00:1::20 via 2001:24::4 dev net1
+
+- name: R3
+  cmds:
+  - cmd: ip addr add 2001:13::3/64 dev net0
+  - cmd: ip addr add 2001:23::3/64 dev net1
+  - cmd: ip addr add 2001:34::3/64 dev net2
+  - cmd: ip route add fc00:1::/64 via 2001:13::1 dev net0
+  - cmd: ip route add fc00:2::/64 via 2001:23::2 dev net1
+  - cmd: ip route add fc00:4::/64 via 2001:34::4 dev net2
+
+- name: R4
+  cmds:
+  - cmd: ip addr add 2001:14::4/64 dev net0
+  - cmd: ip addr add 2001:24::4/64 dev net1
+  - cmd: ip addr add 2001:34::4/64 dev net2
+  - cmd: ip route add fc00:1::/64 via 2001:14::1 dev net0
+  - cmd: ip route add fc00:2::/64 via 2001:24::2 dev net1
+  - cmd: ip route add fc00:3::/64 via 2001:34::3 dev net2
+
+- name: HostA1
+  cmds:
+  - cmd: ip addr add 2001:db8:1::2/64 dev net0
+  - cmd: ip -6 route add default via 2001:db8:1::1
+- name: HostA2
+  cmds:
+  - cmd: ip addr add 2001:db8:2::2/64 dev net0
+  - cmd: ip -6 route add default via 2001:db8:2::1
+- name: HostB1
+  cmds:
+  - cmd: ip addr add 2001:db8:1::2/64 dev net0
+  - cmd: ip -6 route add default via 2001:db8:1::1
+- name: HostB2
+  cmds:
+  - cmd: ip addr add 2001:db8:2::2/64 dev net0
+  - cmd: ip -6 route add default via 2001:db8:2::1

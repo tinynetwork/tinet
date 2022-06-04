@@ -7,6 +7,7 @@ preinit:
 nodes:
   - name: R1
     image: frrouting/frr:v7.5.1
+    docker_run_extra_args: --entrypoint bash
     interfaces:
     - { name: net0, type: direct, args: R2#net0 }
     - { name: net1, type: direct, args: R4#net0 }
@@ -14,12 +15,14 @@ nodes:
     - { name: net3, type: direct, args: HostB1#net0 }
   - name: R2
     image: frrouting/frr:v7.5.1
+    docker_run_extra_args: --entrypoint bash
     interfaces:
     - { name: net0, type: direct, args: R1#net0 }
     - { name: net1, type: direct, args: R3#net0 }
     - { name: net2, type: direct, args: R4#net1 }
   - name: R3
     image: frrouting/frr:v7.5.1
+    docker_run_extra_args: --entrypoint bash
     interfaces:
     - { name: net0, type: direct, args: R2#net1 }
     - { name: net1, type: direct, args: R4#net2 }
@@ -27,6 +30,7 @@ nodes:
     - { name: net3, type: direct, args: HostB2#net0 }
   - name: R4
     image: frrouting/frr:v7.5.1
+    docker_run_extra_args: --entrypoint bash
     interfaces:
     - { name: net0, type: direct, args: R1#net1 }
     - { name: net1, type: direct, args: R2#net2 }
@@ -51,11 +55,12 @@ nodes:
 node_configs:
   - name: R1
     cmds:
-      - cmd: /usr/lib/frr/frr start
-      - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
-      - cmd: /usr/lib/frr/frrinit.sh restart
+      - cmd: sed -i -e 's/bgpd=no/bgpd=yes/g' /etc/frr/daemons
+      - cmd: sed -i -e 's/ospfd=no/ospfd=yes/g' /etc/frr/daemons
+      - cmd: sed -i -e 's/pimd=no/pimd=yes/g' /etc/frr/daemons
+      - cmd: /usr/lib/frr/frrinit.sh start
       - cmd: sysctl -w net.ipv4.ip_forward=1
-      - cmd: systcl -w net.ipv4.conf.all.rp_filter=0
+      - cmd: sysctl -w net.ipv4.conf.all.rp_filter=0
       - cmd: sysctl -w net.mpls.conf.lo.input=1
       - cmd: sysctl -w net.mpls.conf.net0.input=1
       - cmd: sysctl -w net.mpls.conf.net1.input=1
@@ -133,7 +138,7 @@ node_configs:
       - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
       - cmd: /usr/lib/frr/frrinit.sh restart
       - cmd: sysctl -w net.ipv4.ip_forward=1
-      - cmd: systcl -w net.ipv4.conf.all.rp_filter=0
+      - cmd: sysctl -w net.ipv4.conf.all.rp_filter=0
       - cmd: sysctl -w net.mpls.conf.lo.input=1
       - cmd: sysctl -w net.mpls.conf.net0.input=1
       - cmd: sysctl -w net.mpls.conf.net1.input=1
@@ -175,7 +180,7 @@ node_configs:
       - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
       - cmd: /usr/lib/frr/frrinit.sh restart
       - cmd: sysctl -w net.ipv4.ip_forward=1
-      - cmd: systcl -w net.ipv4.conf.all.rp_filter=0
+      - cmd: sysctl -w net.ipv4.conf.all.rp_filter=0
       - cmd: sysctl -w net.mpls.conf.lo.input=1
       - cmd: sysctl -w net.mpls.conf.net0.input=1
       - cmd: sysctl -w net.mpls.conf.net1.input=1
@@ -253,7 +258,7 @@ node_configs:
       - cmd: sed -i -e 's/=no/=yes/g' /etc/frr/daemons
       - cmd: /usr/lib/frr/frrinit.sh restart
       - cmd: sysctl -w net.ipv4.ip_forward=1
-      - cmd: systcl -w net.ipv4.conf.all.rp_filter=0
+      - cmd: sysctl -w net.ipv4.conf.all.rp_filter=0
       - cmd: sysctl -w net.mpls.conf.lo.input=1
       - cmd: sysctl -w net.mpls.conf.net0.input=1
       - cmd: sysctl -w net.mpls.conf.net1.input=1
