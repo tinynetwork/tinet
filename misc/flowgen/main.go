@@ -241,95 +241,98 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 		return err
 	}
 
+	// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 	for _, flowset := range m.FlowSets {
-		// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
-		flowsetlen := 0
-		if flowset.FlowSetID == 0 { // template
-			const flowsetHdrLen = 8
-			flowsetlen = len(flowset.Template.Fields)*4 + flowsetHdrLen
-		} else { // data
-			const flowsetHdrLen = 4
-			flowsetlen = len(flowset.Flow)*56 + flowsetHdrLen
-		}
-
-		if err := binary.Write(buf, binary.BigEndian, &struct {
-			FlowSetID uint16
-			Length    uint16
-		}{
-			flowset.FlowSetID,
-			uint16(flowsetlen),
-		}); err != nil {
+		if err := flowset.ToBuffer(buf); err != nil {
 			return err
-		}
-
-		if flowset.FlowSetID == 0 {
-			if err := binary.Write(buf, binary.BigEndian, &struct {
-				TemplateID uint16
-				FieldCount uint16
-			}{
-				flowset.Template.TemplateID,
-				uint16(len(flowset.Template.Fields)),
-			}); err != nil {
-				return err
-			}
-			for _, field := range flowset.Template.Fields {
-				if err := binary.Write(buf, binary.BigEndian, &field); err != nil {
-					return err
-				}
-			}
-		} else {
-			if err := flowset.ToBuffer(buf); err != nil {
-				return err
-			}
 		}
 	}
 	return nil
 }
 
 func (fs *IPFixFlowSet) ToBuffer(buf *bytes.Buffer) error {
+	// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 	e := binary.BigEndian
-	for _, flow := range fs.Flow {
-		if err := binary.Write(buf, e, &flow.FlowEndMilliseconds); err != nil {
+	flowsetlen := 0
+	if fs.FlowSetID == 0 { // template
+		const flowsetHdrLen = 8
+		flowsetlen = len(fs.Template.Fields)*4 + flowsetHdrLen
+	} else { // data
+		const flowsetHdrLen = 4
+		flowsetlen = len(fs.Flow)*56 + flowsetHdrLen
+	}
+
+	if err := binary.Write(buf, binary.BigEndian, &struct {
+		FlowSetID uint16
+		Length    uint16
+	}{
+		fs.FlowSetID,
+		uint16(flowsetlen),
+	}); err != nil {
+		return err
+	}
+
+	if fs.FlowSetID == 0 {
+		if err := binary.Write(buf, binary.BigEndian, &struct {
+			TemplateID uint16
+			FieldCount uint16
+		}{
+			fs.Template.TemplateID,
+			uint16(len(fs.Template.Fields)),
+		}); err != nil {
 			return err
 		}
-		if err := binary.Write(buf, e, &flow.FlowStartMilliseconds); err != nil {
-			return err
+		for _, field := range fs.Template.Fields {
+			if err := binary.Write(buf, binary.BigEndian, &field); err != nil {
+				return err
+			}
 		}
-		if err := binary.Write(buf, e, &flow.OctetDeltaCount); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.PacketDeltaCount); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.IpVersion); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.IngressInterface); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.EgressInterface); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.FlowDirection); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.SourceIPv4Address); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.DestinationIPv4Address); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.SourceTransportPort); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.DestinationTransportPort); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.TcpControlBits); err != nil {
-			return err
-		}
-		if err := binary.Write(buf, e, &flow.ProtocolIdentifier); err != nil {
-			return err
+
+	} else {
+
+		for _, flow := range fs.Flow {
+			if err := binary.Write(buf, e, &flow.FlowEndMilliseconds); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.FlowStartMilliseconds); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.OctetDeltaCount); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.PacketDeltaCount); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.IpVersion); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.IngressInterface); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.EgressInterface); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.FlowDirection); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.SourceIPv4Address); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.DestinationIPv4Address); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.SourceTransportPort); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.DestinationTransportPort); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.TcpControlBits); err != nil {
+				return err
+			}
+			if err := binary.Write(buf, e, &flow.ProtocolIdentifier); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
