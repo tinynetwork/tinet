@@ -4,17 +4,27 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
 	"time"
 
 	"github.com/cloudflare/goflow/decoders/netflow"
+	"github.com/k0kubun/pp"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
 
 var cliOpt struct {
 	configfile string
+}
+
+var config struct {
+	Templates []struct {
+		ID       uint16   `yaml:"id"`
+		Template []string `yaml:"template"`
+	} `yaml:"templates"`
 }
 
 type IPFixMessage struct {
@@ -82,8 +92,24 @@ func newCommand() *cobra.Command {
 	return cmd
 }
 
+func fileUnmarshalAsYaml(in string, v interface{}) error {
+	yamlFile, err := ioutil.ReadFile(in)
+	if err != nil {
+		return err
+	}
+	err = yaml.Unmarshal(yamlFile, v)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func appMain(cmd *cobra.Command, args []string) error {
 	fmt.Printf("config=%s\n", cliOpt.configfile)
+	if err := fileUnmarshalAsYaml(cliOpt.configfile, &config); err != nil {
+		return err
+	}
+	pp.Println(config)
 
 	msg := IPFixMessage{
 		Header: IPFixHeader{
