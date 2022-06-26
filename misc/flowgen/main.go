@@ -54,9 +54,7 @@ type IPFixFlowTemplateField struct {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	command := newCommand()
-	err := command.Execute()
-	if err != nil {
+	if err := newCommand().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
