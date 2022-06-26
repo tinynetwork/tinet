@@ -29,7 +29,7 @@ for data in execute("sudo bpftool map dump name flow_stats"):
         daddr = element['key']['daddr']
         daddr = str(ipaddress.IPv4Address(socket.htonl(daddr)))
         key = "{}:{}".format(daddr, element['key']['dport'])
-        cnt = 0
+        cnt = stats.get(key, 0)
         for value in element['values']:
             cnt += value['value']['cnt']
         stats[key] = cnt
