@@ -1,4 +1,4 @@
 b:
-	go build main.go
+	go build -o a.out main.go
 r:
 	go run main.go
