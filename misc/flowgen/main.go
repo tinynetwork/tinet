@@ -88,8 +88,60 @@ func appMain(cmd *cobra.Command, args []string) error {
 				Template: IPFixFlowTemplate{
 					Fields: []IPFixFlowTemplateField{
 						{
-							FieldType:   0,
-							FieldLength: 0,
+							FieldType:   153,
+							FieldLength: 8,
+						},
+						{
+							FieldType:   152,
+							FieldLength: 8,
+						},
+						{
+							FieldType:   1,
+							FieldLength: 8,
+						},
+						{
+							FieldType:   2,
+							FieldLength: 8,
+						},
+						{
+							FieldType:   60,
+							FieldLength: 1,
+						},
+						{
+							FieldType:   10,
+							FieldLength: 4,
+						},
+						{
+							FieldType:   14,
+							FieldLength: 4,
+						},
+						{
+							FieldType:   61,
+							FieldLength: 1,
+						},
+						{
+							FieldType:   8,
+							FieldLength: 4,
+						},
+						{
+							FieldType:   12,
+							FieldLength: 4,
+						},
+						{
+							FieldType:   7,
+							FieldLength: 2,
+						},
+						{
+							FieldType:   11,
+							FieldLength: 2,
+						},
+						{
+							FieldType:   6,
+							FieldLength: 1,
+						},
+						{
+							FieldType:   4,
+							FieldLength: 1,
 						},
 					},
 				},
