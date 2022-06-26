@@ -17,7 +17,7 @@ links = execute("ip -j link")
 for link in links:
   if link["ifname"].startswith("ens4") or link["ifname"].startswith("veth"):
     qdisc_configured = False
-    for qdisc in execute("tc -j qdisc list dev ens4 clsact"):
+    for qdisc in execute(f"tc -j qdisc list dev {link['ifname']} clsact"):
       if qdisc["kind"] == "clsact" and \
         qdisc["handle"] == "ffff:" and \
         qdisc["parent"] == "ffff:fff1":
