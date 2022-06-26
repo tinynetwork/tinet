@@ -261,7 +261,6 @@ func (fs *IPFixFlowSet) ToBuffer(buf *bytes.Buffer) error {
 		const flowsetHdrLen = 4
 		flowsetlen = len(fs.Flow)*56 + flowsetHdrLen
 	}
-
 	if err := binary.Write(buf, binary.BigEndian, &struct {
 		FlowSetID uint16
 		Length    uint16
@@ -287,9 +286,7 @@ func (fs *IPFixFlowSet) ToBuffer(buf *bytes.Buffer) error {
 				return err
 			}
 		}
-
 	} else {
-
 		for _, flow := range fs.Flow {
 			if err := binary.Write(buf, e, &flow.FlowEndMilliseconds); err != nil {
 				return err
