@@ -20,11 +20,11 @@ var config struct {
 
 // https://www.rfc-editor.org/rfc/rfc3954.html#section-5.1
 type IPFixMessage struct {
-	Header   IPFixMessageHeader
+	Header   IPFixHeader
 	FlowSets []IPFixFlowSet
 }
 
-type IPFixMessageHeader struct {
+type IPFixHeader struct {
 	VersionNumber  uint16
 	Count          uint16
 	SysupTime      uint32
@@ -92,7 +92,7 @@ func appMain(cmd *cobra.Command, args []string) error {
 	fmt.Printf("arg1=%s, arg2=%s\n", config.arg1, config.arg2)
 
 	msg := IPFixMessage{
-		Header: IPFixMessageHeader{
+		Header: IPFixHeader{
 			VersionNumber:  9,
 			Count:          2,
 			SysupTime:      0x00002250,
