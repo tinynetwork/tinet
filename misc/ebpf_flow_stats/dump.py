@@ -26,7 +26,7 @@ if not flow_stats_exist:
 
 stats = {}
 for data in execute("sudo bpftool map dump name flow_stats"):
-    for element in data['elements']:
+    def countup(element):
         daddr = element['key']['daddr']
         daddr = str(ipaddress.IPv4Address(socket.htonl(daddr)))
         key = "{}:{}".format(daddr, element['key']['dport'])
@@ -34,4 +34,9 @@ for data in execute("sudo bpftool map dump name flow_stats"):
         for value in element['values']:
             cnt += value['value']['cnt']
         stats[key] = cnt
+    if "elements" in data:
+        for element in data['elements']:
+            countup(element)
+    else:
+        countup(data)
 pprint.pprint(stats)
