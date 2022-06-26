@@ -150,7 +150,7 @@ func appMain(cmd *cobra.Command, args []string) error {
 	}
 
 	buf := &bytes.Buffer{}
-	if err := binary.Write(buf, binary.BigEndian, &msg.Header); err != nil {
+	if err := msg.ToBuffer(buf); err != nil {
 		return err
 	}
 	if err := udptransmit("10.146.0.6:2100", buf); err != nil {
@@ -166,6 +166,13 @@ func udptransmit(dst string, buf *bytes.Buffer) error {
 	}
 	defer conn.Close()
 	if _, err = conn.Write(buf.Bytes()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
+	if err := binary.Write(buf, binary.BigEndian, &m.Header); err != nil {
 		return err
 	}
 	return nil
