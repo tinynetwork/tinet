@@ -31,10 +31,8 @@ type IPFixHeader struct {
 	SourceID       uint32
 }
 
-// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 type IPFixFlowSet struct {
 	FlowSetID uint16
-	Length    uint16
 	Template  IPFixFlowTemplate
 	Flow      []IPFixFlow
 }
@@ -100,7 +98,6 @@ func appMain(cmd *cobra.Command, args []string) error {
 		FlowSets: []IPFixFlowSet{
 			{
 				FlowSetID: 0,
-				Length:    64,
 				Template: IPFixFlowTemplate{
 					TemplateID: 1024,
 					FieldCount: 14,
@@ -166,7 +163,6 @@ func appMain(cmd *cobra.Command, args []string) error {
 			},
 			{
 				FlowSetID: 1024,
-				Length:    116,
 				Flow: []IPFixFlow{
 					{
 						FlowEndMilliseconds:      0x000001819e9d896b,
@@ -246,13 +242,24 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 	}); err != nil {
 		return err
 	}
+
 	for _, flowset := range m.FlowSets {
+		// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
+		flowsetlen := 0
+		if flowset.FlowSetID == 0 { // template
+			const flowsetHdrLen = 8
+			flowsetlen = len(flowset.Template.Fields)*4 + flowsetHdrLen
+		} else { // data
+			const flowsetHdrLen = 4
+			flowsetlen = len(flowset.Flow)*56 + flowsetHdrLen
+		}
+
 		if err := binary.Write(buf, binary.BigEndian, &struct {
 			FlowSetID uint16
 			Length    uint16
 		}{
 			flowset.FlowSetID,
-			flowset.Length,
+			uint16(flowsetlen),
 		}); err != nil {
 			return err
 		}
@@ -283,16 +290,6 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 
 func (fs *IPFixFlowSet) ToBuffer(buf *bytes.Buffer) error {
 	e := binary.BigEndian
-	if err := binary.Write(buf, e, &struct {
-		FlowSetID uint16
-		Length    uint16
-	}{
-		FlowSetID: fs.FlowSetID,
-		Length:    fs.Length,
-	}); err != nil {
-		return err
-	}
-
 	for _, flow := range fs.Flow {
 		if err := binary.Write(buf, e, &flow.FlowEndMilliseconds); err != nil {
 			return err
