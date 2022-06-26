@@ -235,18 +235,23 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 		return err
 	}
 	for _, flowset := range m.FlowSets {
-		var d = struct {
-			FlowSetID  uint16
-			Length     uint16
-			TemplateID uint16
-			FieldCount uint16
+		if err := binary.Write(buf, binary.BigEndian, &struct {
+			FlowSetID uint16
+			Length    uint16
 		}{
 			flowset.FlowSetID,
 			flowset.Length,
+		}); err != nil {
+			return err
+		}
+
+		if err := binary.Write(buf, binary.BigEndian, &struct {
+			TemplateID uint16
+			FieldCount uint16
+		}{
 			flowset.Template.TemplateID,
 			flowset.Template.FieldCount,
-		}
-		if err := binary.Write(buf, binary.BigEndian, &d); err != nil {
+		}); err != nil {
 			return err
 		}
 		for _, field := range flowset.Template.Fields {
