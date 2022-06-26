@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cloudflare/goflow/decoders/netflow"
 	"github.com/spf13/cobra"
 )
 
@@ -90,59 +91,59 @@ func appMain(cmd *cobra.Command, args []string) error {
 					FieldCount: 14,
 					Fields: []IPFixFlowTemplateField{
 						{
-							FieldType:   153,
+							FieldType:   netflow.IPFIX_FIELD_flowEndMilliseconds,
 							FieldLength: 8,
 						},
 						{
-							FieldType:   152,
+							FieldType:   netflow.IPFIX_FIELD_flowStartMilliseconds,
 							FieldLength: 8,
 						},
 						{
-							FieldType:   1,
+							FieldType:   netflow.IPFIX_FIELD_octetDeltaCount,
 							FieldLength: 8,
 						},
 						{
-							FieldType:   2,
+							FieldType:   netflow.IPFIX_FIELD_packetDeltaCount,
 							FieldLength: 8,
 						},
 						{
-							FieldType:   60,
+							FieldType:   netflow.IPFIX_FIELD_ipVersion,
 							FieldLength: 1,
 						},
 						{
-							FieldType:   10,
+							FieldType:   netflow.IPFIX_FIELD_ingressInterface,
 							FieldLength: 4,
 						},
 						{
-							FieldType:   14,
+							FieldType:   netflow.IPFIX_FIELD_egressInterface,
 							FieldLength: 4,
 						},
 						{
-							FieldType:   61,
+							FieldType:   netflow.IPFIX_FIELD_flowDirection,
 							FieldLength: 1,
 						},
 						{
-							FieldType:   8,
+							FieldType:   netflow.IPFIX_FIELD_sourceIPv4Address,
 							FieldLength: 4,
 						},
 						{
-							FieldType:   12,
+							FieldType:   netflow.IPFIX_FIELD_destinationIPv4Address,
 							FieldLength: 4,
 						},
 						{
-							FieldType:   7,
+							FieldType:   netflow.IPFIX_FIELD_sourceTransportPort,
 							FieldLength: 2,
 						},
 						{
-							FieldType:   11,
+							FieldType:   netflow.IPFIX_FIELD_destinationTransportPort,
 							FieldLength: 2,
 						},
 						{
-							FieldType:   6,
+							FieldType:   netflow.IPFIX_FIELD_tcpControlBits,
 							FieldLength: 1,
 						},
 						{
-							FieldType:   4,
+							FieldType:   netflow.IPFIX_FIELD_protocolIdentifier,
 							FieldLength: 1,
 						},
 					},
