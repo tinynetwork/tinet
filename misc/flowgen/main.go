@@ -38,6 +38,24 @@ type IPFixFlowSet struct {
 	FlowSetID uint16
 	Length    uint16
 	Template  IPFixFlowTemplate
+	Flow      []IPFixFlow
+}
+
+type IPFixFlow struct {
+	FlowEndMilliseconds      uint64
+	FlowStartMilliseconds    uint64
+	OctetDeltaCount          uint64
+	PacketDeltaCount         uint64
+	IpVersion                uint8
+	IngressInterface         uint32
+	EgressInterface          uint32
+	FlowDirection            uint8
+	SourceIPv4Address        uint32
+	DestinationIPv4Address   uint32
+	SourceTransportPort      uint16
+	DestinationTransportPort uint16
+	TcpControlBits           uint8
+	ProtocolIdentifier       uint8
 }
 
 // https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
@@ -149,6 +167,18 @@ func appMain(cmd *cobra.Command, args []string) error {
 					},
 				},
 			},
+			// {
+			// 	FlowSetID: 1024,
+			// 	Length:    116,
+			// 	Template: IPFixFlowTemplate{
+			// 		TemplateID: 1024,
+			// 		FieldCount: 14,
+			// 		Fields: []IPFixFlowTemplateField{
+			// 			{
+			// 			}
+			// 		},
+			// 	},
+			// },
 		},
 	}
 
