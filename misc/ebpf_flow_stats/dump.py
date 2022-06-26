@@ -19,7 +19,6 @@ for em in execute("sudo bpftool map -j"):
     if em["name"] == "flow_stats":
         flow_stats_exist = True
         break
-
 if not flow_stats_exist:
     print("nothing")
     sys.exit(0)
