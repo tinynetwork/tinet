@@ -72,16 +72,32 @@ func newCommand() *cobra.Command {
 func appMain(cmd *cobra.Command, args []string) error {
 	fmt.Printf("arg1=%s, arg2=%s\n", config.arg1, config.arg2)
 
-	msg := IPFixMessage{}
-	msg.Header.VersionNumber = 9
-	msg.Header.Count = 1
-	msg.Header.SysupTime = 0x00002250
-	msg.Header.UnixSecs = 0x62b7f72d
-	msg.Header.SequenceNumber = 1
-	msg.Header.SourceID = 0
+	msg := IPFixMessage{
+		Header: IPFixMessageHeader{
+			VersionNumber:  9,
+			Count:          1,
+			SysupTime:      0x00002250,
+			UnixSecs:       0x62b7f72d,
+			SequenceNumber: 1,
+			SourceID:       0,
+		},
+		FlowSets: []IPFixFlowSet{
+			{
+				FlowSetID: 0,
+				Length:    64,
+				Template: IPFixFlowTemplate{
+					Fields: []IPFixFlowTemplateField{
+						{
+							FieldType:   0,
+							FieldLength: 0,
+						},
+					},
+				},
+			},
+		},
+	}
 
 	buf := &bytes.Buffer{}
-
 	if err := binary.Write(buf, binary.BigEndian, &msg.Header); err != nil {
 		return err
 	}
