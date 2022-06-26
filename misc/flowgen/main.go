@@ -57,7 +57,6 @@ type IPFixFlow struct {
 // https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 type IPFixFlowTemplate struct {
 	TemplateID uint16
-	FieldCount uint16
 	Fields     []IPFixFlowTemplateField
 }
 
@@ -100,7 +99,6 @@ func appMain(cmd *cobra.Command, args []string) error {
 				FlowSetID: 0,
 				Template: IPFixFlowTemplate{
 					TemplateID: 1024,
-					FieldCount: 14,
 					Fields: []IPFixFlowTemplateField{
 						{
 							FieldType:   netflow.IPFIX_FIELD_flowEndMilliseconds,
@@ -270,7 +268,7 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 				FieldCount uint16
 			}{
 				flowset.Template.TemplateID,
-				flowset.Template.FieldCount,
+				uint16(len(flowset.Template.Fields)),
 			}); err != nil {
 				return err
 			}
