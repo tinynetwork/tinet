@@ -245,20 +245,31 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 			return err
 		}
 
-		if err := binary.Write(buf, binary.BigEndian, &struct {
-			TemplateID uint16
-			FieldCount uint16
-		}{
-			flowset.Template.TemplateID,
-			flowset.Template.FieldCount,
-		}); err != nil {
-			return err
-		}
-		for _, field := range flowset.Template.Fields {
-			if err := binary.Write(buf, binary.BigEndian, &field); err != nil {
+		if flowset.FlowSetID == 0 {
+			if err := binary.Write(buf, binary.BigEndian, &struct {
+				TemplateID uint16
+				FieldCount uint16
+			}{
+				flowset.Template.TemplateID,
+				flowset.Template.FieldCount,
+			}); err != nil {
 				return err
 			}
+			for _, field := range flowset.Template.Fields {
+				if err := binary.Write(buf, binary.BigEndian, &field); err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := flowset.ToBuffer(buf); err != nil {
+				return err
+			}
+
 		}
 	}
+	return nil
+}
+
+func (fs *IPFixFlowSet) ToBuffer(buf *bytes.Buffer) error {
 	return nil
 }
