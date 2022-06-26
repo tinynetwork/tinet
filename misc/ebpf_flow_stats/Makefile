@@ -2,9 +2,10 @@ DEV1 := ens4
 DEV2 := veth05c9680
 bpf-build:
 	clang -target bpf -O3 -g -c filter.bpf.c
-bpf-attach: bpf-build bpf-detach
+bpf-prepare:
 	tc qdisc add dev $(DEV1) clsact
 	tc qdisc add dev $(DEV2) clsact
+bpf-attach: bpf-build bpf-detach bpf-prepare
 	tc filter add dev $(DEV1) ingress pref 100 bpf obj filter.bpf.o section tc-ingress
 	tc filter add dev $(DEV2) ingress pref 100 bpf obj filter.bpf.o section tc-ingress
 bpf-detach:
