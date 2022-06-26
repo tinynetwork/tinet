@@ -1,0 +1,17 @@
+templates:
+- id: 1024
+  template:
+  - FlowEndMilliseconds
+  - FlowStartMilliseconds
+  - OctetDeltaCount
+  - PacketDeltaCount
+  - IpVersion
+  - IngressInterface
+  - EgressInterface
+  - FlowDirection
+  - SourceIPv4Address
+  - DestinationIPv4Address
+  - SourceTransportPort
+  - DestinationTransportPort
+  - TcpControlBits
+  - ProtocolIdentifier
