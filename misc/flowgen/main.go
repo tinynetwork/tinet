@@ -18,7 +18,6 @@ var config struct {
 	arg2 string
 }
 
-// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.1
 type IPFixMessage struct {
 	Header   IPFixHeader
 	FlowSets []IPFixFlowSet
@@ -26,7 +25,6 @@ type IPFixMessage struct {
 
 type IPFixHeader struct {
 	VersionNumber  uint16
-	Count          uint16
 	SysupTime      uint32
 	UnixSecs       uint32
 	SequenceNumber uint32
@@ -94,7 +92,6 @@ func appMain(cmd *cobra.Command, args []string) error {
 	msg := IPFixMessage{
 		Header: IPFixHeader{
 			VersionNumber:  9,
-			Count:          2,
 			SysupTime:      0x00002250,
 			UnixSecs:       0x62b7f72d,
 			SequenceNumber: 1,
@@ -231,7 +228,22 @@ func udptransmit(dst string, buf *bytes.Buffer) error {
 }
 
 func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
-	if err := binary.Write(buf, binary.BigEndian, &m.Header); err != nil {
+	// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.1
+	if err := binary.Write(buf, binary.BigEndian, &struct {
+		VersionNumber  uint16
+		Count          uint16
+		SysupTime      uint32
+		UnixSecs       uint32
+		SequenceNumber uint32
+		SourceID       uint32
+	}{
+		VersionNumber:  m.Header.VersionNumber,
+		Count:          uint16(len(m.FlowSets)),
+		SysupTime:      m.Header.SysupTime,
+		UnixSecs:       m.Header.UnixSecs,
+		SequenceNumber: m.Header.SequenceNumber,
+		SourceID:       m.Header.SourceID,
+	}); err != nil {
 		return err
 	}
 	for _, flowset := range m.FlowSets {
