@@ -6,9 +6,9 @@ import ipaddress
 import subprocess
 
 
-def execute(cmd, without_json_check=False):
+def execute(cmd, nojson=False):
   res = subprocess.check_output(cmd.split())
-  if without_json_check:
+  if nojson:
     return
   return json.loads(res)
 
@@ -24,8 +24,7 @@ for link in links:
         qdisc_configured = True
         break
     if not qdisc_configured:
-      execute(f"tc qdisc add dev {link['ifname']} clsact",
-        without_json_check=True)
+      execute(f"tc qdisc add dev {link['ifname']} clsact", nojson=True)
       print(f"{link['ifname']}/qdisc configured")
     else:
       print(f"{link['ifname']}/qdisc unchanged")
@@ -39,8 +38,7 @@ for link in links:
           break
     if not filter_configured:
       execute(f"tc filter add dev {link['ifname']} ingress "+
-        "pref 100 bpf obj filter.bpf.o section tc-ingress",
-        without_json_check=True)
+        "pref 100 bpf obj filter.bpf.o section tc-ingress", nojson=True)
       print(f"{link['ifname']}/filter configured")
     else:
       print(f"{link['ifname']}/filter unchanged")
