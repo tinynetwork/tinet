@@ -15,31 +15,35 @@ var config struct {
 	arg2 string
 }
 
+// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.1
 type IPFixMessage struct {
-	Version      uint16
-	Count        uint16
-	SysUptime    uint32
-	Timestamp    uint32
-	FlowSequence uint32
-	SourceID     uint32
-	FlowSets     []IPFixFlowSet
+	VersionNumber  uint16
+	Count          uint16
+	SysupTime      uint32
+	UnixSecs       uint32
+	SequenceNumber uint32
+	SourceID       uint32
+	FlowSets       []IPFixFlowSet
 }
 
+// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 type IPFixFlowSet struct {
-	ID       uint16
-	Length   uint16
-	Template IPFixFlowTemplate
+	FlowSetID uint16
+	Length    uint16
+	Template  IPFixFlowTemplate
 }
 
+// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 type IPFixFlowTemplate struct {
-	ID     uint16
-	Count  uint16
-	Fields []IPFixFlowTemplateField
+	TemplateID uint16
+	FieldCount uint16
+	Fields     []IPFixFlowTemplateField
 }
 
+// https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
 type IPFixFlowTemplateField struct {
-	Type   uint16
-	Length uint16
+	FieldType   uint16
+	FieldLength uint16
 }
 
 func main() {
