@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"net"
@@ -18,13 +19,17 @@ var config struct {
 
 // https://www.rfc-editor.org/rfc/rfc3954.html#section-5.1
 type IPFixMessage struct {
+	Header   IPFixMessageHeader
+	FlowSets []IPFixFlowSet
+}
+
+type IPFixMessageHeader struct {
 	VersionNumber  uint16
 	Count          uint16
 	SysupTime      uint32
 	UnixSecs       uint32
 	SequenceNumber uint32
 	SourceID       uint32
-	FlowSets       []IPFixFlowSet
 }
 
 // https://www.rfc-editor.org/rfc/rfc3954.html#section-5.2
@@ -70,15 +75,18 @@ func appMain(cmd *cobra.Command, args []string) error {
 	fmt.Printf("arg1=%s, arg2=%s\n", config.arg1, config.arg2)
 
 	msg := IPFixMessage{}
-	msg.VersionNumber = 9
-	msg.Count = 1
-	msg.SysupTime = 0x00002250
-	msg.UnixSecs = 0x62b7f72d
-	msg.SequenceNumber = 1
-	msg.SourceID = 0
+	msg.Header.VersionNumber = 9
+	msg.Header.Count = 1
+	msg.Header.SysupTime = 0x00002250
+	msg.Header.UnixSecs = 0x62b7f72d
+	msg.Header.SequenceNumber = 1
+	msg.Header.SourceID = 0
 
-	buf := bytes.NewBuffer(nil)
+	buf := &bytes.Buffer{}
 
+	if err := binary.Write(buf, binary.BigEndian, &msg.Header); err != nil {
+		return err
+	}
 	if err := udptransmit("10.146.0.6:2100", buf); err != nil {
 		return err
 	}
