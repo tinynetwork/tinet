@@ -94,7 +94,7 @@ func appMain(cmd *cobra.Command, args []string) error {
 	msg := IPFixMessage{
 		Header: IPFixMessageHeader{
 			VersionNumber:  9,
-			Count:          1,
+			Count:          2,
 			SysupTime:      0x00002250,
 			UnixSecs:       0x62b7f72d,
 			SequenceNumber: 1,
@@ -264,12 +264,66 @@ func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 			if err := flowset.ToBuffer(buf); err != nil {
 				return err
 			}
-
 		}
 	}
 	return nil
 }
 
 func (fs *IPFixFlowSet) ToBuffer(buf *bytes.Buffer) error {
+	e := binary.BigEndian
+	if err := binary.Write(buf, e, &struct {
+		FlowSetID uint16
+		Length    uint16
+	}{
+		FlowSetID: fs.FlowSetID,
+		Length:    fs.Length,
+	}); err != nil {
+		return err
+	}
+
+	for _, flow := range fs.Flow {
+		if err := binary.Write(buf, e, &flow.FlowEndMilliseconds); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.FlowStartMilliseconds); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.OctetDeltaCount); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.PacketDeltaCount); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.IpVersion); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.IngressInterface); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.EgressInterface); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.FlowDirection); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.SourceIPv4Address); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.DestinationIPv4Address); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.SourceTransportPort); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.DestinationTransportPort); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.TcpControlBits); err != nil {
+			return err
+		}
+		if err := binary.Write(buf, e, &flow.ProtocolIdentifier); err != nil {
+			return err
+		}
+	}
 	return nil
 }
