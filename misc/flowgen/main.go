@@ -86,6 +86,8 @@ func appMain(cmd *cobra.Command, args []string) error {
 				FlowSetID: 0,
 				Length:    64,
 				Template: IPFixFlowTemplate{
+					TemplateID: 1024,
+					FieldCount: 14,
 					Fields: []IPFixFlowTemplateField{
 						{
 							FieldType:   153,
@@ -174,6 +176,27 @@ func udptransmit(dst string, buf *bytes.Buffer) error {
 func (m *IPFixMessage) ToBuffer(buf *bytes.Buffer) error {
 	if err := binary.Write(buf, binary.BigEndian, &m.Header); err != nil {
 		return err
+	}
+	for _, flowset := range m.FlowSets {
+		var d = struct {
+			FlowSetID  uint16
+			Length     uint16
+			TemplateID uint16
+			FieldCount uint16
+		}{
+			flowset.FlowSetID,
+			flowset.Length,
+			flowset.Template.TemplateID,
+			flowset.Template.FieldCount,
+		}
+		if err := binary.Write(buf, binary.BigEndian, &d); err != nil {
+			return err
+		}
+		for _, field := range flowset.Template.Fields {
+			if err := binary.Write(buf, binary.BigEndian, &field); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
