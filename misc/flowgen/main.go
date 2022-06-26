@@ -167,18 +167,44 @@ func appMain(cmd *cobra.Command, args []string) error {
 					},
 				},
 			},
-			// {
-			// 	FlowSetID: 1024,
-			// 	Length:    116,
-			// 	Template: IPFixFlowTemplate{
-			// 		TemplateID: 1024,
-			// 		FieldCount: 14,
-			// 		Fields: []IPFixFlowTemplateField{
-			// 			{
-			// 			}
-			// 		},
-			// 	},
-			// },
+			{
+				FlowSetID: 1024,
+				Length:    116,
+				Flow: []IPFixFlow{
+					{
+						FlowEndMilliseconds:      0x000001819e9d896b,
+						FlowStartMilliseconds:    0x0000000000002118,
+						OctetDeltaCount:          8482,
+						PacketDeltaCount:         80,
+						IpVersion:                4,
+						IngressInterface:         0,
+						EgressInterface:          0,
+						FlowDirection:            0,
+						SourceIPv4Address:        0x0a000005,
+						DestinationIPv4Address:   0xcb000001,
+						SourceTransportPort:      22,
+						DestinationTransportPort: 63153,
+						TcpControlBits:           0x18,
+						ProtocolIdentifier:       6,
+					},
+					{
+						FlowEndMilliseconds:      0x000001819e9d6565,
+						FlowStartMilliseconds:    0x000001819e9d896b,
+						OctetDeltaCount:          6732,
+						PacketDeltaCount:         94,
+						IpVersion:                4,
+						IngressInterface:         0,
+						EgressInterface:          0,
+						FlowDirection:            0,
+						SourceIPv4Address:        0xcb000001,
+						DestinationIPv4Address:   0x0a000005,
+						SourceTransportPort:      63153,
+						DestinationTransportPort: 22,
+						TcpControlBits:           0x18,
+						ProtocolIdentifier:       6,
+					},
+				},
+			},
 		},
 	}
 
