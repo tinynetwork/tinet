@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"math/rand"
 	"net"
@@ -68,15 +69,30 @@ func newCommand() *cobra.Command {
 func appMain(cmd *cobra.Command, args []string) error {
 	fmt.Printf("arg1=%s, arg2=%s\n", config.arg1, config.arg2)
 
-	conn, err := net.Dial("udp", "10.146.0.6:2100")
+	msg := IPFixMessage{}
+	msg.VersionNumber = 9
+	msg.Count = 1
+	msg.SysupTime = 0x00002250
+	msg.UnixSecs = 0x62b7f72d
+	msg.SequenceNumber = 1
+	msg.SourceID = 0
+
+	buf := bytes.NewBuffer(nil)
+
+	if err := udptransmit("10.146.0.6:2100", buf); err != nil {
+		return err
+	}
+	return nil
+}
+
+func udptransmit(dst string, buf *bytes.Buffer) error {
+	conn, err := net.Dial("udp", dst)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
-
-	if _, err = conn.Write([]byte("Ping")); err != nil {
+	if _, err = conn.Write(buf.Bytes()); err != nil {
 		return err
 	}
-
 	return nil
 }
