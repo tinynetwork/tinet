@@ -6,34 +6,32 @@ import ipaddress
 import subprocess
 
 
-def execute_json(cmd):
+def execute(cmd, without_json_check=False):
   res = subprocess.check_output(cmd.split())
-  datas = json.loads(res)
-  return datas
+  if without_json_check:
+    return
+  return json.loads(res)
 
 
-def execute(cmd):
-  subprocess.check_output(cmd.split())
-
-
-links = execute_json("ip -j link")
+links = execute("ip -j link")
 for link in links:
   if link["ifname"].startswith("ens4") or link["ifname"].startswith("veth"):
     qdisc_configured = False
-    for qdisc in execute_json("tc -j qdisc list dev ens4 clsact"):
+    for qdisc in execute("tc -j qdisc list dev ens4 clsact"):
       if qdisc["kind"] == "clsact" and \
         qdisc["handle"] == "ffff:" and \
         qdisc["parent"] == "ffff:fff1":
         qdisc_configured = True
         break
     if not qdisc_configured:
-      execute(f"tc qdisc add dev {link['ifname']} clsact")
+      execute(f"tc qdisc add dev {link['ifname']} clsact",
+        without_json_check=True)
       print(f"{link['ifname']}/qdisc configured")
     else:
       print(f"{link['ifname']}/qdisc unchanged")
 
     filter_configured = False
-    for filter in execute_json(f"tc -j filter list dev {link['ifname']}"+
+    for filter in execute(f"tc -j filter list dev {link['ifname']}"+
         " ingress pref 100 chain 0 handle 0x1 protocol all"):
       if filter["kind"] == "bpf" and "options" in filter:
         if filter["options"]["bpf_name"] == "filter.bpf.o:[tc-ingress]":
@@ -41,7 +39,8 @@ for link in links:
           break
     if not filter_configured:
       execute(f"tc filter add dev {link['ifname']} ingress "+
-        "pref 100 bpf obj filter.bpf.o section tc-ingress")
+        "pref 100 bpf obj filter.bpf.o section tc-ingress",
+        without_json_check=True)
       print(f"{link['ifname']}/filter configured")
     else:
       print(f"{link['ifname']}/filter unchanged")
