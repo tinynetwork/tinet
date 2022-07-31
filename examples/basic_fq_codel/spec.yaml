@@ -1,0 +1,88 @@
+nodes:
+- name: R1
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: R2#net0 }
+  - { name: net1, type: direct, args: C1#net0 }
+  - { name: net2, type: direct, args: C2#net0 }
+- name: R2
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: R1#net0 }
+  - { name: net1, type: direct, args: C3#net0 }
+  - { name: net2, type: direct, args: C4#net0 }
+- name: C1
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: R1#net1 }
+- name: C2
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: R1#net2 }
+- name: C3
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: R2#net1 }
+- name: C4
+  image: nicolaka/netshoot
+  interfaces:
+  - { name: net0, type: direct, args: R2#net2 }
+node_configs:
+- name: R1
+  cmds:
+  - cmd: ip addr add 10.0.0.1/24 dev net1
+  - cmd: ip addr add 10.0.1.1/24 dev net2
+  - cmd: ip addr add 10.0.2.1/24 dev net0
+  - cmd: ip route add default via 10.0.2.2
+  - cmd: "tc qdisc add dev net0 root handle 1: htb default 1"
+  - cmd: "tc class add dev net0 parent 1: classid 1:1 htb rate 500mbit quantum 1514"
+  - cmd: "tc qdisc add dev net0 parent 1:1 fq_codel"
+- name: R2
+  cmds:
+  - cmd: ip addr add 10.0.2.2/24 dev net0
+  - cmd: ip addr add 10.0.3.1/24 dev net1
+  - cmd: ip addr add 10.0.4.1/24 dev net2
+  - cmd: ip route add default via 10.0.2.1
+  - cmd: "tc qdisc add dev net0 root handle 1: htb default 1"
+  - cmd: "tc class add dev net0 parent 1: classid 1:1  htb rate 500mbit quantum 1514"
+  - cmd: "tc qdisc add dev net0 parent 1:1 fq_codel"
+- name: C1
+  cmds:
+  - cmd: ip addr add 10.0.0.2/24 dev net0
+  - cmd: ip route add default via 10.0.0.1
+- name: C2
+  cmds:
+  - cmd: ip addr add 10.0.1.2/24 dev net0
+  - cmd: ip route add default via 10.0.1.1
+- name: C3
+  cmds:
+  - cmd: ip addr add 10.0.3.2/24 dev net0
+  - cmd: ip route add default via 10.0.3.1
+- name: C4
+  cmds:
+  - cmd: ip addr add 10.0.4.2/24 dev net0
+  - cmd: ip route add default via 10.0.4.1
+test:
+  - cmds:
+    - cmd: echo "=========================================="
+    - cmd: echo "iperf from C1 to C3"
+    - cmd: echo "=========================================="
+    - cmd: docker exec C3 iperf -s -i 1 &
+    - cmd: sleep 3
+    - cmd: docker exec C1 iperf -c 10.0.3.2 2>&1 > /dev/null
+    - cmd: docker exec C3 pkill iperf
+    - cmd: echo "=========================================="
+    - cmd: echo "ping from C2 to C4"
+    - cmd: echo "=========================================="
+    - cmd: docker exec C2 ping -c 10 10.0.4.2
+    - cmd: echo "=========================================="
+    - cmd: echo "ping from C2 to C4 while iperf-ing from C1 to C3"
+    - cmd: echo "=========================================="
+    - cmd: docker exec C3 iperf -s 2>&1 > /dev/null &
+    - cmd: sleep 3
+    - cmd: docker exec C1 iperf -c 10.0.3.2 -t 60 2>&1 > /dev/null &
+    - cmd: sleep 3
+    - cmd: docker exec C2 ping -c 10 10.0.4.2
+    - cmd: docker exec C1 pkill iperf
+    - cmd: sleep 3
+    - cmd: docker exec C3 pkill iperf
