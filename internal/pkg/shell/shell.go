@@ -510,6 +510,13 @@ func NetnsLinkUp(netnsName string, linkName string) (netnsLinkUpCmd string) {
 	return netnsLinkUpCmd
 }
 
+func (inf *Interface) AddrSet(nodeName string) (addrSetCmd string) {
+
+	addrSetCmd = fmt.Sprintf("ip netns exec %s ip link set %s address %s", nodeName, inf.Name, inf.Addr)
+
+	return addrSetCmd
+}
+
 // CreateSwitch Create bridge set in config
 func (bridge *Switch) CreateSwitch() (createSwitchCmds []string) {
 
@@ -533,11 +540,6 @@ func (inf *Interface) N2nLink(nodeName string) (n2nLinkCmds []string) {
 	n2nLinkCmds = append(n2nLinkCmds, n2nlinkCmd)
 	n2nLinkCmds = append(n2nLinkCmds, NetnsLinkUp(nodeName, nodeinf))
 	n2nLinkCmds = append(n2nLinkCmds, NetnsLinkUp(peerNode, peerinf))
-
-	if len(inf.Addr) != 0 {
-		addrSetCmd := fmt.Sprintf("ip netns exec %s ip link set %s address %s", nodeName, inf.Name, inf.Addr)
-		n2nLinkCmds = append(n2nLinkCmds, addrSetCmd)
-	}
 
 	return n2nLinkCmds
 }
