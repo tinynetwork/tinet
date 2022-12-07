@@ -185,6 +185,10 @@ func CmdUp(c *cli.Context) error {
 					n2nLinkCmds := inf.N2nLink(node.Name)
 					utils.PrintCmds(os.Stdout, n2nLinkCmds, verbose)
 				}
+				if len(inf.Addr) != 0 {
+					addrSetCmd := inf.AddrSet(node.Name)
+					utils.PrintCmd(os.Stdout, addrSetCmd, verbose)
+				}
 			} else if inf.Type == "bridge" {
 				s2nLinkCmds := inf.S2nLink(node.Name)
 				utils.PrintCmds(os.Stdout, s2nLinkCmds, verbose)

@@ -31,7 +31,7 @@ nodes:
 	- direct: p2p connect to other container
 	- bridge: bridge connection
 	- phys  : host's network interface
-- mac: specify mac address
+- addr: specify mac address
 
 ```
 nodes:
@@ -41,7 +41,7 @@ nodes:
       - { name: net0, type: direct, args: R0#net1 }
       - { name: net0, type: bridge, args: B0 }
       - { name: eth0, type: phys }
-      - { name: net0, type: direct, args: R1#net1, mac: 11:11:11:11:11:11 }
+      - { name: net0, type: direct, args: R1#net1, addr: 11:11:11:11:11:11 }
 ```
 
 ### Bridge Definition
