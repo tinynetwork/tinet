@@ -94,6 +94,7 @@ nodes:
 node_configs:
   - name: Spine1
     cmds:
+      - cmd: sed -i s/'#frr_profile="datacenter"'/'frr_profile="datacenter"'/ /etc/frr/daemons
       - cmd: /etc/init.d/frr start
       - cmd: >-
           vtysh -c "conf t"
@@ -117,6 +118,7 @@ node_configs:
           -c " exit-address-family"
   - name: Spine2
     cmds:
+      - cmd: sed -i s/'#frr_profile="datacenter"'/'frr_profile="datacenter"'/ /etc/frr/daemons
       - cmd: /etc/init.d/frr start
       - cmd: >-
           vtysh -c "conf t"
@@ -140,6 +142,7 @@ node_configs:
           -c " exit-address-family"
   - name: Leaf1
     cmds:
+      - cmd: sed -i s/'#frr_profile="datacenter"'/'frr_profile="datacenter"'/ /etc/frr/daemons
       - cmd: /etc/init.d/frr start
       - cmd: ip link add br0 type bridge vlan_filtering 1
       - cmd: ip link add link swp1 name swp1.100 type vlan id 100
@@ -172,6 +175,7 @@ node_configs:
           -c " exit-address-family"
   - name: Leaf2
     cmds:
+      - cmd: sed -i s/'#frr_profile="datacenter"'/'frr_profile="datacenter"'/ /etc/frr/daemons
       - cmd: /etc/init.d/frr start
       - cmd: ip link add br0 type bridge vlan_filtering 1
       - cmd: ip link add link swp1 name swp1.100 type vlan id 100

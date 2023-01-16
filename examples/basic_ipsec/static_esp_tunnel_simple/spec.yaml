@@ -70,6 +70,7 @@ test:
     - cmd: echo "ping from C0 to C1"
     - cmd: echo "==================================================="
     - cmd: docker exec C0 ping -c 1 10.0.1.2
+    - cmd: sleep 3
     - cmd: echo "==================================================="
     - cmd: echo "Stopping packet capture on R0 (net1) and R1 (net1)"
     - cmd: echo "==================================================="
