@@ -1,0 +1,76 @@
+preinit:
+  - cmds:
+    - cmd: docker build -t xdptmp .
+
+nodes:
+  - name: R1
+    image: xdptmp
+    interfaces:
+      - { name: net1, type: direct, args: CLOS#net1 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.default.rp_filter=0
+
+  - name: C1
+    image: slankdev/mikanectl
+    docker_run_extra_args: --entrypoint bash
+    interfaces:
+      - { name: net0, type: direct, args: CLOS#net0 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.default.rp_filter=0
+
+  - name: C2
+    image: slankdev/mikanectl
+    docker_run_extra_args: --entrypoint bash
+    interfaces:
+      - { name: net2, type: direct, args: CLOS#net2 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.default.rp_filter=0
+
+  - name: CLOS
+    image: nicolaka/netshoot
+    interfaces:
+      - { name: net0, type: direct, args: C1#net0 }
+      - { name: net1, type: direct, args: R1#net1 }
+      - { name: net2, type: direct, args: C2#net2 }
+    sysctls:
+      - sysctl: net.ipv4.ip_forward=1
+      - sysctl: net.ipv4.conf.all.rp_filter=0
+      - sysctl: net.ipv4.conf.default.rp_filter=0
+
+postinit:
+  cmds:
+  - cmd: docker cp xdp.c R1:/root/xdp.c
+  - cmd: docker exec R1 clang -O2 -Wall -target bpf -c /root/xdp.c
+  - cmd: docker exec R1 ip link set net1 xdpgeneric obj xdp.o sec xdp-lb
+
+node_configs:
+  - name: R1
+    cmds:
+      - cmd: ip addr add 142.0.0.1/32 dev lo
+      - cmd: ip addr add 10.0.1.1/24 dev net1
+      - cmd: ip route add default via 10.0.1.2
+  - name: C1
+    cmds:
+      - cmd: ip addr add 10.0.0.1/24 dev net0
+      - cmd: ip route add default via 10.0.0.2
+  - name: C2
+    cmds:
+      - cmd: nohup mikanectl ifconfig-http -p 80 &
+      - cmd: ip addr add 10.0.2.1/24 dev net2
+      - cmd: ip route add default via 10.0.2.2
+      - cmd: ip route add local 142.0.0.1/32 dev lo
+      - cmd: tc qdisc add dev net2 clsact
+      - cmd: tc filter add dev net2 ingress u32 match ip dsfield 0xa 0x1e action nat ingress 10.0.2.1 142.0.0.1
+
+  - name: CLOS
+    cmds:
+      - cmd: ip addr add 10.0.0.2/24 dev net0
+      - cmd: ip addr add 10.0.1.2/24 dev net1
+      - cmd: ip addr add 10.0.2.2/24 dev net2
+      - cmd: ip route add 142.0.0.1/32 dev net1
