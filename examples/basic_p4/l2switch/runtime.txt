@@ -1,0 +1,4 @@
+table_set_default MyIngress.ipv4_lpm MyIngress.drop
+table_add MyIngress.ipv4_lpm MyIngress.ipv4_forward 192.168.10.10/32 => 10:10:10:10:10:10 1
+table_add MyIngress.ipv4_lpm MyIngress.ipv4_forward 192.168.20.20/32 => 20:20:20:20:20:20 2
+table_add MyIngress.ipv4_lpm MyIngress.ipv4_forward 192.168.30.30/32 => 30:30:30:30:30:30 3
