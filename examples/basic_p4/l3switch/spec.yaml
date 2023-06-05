@@ -9,19 +9,16 @@ nodes:
   sysctls:
   - sysctl: net.ipv4.ip_forward=0
   - sysctl: net.ipv6.conf.all.forwarding=0
-
 - name: VM1
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
   interfaces:
   - { name: net0, type: direct, args: P4#vm1, addr: 10:10:10:10:10:10 }
-
 - name: VM2
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
   interfaces:
   - { name: net0, type: direct, args: P4#vm2, addr: 20:20:20:20:20:20 }
-
 - name: VM3
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
@@ -47,13 +44,11 @@ node_configs:
   - cmd: ip addr add 192.168.10.10/24 dev net0
   - cmd: ip neigh replace 192.168.10.1 lladdr 10:00:00:00:00:10 dev net0
   - cmd: ip route add default via 192.168.10.1
-
 - name: VM2
   cmds:
   - cmd: ip addr add 192.168.20.20/24 dev net0
   - cmd: ip neigh replace 192.168.20.1 lladdr 20:00:00:00:00:20 dev net0
   - cmd: ip route add default via 192.168.20.1
-
 - name: VM3
   cmds:
   - cmd: ip addr add 192.168.30.30/24 dev net0
