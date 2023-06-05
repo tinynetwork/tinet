@@ -1,7 +1,7 @@
 nodes:
 - name: P4
   image: tinynetwork/p4bmv2:develop
-  docker_run_extra_args: -v `realpath $PWD/../P4`:/behavioral-model/src
+  docker_run_extra_args: --entrypoint bash
   interfaces:
   - { name: vm1, type: direct, args: VM1#net0, addr: 10:00:00:00:00:10 }
   - { name: vm2, type: direct, args: VM2#net0, addr: 20:00:00:00:00:20 }
@@ -38,6 +38,14 @@ node_configs:
   - cmd: ip addr add 192.168.20.1/24 dev vm2
   - cmd: ip addr add 192.168.30.1/24 dev vm3
 
+  - cmd: p4c --target bmv2 --arch v1model /main.p4 --p4runtime-files p4info.txt -o /
+  - cmd: >-
+      nohup simple_switch /main.json -i 1@vm1 -i 2@vm2 -i 3@vm3
+      --nanolog ipc:///tmp/bm-0-log.ipc --log-console -L debug
+      --notifications-addr ipc:///tmp/bmv2-0-notifications.ipc &
+  - cmd: wait.sh
+  - cmd: sh -c "cat /runtime.txt | bm_CLI"
+
 - name: VM1
   cmds:
   - cmd: ip link set net0 address 10:10:10:10:10:10
@@ -58,3 +66,8 @@ node_configs:
   - cmd: ip addr add 192.168.30.30/24 dev net0
   - cmd: ip neigh replace 192.168.30.1 lladdr 30:00:00:00:00:30 dev net0
   - cmd: ip route add default via 192.168.30.1
+
+postinit:
+  cmds:
+  - cmd: docker cp main.p4 P4:/main.p4
+  - cmd: docker cp runtime.txt P4:/runtime.txt
