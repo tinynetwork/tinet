@@ -16,8 +16,10 @@ later.
 - graphviz (optional)
 
 ## Quick Install
+
+There is only linux_amd64 pre-built binary
 ```
-curl -Lo /usr/bin/tinet https://github.com/tinynetwork/tinet/releases/download/v0.0.2/tinet
+curl -Lo /usr/bin/tinet https://github.com/tinynetwork/tinet/releases/download/v0.0.3/tinet.linux_amd64
 chmod +x /usr/bin/tinet
 tinet --version
 ```
