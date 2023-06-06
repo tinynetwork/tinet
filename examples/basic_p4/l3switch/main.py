@@ -4,6 +4,7 @@ import time
 import struct
 import pprint
 import subprocess
+import threading
 from fcntl import ioctl
 import p4runtime_sh.shell as sh
 from p4runtime_sh.p4runtime import P4RuntimeClient
@@ -70,14 +71,35 @@ client = P4RuntimeClient(
   device_id=0,
   grpc_addr='localhost:9559',
   election_id=(0, 1))
-while True:
-    rep = client.get_stream_packet("packet", timeout=1)
-    if rep is not None:
-        #pprint.pprint(rep)
-        #print(type(rep.packet.metadata))
-        #pprint.pprint(rep.packet.metadata[0].value)
-        #pprint.pprint(rep.packet.metadata[1].value)
-        v = struct.unpack("@c", rep.packet.metadata[0].value)
-        v = int.from_bytes(v[0], "little")
-        print(f"PacketIN({v})")
-        swp[v-1].write(rep.packet.payload)
+
+def loop_packet_in():
+    while True:
+        rep = client.get_stream_packet("packet", timeout=1)
+        if rep is not None:
+            #pprint.pprint(rep)
+            #print(type(rep.packet.metadata))
+            #pprint.pprint(rep.packet.metadata[0].value)
+            #pprint.pprint(rep.packet.metadata[1].value)
+            v = struct.unpack("@c", rep.packet.metadata[0].value)
+            v = int.from_bytes(v[0], "little")
+            print(f"PacketIN({v})")
+            swp[v-1].write(rep.packet.payload)
+
+def loop_packet_out():
+    while True:
+        for port in swp:
+            #print(port)
+            print("out blocking start")
+            data = os.read(port.fileno(), 1500)
+            print(data)
+            print("out blocking fin")
+        time.sleep(1)
+
+thread1 = threading.Thread(target=loop_packet_in)
+thread1.start()
+
+thread2 = threading.Thread(target=loop_packet_out)
+thread2.start()
+
+thread1.join()
+thread2.join()
