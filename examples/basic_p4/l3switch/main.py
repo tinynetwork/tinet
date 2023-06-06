@@ -39,20 +39,14 @@ te3.match["hdr.ipv4.dstAddr"] = "10.0.3.2/32"
 te3.action["dstAddr"] = '30:30:30:30:30:30'
 te3.action["port"] = "3"
 te3.insert()
-te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
+te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.to_controller")
 te.match["hdr.ipv4.dstAddr"] = "10.0.1.1/32"
-te.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
-te.action["port"] = "255"
 te.insert()
-te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
+te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.to_controller")
 te.match["hdr.ipv4.dstAddr"] = "10.0.2.1/32"
-te.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
-te.action["port"] = "255"
 te.insert()
-te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
+te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.to_controller")
 te.match["hdr.ipv4.dstAddr"] = "10.0.3.1/32"
-te.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
-te.action["port"] = "255"
 te.insert()
 sh.teardown()
 
@@ -71,6 +65,11 @@ client = P4RuntimeClient(
 while True:
     rep = client.get_stream_packet("packet", timeout=1)
     if rep is not None:
-        #print("PacketIN")
-        #pprint.pprint(rep.packet.payload)
-        swp[0].write(rep.packet.payload)
+        #pprint.pprint(rep)
+        #print(type(rep.packet.metadata))
+        #pprint.pprint(rep.packet.metadata[0].value)
+        #pprint.pprint(rep.packet.metadata[1].value)
+        v = struct.unpack("@c", rep.packet.metadata[0].value)
+        v = int.from_bytes(v[0], "little")
+        print(f"PacketIN({v})")
+        swp[v-1].write(rep.packet.payload)
