@@ -76,10 +76,6 @@ def loop_packet_in():
     while True:
         rep = client.get_stream_packet("packet", timeout=1)
         if rep is not None:
-            #pprint.pprint(rep)
-            #print(type(rep.packet.metadata))
-            #pprint.pprint(rep.packet.metadata[0].value)
-            #pprint.pprint(rep.packet.metadata[1].value)
             v = struct.unpack("@c", rep.packet.metadata[0].value)
             v = int.from_bytes(v[0], "little")
             print(f"PacketIN({v})")
