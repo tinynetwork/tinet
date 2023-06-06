@@ -39,16 +39,29 @@ te3.match["hdr.ipv4.dstAddr"] = "10.0.3.2/32"
 te3.action["dstAddr"] = '30:30:30:30:30:30'
 te3.action["port"] = "3"
 te3.insert()
-te4 = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
-te4.match["hdr.ipv4.dstAddr"] = "10.0.0.0/8"
-te4.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
-#te4.action["dstAddr"] = 'aa:aa:aa:aa:aa:aa'
-te4.action["port"] = "255"
-te4.insert()
+te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
+te.match["hdr.ipv4.dstAddr"] = "10.0.1.1/32"
+te.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
+te.action["port"] = "255"
+te.insert()
+te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
+te.match["hdr.ipv4.dstAddr"] = "10.0.2.1/32"
+te.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
+te.action["port"] = "255"
+te.insert()
+te = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
+te.match["hdr.ipv4.dstAddr"] = "10.0.3.1/32"
+te.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
+te.action["port"] = "255"
+te.insert()
 sh.teardown()
 
 ## PREPARE TAP
-tap = openTun("hoge")
+swp = [
+  openTun("swp1"),
+  openTun("swp2"),
+  openTun("swp3"),
+]
 
 ## MAIN ROUTING
 client = P4RuntimeClient(
@@ -60,4 +73,4 @@ while True:
     if rep is not None:
         #print("PacketIN")
         #pprint.pprint(rep.packet.payload)
-        tap.write(rep.packet.payload)
+        swp[0].write(rep.packet.payload)
