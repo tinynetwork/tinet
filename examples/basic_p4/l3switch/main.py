@@ -25,23 +25,24 @@ sh.setup(
   election_id=(0, 1),
   config=sh.FwdPipeConfig('/p4c/p4info.txt', '/main.json'))
 te1 = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
-te1.match["hdr.ipv4.dstAddr"] = "192.168.10.10/32"
+te1.match["hdr.ipv4.dstAddr"] = "10.0.1.2/32"
 te1.action["dstAddr"] = '10:10:10:10:10:10'
 te1.action["port"] = "1"
 te1.insert()
 te2 = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
-te2.match["hdr.ipv4.dstAddr"] = "192.168.20.20/32"
+te2.match["hdr.ipv4.dstAddr"] = "10.0.2.2/32"
 te2.action["dstAddr"] = '20:20:20:20:20:20'
 te2.action["port"] = "2"
 te2.insert()
 te3 = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
-te3.match["hdr.ipv4.dstAddr"] = "192.168.30.30/32"
+te3.match["hdr.ipv4.dstAddr"] = "10.0.3.2/32"
 te3.action["dstAddr"] = '30:30:30:30:30:30'
 te3.action["port"] = "3"
 te3.insert()
 te4 = sh.TableEntry("MyIngress.ipv4_lpm")(action="MyIngress.ipv4_forward")
-te4.match["hdr.ipv4.dstAddr"] = "192.168.40.40/32"
-te4.action["dstAddr"] = 'aa:aa:aa:aa:aa:aa'
+te4.match["hdr.ipv4.dstAddr"] = "10.0.0.0/8"
+te4.action["dstAddr"] = 'ff:ff:ff:ff:ff:ff'
+#te4.action["dstAddr"] = 'aa:aa:aa:aa:aa:aa'
 te4.action["port"] = "255"
 te4.insert()
 sh.teardown()
