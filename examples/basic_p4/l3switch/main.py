@@ -8,7 +8,7 @@ from fcntl import ioctl
 import p4runtime_sh.shell as sh
 from p4runtime_sh.p4runtime import P4RuntimeClient
 
-def openTun(tunName):
+def openTun(tunName, macaddr, ipaddr):
     tun = open("/dev/net/tun", "r+b", buffering=0)
     LINUX_IFF_TAP = 0x0002
     LINUX_IFF_NO_PI = 0x1000
@@ -16,7 +16,9 @@ def openTun(tunName):
     flags = LINUX_IFF_TAP | LINUX_IFF_NO_PI
     ifs = struct.pack("16sH22s", tunName.encode("utf-8"), flags, b"")
     ioctl(tun, LINUX_TUNSETIFF, ifs)
+    subprocess.check_call(f'ip link set {tunName} address {macaddr}', shell=True)
     subprocess.check_call(f'ip link set {tunName} up', shell=True)
+    subprocess.check_call(f'ip addr add {ipaddr} dev {tunName}', shell=True)
     return tun
 
 sh.setup(
@@ -52,9 +54,9 @@ sh.teardown()
 
 ## PREPARE TAP
 swp = [
-  openTun("swp1"),
-  openTun("swp2"),
-  openTun("swp3"),
+  openTun("swp1", "52:54:00:00:00:01", "10.0.1.1/24"),
+  openTun("swp2", "52:54:00:00:00:02", "10.0.2.1/24"),
+  openTun("swp3", "52:54:00:00:00:03", "10.0.3.1/24"),
 ]
 
 ## MAIN ROUTING
