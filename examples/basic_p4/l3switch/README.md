@@ -14,8 +14,9 @@ source $VENV/bin/activate
 
 ## Misc
 
-https://github.com/p4lang/p4runtime-shell#available-commands
-https://github.com/p4lang/p4runtime-shell/blob/main/usage/packet_io.md
+- https://github.com/p4lang/p4runtime-shell#available-commands
+- https://github.com/p4lang/p4runtime-shell/blob/main/usage/packet_io.md
+
 ```
 tables
 actions
