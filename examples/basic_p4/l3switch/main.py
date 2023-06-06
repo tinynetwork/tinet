@@ -85,21 +85,17 @@ def loop_packet_in():
             print(f"PacketIN({v})")
             swp[v-1].write(rep.packet.payload)
 
-def loop_packet_out():
+def loop_packet_out(portIdx):
+    time.sleep(1)
+    port = swp[portIdx-1]
     while True:
-        for port in swp:
-            #print(port)
-            print("out blocking start")
-            data = os.read(port.fileno(), 1500)
-            print(data)
-            print("out blocking fin")
-        time.sleep(1)
+        data = os.read(port.fileno(), 1500)
+        print(f"PacketOut({portIdx})")
+        print(data)
 
 thread1 = threading.Thread(target=loop_packet_in)
 thread1.start()
-
-thread2 = threading.Thread(target=loop_packet_out)
-thread2.start()
-
+threading.Thread(target=loop_packet_out, args=(1,)).start()
+threading.Thread(target=loop_packet_out, args=(2,)).start()
+threading.Thread(target=loop_packet_out, args=(3,)).start()
 thread1.join()
-thread2.join()
