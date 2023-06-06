@@ -8,6 +8,9 @@ from fcntl import ioctl
 import p4runtime_sh.shell as sh
 from p4runtime_sh.p4runtime import P4RuntimeClient
 
+def exec(cmd):
+    subprocess.check_call(cmd, shell=True)
+
 def openTun(tunName, macaddr, ipaddr):
     tun = open("/dev/net/tun", "r+b", buffering=0)
     LINUX_IFF_TAP = 0x0002
@@ -58,6 +61,9 @@ swp = [
   openTun("swp2", "52:54:00:00:00:02", "10.0.2.1/24"),
   openTun("swp3", "52:54:00:00:00:03", "10.0.3.1/24"),
 ]
+exec('ip nei replace 10.0.1.2 lladdr 10:10:10:10:10:10 dev swp1')
+exec('ip nei replace 10.0.2.2 lladdr 20:20:20:20:20:20 dev swp2')
+exec('ip nei replace 10.0.3.2 lladdr 30:30:30:30:30:30 dev swp3')
 
 ## MAIN ROUTING
 client = P4RuntimeClient(
