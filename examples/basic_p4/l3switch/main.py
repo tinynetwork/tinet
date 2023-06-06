@@ -86,7 +86,6 @@ def loop_packet_in():
             swp[v-1].write(rep.packet.payload)
 
 def loop_packet_out(portIdx):
-    time.sleep(1)
     port = swp[portIdx-1]
     while True:
         data = os.read(port.fileno(), 1500)
