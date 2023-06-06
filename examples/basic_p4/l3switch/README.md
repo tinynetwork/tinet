@@ -3,6 +3,7 @@
 ## Running p4runtime-shell
 
 ```
+docker exec P4 simple_switch_grpc /main.json -i 1@vm1 -i 2@vm2 -i 3@vm3 --nanolog ipc:///tmp/bm-0-log.ipc --log-console -L debug --notifications-addr ipc:///tmp/bmv2-0-notifications.ipc -- --cpu-port 255
 // copy p4info.txt and main.json
 docker run -it --net container:P4 --name p4r -v /tmp/P4runtime-nanoswitch/:/tmp/ myproj/p4rt-sh-dev /bin/bash
 source $VENV/bin/activate
