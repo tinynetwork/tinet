@@ -92,7 +92,8 @@ def loop_packet_out(portIdx):
         print(f"PacketOut({portIdx})")
         req = p4runtime_pb2.StreamMessageRequest()
         req.packet.payload = data
-        #metadata = p4runtime_pb2.PacketMetadata()
+        # XXX(slankdev)
+        # metadata = p4runtime_pb2.PacketMetadata()
         # metadata.metadata_id = 1
         # metadata.value = portIdx
         # req.packet.metadata.append(metadata)
