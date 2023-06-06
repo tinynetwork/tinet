@@ -13,4 +13,4 @@ COPY --from=deps /p4runtime-sh /p4runtime-sh
 COPY ./p4runtime-sh /p4runtime-sh/p4runtime-sh
 RUN pip3 install p4runtime-shell && chmod +x /p4runtime-sh/p4runtime-sh
 
-RUN apt-get update -y && apt-get install -y tcpdump psmisc
+RUN apt-get update -y && apt-get install -y tcpdump psmisc iputils-ping net-tools
