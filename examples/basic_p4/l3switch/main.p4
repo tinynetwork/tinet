@@ -1,7 +1,7 @@
 /* -*- P4_16 -*- */
 #include <core.p4>
 #include <v1model.p4>
-
+#define CPU_PORT 255
 const bit<16> TYPE_IPV4 = 0x800;
 
 /*************************************************************************
@@ -11,6 +11,12 @@ const bit<16> TYPE_IPV4 = 0x800;
 typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
+
+@controller_header("packet_in")
+header packet_in_header_t {
+    bit<9> ingress_port;
+    bit<7> _pad;
+}
 
 header ethernet_t {
     macAddr_t dstAddr;
@@ -34,12 +40,14 @@ header ipv4_t {
 }
 
 struct metadata {
-    /* empty */
+    bit<9> ingress_port;
+    bit<7> _pad;
 }
 
 struct headers {
-    ethernet_t   ethernet;
-    ipv4_t       ipv4;
+    ethernet_t         ethernet;
+    ipv4_t             ipv4;
+    packet_in_header_t packet_in;
 }
 
 /*************************************************************************
@@ -97,6 +105,12 @@ control MyIngress(inout headers hdr,
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
 
+    action to_controller() {
+        standard_metadata.egress_spec = CPU_PORT;
+        hdr.packet_in.setValid();
+        hdr.packet_in.ingress_port = standard_metadata.ingress_port;
+    }
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -105,6 +119,7 @@ control MyIngress(inout headers hdr,
             ipv4_forward;
             drop;
             NoAction;
+            to_controller;
         }
         size = 1024;
         default_action = drop();
@@ -124,7 +139,8 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {  }
+    apply {
+    }
 }
 
 /*************************************************************************
@@ -157,6 +173,7 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
+        packet.emit(hdr.packet_in);
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
     }
