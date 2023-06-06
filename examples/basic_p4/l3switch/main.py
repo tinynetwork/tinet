@@ -8,6 +8,9 @@ import threading
 from fcntl import ioctl
 import p4runtime_sh.shell as sh
 from p4runtime_sh.p4runtime import P4RuntimeClient
+from p4.v1 import p4runtime_pb2
+from p4.config.v1 import p4info_pb2
+
 
 def exec(cmd):
     subprocess.check_call(cmd, shell=True)
@@ -24,6 +27,7 @@ def openTun(tunName, macaddr, ipaddr):
     subprocess.check_call(f'ip link set {tunName} up', shell=True)
     subprocess.check_call(f'ip addr add {ipaddr} dev {tunName}', shell=True)
     return tun
+
 
 sh.setup(
   device_id=0,
@@ -86,7 +90,16 @@ def loop_packet_out(portIdx):
     while True:
         data = os.read(port.fileno(), 1500)
         print(f"PacketOut({portIdx})")
-        print(data)
+        req = p4runtime_pb2.StreamMessageRequest()
+        req.packet.payload = data
+        #metadata = p4runtime_pb2.PacketMetadata()
+        # metadata.metadata_id = 1
+        # metadata.value = portIdx
+        # req.packet.metadata.append(metadata)
+        # metadata.metadata_id = 3
+        # metadata.value = mcast_grp
+        # req.packet.metadata.append(metadata)
+        client.stream_out_q.put(req)
 
 thread1 = threading.Thread(target=loop_packet_in)
 thread1.start()
