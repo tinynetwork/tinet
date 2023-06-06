@@ -8,6 +8,8 @@ docker exec P4 simple_switch_grpc /main.json -i 1@vm1 -i 2@vm2 -i 3@vm3 --nanolo
 docker run -it --net container:P4 --name p4r -v /tmp/P4runtime-nanoswitch/:/tmp/ myproj/p4rt-sh-dev /bin/bash
 source $VENV/bin/activate
 /p4runtime-sh/p4runtime-sh --grpc-addr 0.0.0.0:9559 --device-id 0 --election-id 0,1 --config /p4info.txt,/main.json
+/p4runtime-sh/p4runtime-sh --grpc-addr 0.0.0.0:9559 --device-id 0 --election-id 0,1 --config /p4c/p4info.txt,/main.json
+
 ```
 
 ## Misc
