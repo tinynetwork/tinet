@@ -20,6 +20,7 @@ nodes:
     type: ""
     args: ""
     addr: ""
+    label: ""
   sysctls: []
 switches:
 - name: ""
