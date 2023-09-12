@@ -139,6 +139,12 @@ var commandImg = &cli.Command{
 			Usage:   "Specify the Config file.",
 			Value:   "spec.yaml",
 		},
+		&cli.StringFlag{
+			Name:    "format",
+			Aliases: []string{"f"},
+			Usage:   "Image output format",
+			Value:   "graphviz",
+		},
 	},
 }
 
