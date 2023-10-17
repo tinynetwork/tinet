@@ -310,7 +310,7 @@ func CmdExec(c *cli.Context) error {
 }
 
 func CmdImg(c *cli.Context) error {
-
+	format := c.String("format")
 	tnconfig, _, err := LoadCfg(c)
 	if err != nil {
 		return err
@@ -332,9 +332,21 @@ func CmdImg(c *cli.Context) error {
 					newEdge := g.Edge(fromNode, toNode)
 					newEdge.Attr("arrowhead", "none")
 					newEdge.Attr("labelfloat", "true")
+					taillabel := ""
+					if ifaceInfo.Label != "" {
+						taillabel = fmt.Sprintf("%s(%s)", ifaceInfo.Name, ifaceInfo.Label)
+					} else {
+						taillabel = ifaceInfo.Name
+					}
 					newEdge.Attr("headlabel", strings.Split(ifaceInfo.Args, "#")[1])
-					newEdge.Attr("taillabel", ifaceInfo.Name)
+					newEdge.Attr("taillabel", taillabel)
 					newEdge.Attr("fontsize", "8")
+				} else {
+					edge := findEdges[0]
+					if ifaceInfo.Label != "" {
+						headlabel := fmt.Sprintf("%s(%s)", edge.GetAttr("headlabel"), ifaceInfo.Label)
+						edge.Attr("headlabel", headlabel)
+					}
 				}
 			} else if ifaceInfo.Type == "bridge" {
 				argsName = ifaceInfo.Args
@@ -345,14 +357,30 @@ func CmdImg(c *cli.Context) error {
 					newEdge.Attr("arrowhead", "none")
 					newEdge.Attr("labelfloat", "true")
 					newEdge.Attr("headlabel", argsName)
-					newEdge.Attr("taillabel", ifaceInfo.Name)
+					taillabel := ""
+					if ifaceInfo.Label != "" {
+						taillabel = fmt.Sprintf("%s(%s)", ifaceInfo.Name, ifaceInfo.Label)
+					} else {
+						taillabel = ifaceInfo.Name
+					}
+					newEdge.Attr("taillabel", taillabel)
 					newEdge.Attr("fontsize", "8")
+				} else {
+					edge := findEdges[0]
+					if ifaceInfo.Label != "" {
+						headlabel := fmt.Sprintf("%s(%s)", edge.GetAttr("headlabel"), ifaceInfo.Label)
+						edge.Attr("headlabel", headlabel)
+					}
 				}
 			}
 		}
 	}
 
-	fmt.Fprintln(os.Stdout, g.String())
+	if format == "mermaid" {
+		fmt.Println(dot.MermaidGraph(g, dot.MermaidTopToBottom))
+	} else {
+		fmt.Fprintln(os.Stdout, g.String())
+	}
 
 	return nil
 }

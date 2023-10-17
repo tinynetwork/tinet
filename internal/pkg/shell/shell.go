@@ -71,10 +71,11 @@ type Node struct {
 
 // Interface
 type Interface struct {
-	Name string `yaml:"name"`
-	Type string `yaml:"type"`
-	Args string `yaml:"args"`
-	Addr string `yaml:"addr"`
+	Name  string `yaml:"name"`
+	Type  string `yaml:"type"`
+	Args  string `yaml:"args"`
+	Addr  string `yaml:"addr"`
+	Label string `yaml:"label"`
 }
 
 // Sysctl
