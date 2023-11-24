@@ -1,0 +1,12 @@
+- port_limit: 2
+  version: 2
+  prefix: client
+  zmq_pub_port: 4600
+  zmq_rpc_port: 4601
+  interfaces: ["net0","dum0"]
+  platform:
+    master_thread_id: 3
+    latency_thread_id: 4
+    dual_if:
+    - socket: 0
+      threads: [5]
