@@ -1,0 +1,12 @@
+- port_limit: 2
+  version: 2
+  prefix: server
+  zmq_pub_port: 4700
+  zmq_rpc_port: 4701
+  interfaces: ["dum1","net1"]
+  platform:
+    master_thread_id: 0
+    latency_thread_id: 1
+    dual_if:
+    - socket: 0
+      threads: [2]

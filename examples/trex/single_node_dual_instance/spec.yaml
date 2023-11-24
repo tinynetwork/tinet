@@ -1,0 +1,38 @@
+nodes:
+- name: DUT1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: T1#net0 }
+  - { name: net1, type: direct, args: T1#net1 }
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+- name: T1
+  image: tinynetwork/trex:develop
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: DUT1#net0 }
+  - { name: net1, type: direct, args: DUT1#net1 }
+
+node_configs:
+- name: T1
+  cmds:
+  - cmd: ip link add dum0 type dummy
+  - cmd: ip link add dum1 type dummy
+  - cmd: ip link set dum0 up
+  - cmd: ip link set dum1 up
+- name: DUT1
+  cmds:
+  - cmd: ip link add br0 type bridge
+  - cmd: ip link set br0 up
+  - cmd: ip link set net0 master br0
+  - cmd: ip link set net1 master br0
+
+postinit:
+  cmds:
+  - cmd: mkdir -p /var/run/netns
+  - cmd: ln -s /proc/$(docker inspect T1 -f {{.State.Pid}})/ns/net /var/run/netns/T1
+  - cmd: docker cp client.yaml T1:/opt/trex
+  - cmd: docker cp server.yaml T1:/opt/trex
+  - cmd: docker cp tcp_open.py T1:/opt/trex
+  - cmd: docker cp tcp_openclose.py T1:/opt/trex
