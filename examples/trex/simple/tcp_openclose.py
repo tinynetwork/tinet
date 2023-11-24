@@ -9,7 +9,6 @@ class Prof1():
     def create_profile(self, cps):
         prog_c = ASTFProgram()
         prog_c.connect()
-        prog_c.reset()
         prog_s = ASTFProgram()
         prog_s.wait_for_peer_close()
 
@@ -21,7 +20,7 @@ class Prof1():
                            dist_server=ip_gen_s)
 
         # template
-        temp_c = ASTFTCPClientTemplate(program=prog_c,  ip_gen=ip_gen, cps=cps,limit=cps)
+        temp_c = ASTFTCPClientTemplate(program=prog_c,  ip_gen=ip_gen, cps=cps)
         temp_s = ASTFTCPServerTemplate(program=prog_s)
         template = ASTFTemplate(client_template=temp_c, server_template=temp_s)
 
