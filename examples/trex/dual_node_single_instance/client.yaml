@@ -1,6 +1,8 @@
 - port_limit: 2
   version: 2
-  interfaces: ["net0","dum0"]
+  interfaces:
+  - "net0"
+  - "dum0"
   platform:
     master_thread_id: 3
     latency_thread_id: 4
