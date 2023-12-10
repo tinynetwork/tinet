@@ -11,6 +11,9 @@ nodes:
   interfaces:
   - { name: net0, type: direct, args: HV1#net1 }
   - { name: net1, type: direct, args: HV1#net2 }
+  sysctls:
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
 - name: HV1
   image: slankdev/vpp:19.04
   docker_run_extra_args: --entrypoint bash
@@ -19,7 +22,8 @@ nodes:
   - { name: net1, type: direct, args: T1#net0 }
   - { name: net2, type: direct, args: T1#net1 }
   sysctls:
-  - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
 - name: BR
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
@@ -27,8 +31,7 @@ nodes:
   - { name: hv1, type: direct, args: HV1#net0 }
   - { name: l1, type: direct, args: L1#net0 }
   - { name: n1, type: direct, args: N1#net0 }
-  sysctls:
-  - sysctl: net.ipv4.ip_forward=1
+  sysctls: []
 - name: L1
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
@@ -36,6 +39,8 @@ nodes:
   - { name: net0, type: direct, args: BR#l1 }
   sysctls:
   - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
 - name: N1
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
@@ -43,14 +48,13 @@ nodes:
   - { name: net0, type: direct, args: BR#n1 }
   sysctls:
   - sysctl: net.ipv4.ip_forward=1
+  - sysctl: net.ipv6.conf.all.disable_ipv6=0
+  - sysctl: net.ipv6.conf.default.disable_ipv6=0
 
 node_configs:
 - name: T1
   cmds:
   - cmd: nohup ./_t-rex-64 -i --astf --cfg ./cfg.yaml &
-- name: HV1
-  cmds:
-  - cmd: nohup vpp -c /etc/vpp/startup.conf &
 - name: BR
   cmds:
   - cmd: ip link add br0 type bridge
@@ -58,6 +62,22 @@ node_configs:
   - cmd: ip link set hv1 master br0
   - cmd: ip link set l1 master br0
   - cmd: ip link set n1 master br0
+- name: HV1
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:ff:00:01
+  - cmd: ip link set net0 up
+  - cmd: nohup vpp -c /etc/vpp/startup.conf &
+- name: L1
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:ff:00:02
+  - cmd: ip link set net0 up
+- name: N1
+  cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:ff:00:03
+  - cmd: ip link set net0 up
 
 postinit:
   cmds:
@@ -81,19 +101,17 @@ postinit:
       set interface mac address host-net1 52:54:00:01:00:02
       set interface mac address host-net2 52:54:00:02:00:02
 
-      set int ip addr host-net0 2001:13::1/64
+      set int ip addr host-net0 2001::1/64
       set int ip addr host-net1 20.0.0.1/8
       set int ip addr host-net2 30.0.0.1/8
-      ip route add fc00:2::/64 via 2001:13::3
-      ip route add fc00:2::/64 via 2001:14::4
-      ip route add fc00:3::/64 via 2001:13::3
+      ip route add fc00:ff00::/24 via 2001::2
+      ip route add fc00:3100::/24 via 2001::2
 
-      sr localsid address fc00:1:: behavior end
-      sr localsid address fc00:1::10 behavior end.dt4 10
-      sr localsid address fc00:1::20 behavior end.dt4 20
-      set sr encaps source addr fc00:1::
+      sr localsid address fc00:1100:: behavior end
+      sr localsid address fc00:1101:: behavior end.dt4 10
+      set sr encaps source addr fc00:1100::
 
-      sr policy add bsid cafe::10 next fc00:2::10 fib-table 0
+      sr policy add bsid cafe::10 next fc00:ff00:: fib-table 0
       sr steer l3 30.0.0.0/8 via bsid cafe::10 fib-table 10
       EOF
 
