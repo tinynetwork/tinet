@@ -1,0 +1,63 @@
+#
+#   (net0) ---+
+# T1         HV1 -- CLOS
+#   (net1) ---+      |
+#                    +--- L1
+#                    |
+#                    +--- N1
+nodes:
+- name: T1
+  image: tinynetwork/trex:develop
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: HV1#net1 }
+  - { name: net1, type: direct, args: HV1#net2 }
+- name: HV1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: CLOS#hv1 }
+  - { name: net1, type: direct, args: T1#net0 }
+  - { name: net2, type: direct, args: T1#net1 }
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+- name: CLOS
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: hv1, type: direct, args: HV1#net0 }
+  - { name: l1, type: direct, args: L1#net0 }
+  - { name: n1, type: direct, args: N1#net0 }
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+- name: L1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: CLOS#l1 }
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+- name: N1
+  image: nicolaka/netshoot
+  docker_run_extra_args: --entrypoint bash
+  interfaces:
+  - { name: net0, type: direct, args: CLOS#n1 }
+  sysctls:
+  - sysctl: net.ipv4.ip_forward=1
+
+node_configs:
+# - name: DUT1
+#   cmds:
+#   - cmd: ip link add br0 type bridge
+#   - cmd: ip link set br0 up
+#   - cmd: ip link set net0 master br0
+#   - cmd: ip link set net1 master br0
+
+postinit:
+  cmds:
+  - cmd: docker cp cfg.yaml T1:/opt/trex
+  - cmd: docker cp tcp_open.py T1:/opt/trex
+  - cmd: docker cp tcp_openclose.py T1:/opt/trex
+  - cmd: >-
+			docker cp new_connection_test.py
+			T1:/opt/trex/automation/trex_control_plane/interactive/trex/examples/astf
