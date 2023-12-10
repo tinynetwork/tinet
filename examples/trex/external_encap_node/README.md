@@ -4,6 +4,6 @@
 tinet upconf | sudo sh -xe
 docker exec -it T1
 ./t-rex-64 -i --astf --cfg ./cfg.yaml
-./trex-console
-trex>start -f http_eflow.py -t cps=10
+cd /opt/trex/automation/trex_control_plane/interactive/trex/examples/astf
+python3 new_connection_test.py -m 1
 ```
