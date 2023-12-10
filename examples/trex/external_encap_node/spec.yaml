@@ -82,8 +82,6 @@ node_configs:
 postinit:
   cmds:
   - cmd: docker cp cfg.yaml T1:/opt/trex
-  - cmd: docker cp tcp_open.py T1:/opt/trex
-  - cmd: docker cp tcp_openclose.py T1:/opt/trex
   - cmd: >-
       docker cp new_connection_test.py
       T1:/opt/trex/automation/trex_control_plane/interactive/trex/examples/astf
