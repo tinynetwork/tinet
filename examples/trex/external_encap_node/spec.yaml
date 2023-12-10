@@ -54,11 +54,11 @@ node_configs:
   - cmd: nohup vpp -c /etc/vpp/startup.conf &
 - name: BR
   cmds:
-  - cmd: ip link add br0
+  - cmd: ip link add br0 type bridge
   - cmd: ip link set br0 up
-  - cmd: ip link set net0 master br0
-  - cmd: ip link set net1 master br0
-  - cmd: ip link set net2 master br0
+  - cmd: ip link set hv1 master br0
+  - cmd: ip link set l1 master br0
+  - cmd: ip link set n1 master br0
 
 postinit:
   cmds:
