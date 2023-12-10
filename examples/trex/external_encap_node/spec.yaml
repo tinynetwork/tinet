@@ -1,10 +1,10 @@
 #
 #   (net0) ---+
-# T1         HV1 -- CLOS
-#   (net1) ---+      |
-#                    +--- L1
-#                    |
-#                    +--- N1
+# T1         HV1 -- CLOS----BR
+#   (net1) ---+             |
+#                     L1----+
+#                           |
+#                     N1----+
 nodes:
 - name: T1
   image: tinynetwork/trex:develop
@@ -16,12 +16,12 @@ nodes:
   image: slankdev/vpp:19.04
   docker_run_extra_args: --entrypoint bash
   interfaces:
-  - { name: net0, type: direct, args: CLOS#hv1 }
+  - { name: net0, type: direct, args: BR#hv1 }
   - { name: net1, type: direct, args: T1#net0 }
   - { name: net2, type: direct, args: T1#net1 }
   sysctls:
   - sysctl: net.ipv4.ip_forward=1
-- name: CLOS
+- name: BR
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
   interfaces:
@@ -34,14 +34,14 @@ nodes:
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
   interfaces:
-  - { name: net0, type: direct, args: CLOS#l1 }
+  - { name: net0, type: direct, args: BR#l1 }
   sysctls:
   - sysctl: net.ipv4.ip_forward=1
 - name: N1
   image: nicolaka/netshoot
   docker_run_extra_args: --entrypoint bash
   interfaces:
-  - { name: net0, type: direct, args: CLOS#n1 }
+  - { name: net0, type: direct, args: BR#n1 }
   sysctls:
   - sysctl: net.ipv4.ip_forward=1
 
@@ -52,6 +52,13 @@ node_configs:
 - name: HV1
   cmds:
   - cmd: nohup vpp -c /etc/vpp/startup.conf &
+- name: BR
+  cmds:
+  - cmd: ip link add br0
+  - cmd: ip link set br0 up
+  - cmd: ip link set net0 master br0
+  - cmd: ip link set net1 master br0
+  - cmd: ip link set net2 master br0
 
 postinit:
   cmds:
