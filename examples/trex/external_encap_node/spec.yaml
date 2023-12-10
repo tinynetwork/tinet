@@ -104,8 +104,8 @@ postinit:
       set int ip addr host-net0 2001::1/64
       set int ip addr host-net1 20.0.0.1/8
       set int ip addr host-net2 30.0.0.1/8
-      ip route add fc00:ff00::/24 via 2001::2
-      ip route add fc00:3100::/24 via 2001::2
+      ip route add fc00:ff00::/24 via fe80::5054:ff:feff:2 host-net0
+      ip route add fc00:3100::/24 via fe80::5054:ff:feff:3 host-net0
 
       sr localsid address fc00:1100:: behavior end
       sr localsid address fc00:1101:: behavior end.dt4 10
