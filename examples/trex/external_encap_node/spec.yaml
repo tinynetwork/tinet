@@ -13,7 +13,7 @@ nodes:
   - { name: net0, type: direct, args: HV1#net1 }
   - { name: net1, type: direct, args: HV1#net2 }
 - name: HV1
-  image: nicolaka/netshoot
+  image: slankdev/vpp:19.04
   docker_run_extra_args: --entrypoint bash
   interfaces:
   - { name: net0, type: direct, args: CLOS#hv1 }
@@ -46,6 +46,9 @@ nodes:
   - sysctl: net.ipv4.ip_forward=1
 
 node_configs:
+- name: HV1
+  cmds:
+  - cmd: nohup vpp -c /etc/vpp/startup.conf &
 # - name: DUT1
 #   cmds:
 #   - cmd: ip link add br0 type bridge
@@ -59,5 +62,37 @@ postinit:
   - cmd: docker cp tcp_open.py T1:/opt/trex
   - cmd: docker cp tcp_openclose.py T1:/opt/trex
   - cmd: >-
-			docker cp new_connection_test.py
-			T1:/opt/trex/automation/trex_control_plane/interactive/trex/examples/astf
+      docker cp new_connection_test.py
+      T1:/opt/trex/automation/trex_control_plane/interactive/trex/examples/astf
+  - cmd: |
+      cat <<EOF > /tmp/hv1_exec.vpp
+      create host-interface name net0
+      create host-interface name net1
+      create host-interface name net2
+      set int state host-net0 up
+      set int state host-net1 up
+      set int state host-net2 up
+      ip table add 10
+      set int ip table host-net1 10
+
+      set interface mac address host-net1 52:54:00:01:00:02
+      set interface mac address host-net2 52:54:00:02:00:02
+
+      set int ip addr host-net0 2001:13::1/64
+      set int ip addr host-net1 20.0.0.1/8
+      set int ip addr host-net2 30.0.0.1/8
+      ip route add fc00:2::/64 via 2001:13::3
+      ip route add fc00:2::/64 via 2001:14::4
+      ip route add fc00:3::/64 via 2001:13::3
+
+      sr localsid address fc00:1:: behavior end
+      sr localsid address fc00:1::10 behavior end.dt4 10
+      sr localsid address fc00:1::20 behavior end.dt4 20
+      set sr encaps source addr fc00:1::
+
+      sr policy add bsid cafe::10 next fc00:2::10 fib-table 0
+      sr steer l3 30.0.0.0/8 via bsid cafe::10 fib-table 10
+      EOF
+
+  - cmd: docker exec HV1 mkdir -p /etc/vpp
+  - cmd: docker cp /tmp/hv1_exec.vpp HV1:/etc/vpp/exec.vpp
