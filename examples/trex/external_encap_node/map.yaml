@@ -1,0 +1,91 @@
+kind: auto
+items:
+
+- mapfile: /sys/fs/bpf/xdp/globals/l1_encap_source
+  encap_source:
+    items:
+    - key: {index:  0}
+      val: {addr: fc00:ff00::0}
+- mapfile: /sys/fs/bpf/xdp/globals/l1_fib4
+  fib4:
+    items:
+    - key: {prefix: "142.0.0.1/32"}
+      val:
+        backend_block_index: 0
+        nat_port_hash_bit: 0x00ff
+    - key: {prefix: "142.0.0.2/32"}
+      val:
+        backend_block_index: 0
+        nat_port_hash_bit: 0x00ff
+- mapfile: /sys/fs/bpf/xdp/globals/l1_fib6
+  fib6:
+    items:
+    - key: {prefix: "fc00:ff01::/32"}
+      val:
+        action: 123
+        backend_block_index: 0
+        vip: "142.0.0.1"
+        nat_port_hash_bit: 0x00ff
+        usid_block_length: 32
+        usid_function_length: 32
+        nat_mapping: 0
+        nat_filtering: 0
+        sources:
+        - prefix: "10.0.1.0/24"
+    - key: {prefix: "fc00:ff02::/32"}
+      val:
+        action: 123
+        backend_block_index: 0
+        vip: "142.0.0.2"
+        nat_port_hash_bit: 0x00ff
+        usid_block_length: 32
+        usid_function_length: 32
+        nat_mapping: 0
+        nat_filtering: 0
+        sources:
+        - prefix: "10.0.2.0/24"
+- mapfile: /sys/fs/bpf/xdp/globals/l1_lb_backend
+  lb_backend:
+    items:
+    - {key: {index:  0}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  1}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  2}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  3}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  4}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  5}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  6}, val: {addr: "fc00:3100:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  7}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  8}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index:  9}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index: 10}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index: 11}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index: 12}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+    - {key: {index: 13}, val: {addr: "fc00:3200:0000:0000:0000:0000:0000:0000"}}
+
+- mapfile: /sys/fs/bpf/xdp/globals/n1_overlay_fib4
+  overlay_fib4:
+    items:
+    - key:
+        vrf_id: 1
+        addr: "10.0.1.11"
+      val:
+        flags: 0
+        segs:
+        - "fc00:1101::"
+- mapfile: /sys/fs/bpf/xdp/globals/n1_fib6
+  fib6:
+    items:
+    - key:
+        prefix: "fc00:3100::/32"
+      val:
+        action: 456
+        backend_block_index: 0
+        vip: "142.0.0.1"
+        nat_port_hash_bit: 0x00ff
+        usid_block_length: 16
+        usid_function_length: 16
+        nat_mapping: 0
+        nat_filtering: 0
+        sources:
+        - prefix: "20.0.0.0/16"
+
