@@ -65,13 +65,23 @@ items:
 - mapfile: /sys/fs/bpf/xdp/globals/n1_overlay_fib4
   overlay_fib4:
     items:
-    - key:
-        vrf_id: 1
-        addr: "10.0.1.11"
-      val:
-        flags: 0
-        segs:
-        - "fc00:1101::"
+    - {key: {vrf_id: 1, addr: "20.0.0.0"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.1"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.2"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.3"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.4"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.5"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.6"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.7"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.8"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.9"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.10"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.11"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.12"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.13"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.14"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.15"}, val: {flags: 0, segs: ["fc00:1101::"]}}
+    - {key: {vrf_id: 1, addr: "20.0.0.16"}, val: {flags: 0, segs: ["fc00:1101::"]}}
 - mapfile: /sys/fs/bpf/xdp/globals/n1_fib6
   fib6:
     items:

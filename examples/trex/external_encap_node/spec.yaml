@@ -54,6 +54,12 @@ nodes:
 node_configs:
 - name: T1
   cmds:
+  - cmd: ip link set net0 down
+  - cmd: ip link set net0 address 52:54:00:01:00:01
+  - cmd: ip link set net0 up
+  - cmd: ip link set net1 down
+  - cmd: ip link set net1 address 52:54:00:02:00:01
+  - cmd: ip link set net1 up
   - cmd: nohup ./_t-rex-64 -i --astf --cfg ./cfg.yaml &
 - name: BR
   cmds:
@@ -96,14 +102,22 @@ postinit:
       ip table add 10
       set int ip table host-net1 10
 
+      set interface mac address host-net0 52:54:00:ff:00:01
       set interface mac address host-net1 52:54:00:01:00:02
       set interface mac address host-net2 52:54:00:02:00:02
 
       set int ip addr host-net0 2001::1/64
-      set int ip addr host-net1 20.0.0.1/8
-      set int ip addr host-net2 30.0.0.1/8
+      set int ip addr host-net1 50.0.0.1/8
+      set int ip addr host-net2 40.0.0.1/8
+      ip route add table 10 20.0.0.0/8 via 50.0.0.2 host-net1
+      ip route add 30.0.0.0/8 via 40.0.0.2 host-net2
+      ip route add 142.0.0.0/8 via fe80::5054:ff:feff:2 host-net0
       ip route add fc00:ff00::/24 via fe80::5054:ff:feff:2 host-net0
       ip route add fc00:3100::/24 via fe80::5054:ff:feff:3 host-net0
+
+      set ip arp host-net2 40.0.0.2 52:54:00:02:00:01
+      set ip arp host-net1 50.0.0.2 52:54:00:01:00:01
+      set int feature host-net0 ip4-not-enabled arc ip4-unicast disable
 
       sr localsid address fc00:1100:: behavior end
       sr localsid address fc00:1101:: behavior end.dt4 10

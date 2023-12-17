@@ -18,7 +18,7 @@ class Prof1():
         prog_s.wait_for_peer_close()
 
         # ip generator
-        ip_gen_c = ASTFIPGenDist(ip_range=["20.0.0.0", "20.0.255.255"], distribution="seq")
+        ip_gen_c = ASTFIPGenDist(ip_range=["20.0.0.0", "20.0.0.16"], distribution="seq")
         ip_gen_s = ASTFIPGenDist(ip_range=["30.0.0.0", "30.0.255.255"], distribution="seq")
         ip_gen = ASTFIPGen(glob=ASTFIPGenGlobal(ip_offset="1.0.0.0"),
                            dist_client=ip_gen_c,
@@ -38,6 +38,7 @@ class Prof1():
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mult', "-m", default=1, type=int)
+parser.add_argument('--duration', "-d", default=3600, type=int)
 args = parser.parse_args()
 
 c = ASTFClient()
@@ -47,7 +48,7 @@ print("astfclient initialized")
 
 c.load_profile(Prof1().create_profile(1))
 c.clear_stats()
-c.start(mult=args.mult, duration=3600)
+c.start(mult=args.mult, duration=args.duration)
 print("started")
 
 def dig(d, keys):
