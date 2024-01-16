@@ -1,33 +1,27 @@
-name: release
+name: release tag
 on:
   push:
     tags:
-    - "v[0-9]+.[0-9]+.[0-9]+"
-
+      - "v[0-9]+.[0-9]+.[0-9]+"
+permissions:
+  contents: write
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Go 1.13
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.13
-      id: go
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
-    - name: Build
-      env:
-        GO111MODULE: on
-        GOPATH: /home/runner/work/
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        go get -u github.com/x-motemen/gobump/cmd/gobump
-        go get -u github.com/tcnksm/ghr
-        go get -u github.com/Songmu/ghch/cmd/ghch
-        go get -u github.com/Songmu/goxz/cmd/goxz
-        export TAGNAME=$($GOPATH/bin/gobump show -r)
-        echo "DEBUG:" $TAGNAME
-        $GOPATH/bin/goxz -pv $TAGNAME -os=linux -arch=amd64 -d ./dist/v$TAGNAME
-        $GOPATH/bin/ghr -n=v$TAGNAME -b="$($GOPATH/bin/ghch -F markdown --latest)" -draft v$TAGNAME ./dist/v$TAGNAME
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: stable
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: v1.23.0
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
