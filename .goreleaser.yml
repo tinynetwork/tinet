@@ -1,27 +1,21 @@
-project_name: tinet
-env:
-  - GO111MODULE=on
+version: 1
 before:
   hooks:
     - go mod tidy
 builds:
-  - main: .
-    binary: tinet
+  - env:
+      - CGO_ENABLED=0
     ldflags:
       - -s -w
       - -X main.Version={{.Version}}
-    env:
-      - CGO_ENABLED=0
     goos:
       - linux
     goarch:
       - amd64
+      - arm64
 archives:
-  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}_v{{ .Version }}'
-    replacements:
-      linux: linux
-      amd64: x86_64
-    files:
-      - none*
-release:
-  prerelease: auto
+  - format: binary
+    name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+changelog:
+  sort: asc
+  use: github-native
