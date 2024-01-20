@@ -1,0 +1,16 @@
+examples:
+  - changed-files:
+      - examples/**/*
+dockerfiles:
+  - changed-files:
+      - Dockerfiles/**/*
+docs:
+  - changed-files:
+      - docs/*
+githubactions:
+  - changed-files:
+      - .github/workflows/*
+feature:
+  - head-branch: ['^feature', 'feature']
+fix:
+  - head-branch: ['^fix', 'fix']
