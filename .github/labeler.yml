@@ -1,15 +1,15 @@
 examples:
   - changed-files:
-      - examples/**/*
+      - any-glob-to-any-file: 'examples/**'
 dockerfiles:
   - changed-files:
-      - Dockerfiles/**/*
+      - any-glob-to-any-file: 'Dockerfiles/**'
 docs:
   - changed-files:
-      - docs/*
-githubactions:
+      - any-glob-to-any-file: 'docs/**'
+github_actions:
   - changed-files:
-      - .github/workflows/*
+      - any-glob-to-any-file: '.github/**'
 feature:
   - head-branch: ['^feature', 'feature']
 fix:
