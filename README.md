@@ -11,20 +11,37 @@ in QUICKSTART.md. It is tested on Ubuntu 16.04 LTS and
 later.
 
 ## Requirements
+
 - Docker
 - OpenvSwitch (optional)
 - graphviz (optional)
 
 ## Quick Install
 
-There is only linux_amd64 pre-built binary
+To install the latest version of tinet
+
+### linux_amd64
+
 ```
-curl -Lo /usr/bin/tinet https://github.com/tinynetwork/tinet/releases/download/v0.0.3/tinet.linux_amd64
+tinet_binary_download_url=$(curl -s https://api.github.com/repos/tinynetwork/tinet/releases | jq -r '.[0].assets[] | select(.name | contains("linux_amd64")) | .browser_download_url')
+echo $tinet_binary_download_url
+curl -Lo /usr/bin/tinet $tinet_binary_download_url
+chmod +x /usr/bin/tinet
+tinet --version
+```
+
+### linux_arm64
+
+```
+tinet_binary_download_url=$(curl -s https://api.github.com/repos/tinynetwork/tinet/releases | jq -r '.[0].assets[] | select(.name | contains("linux_arm64")) | .browser_download_url')
+echo $tinet_binary_download_url
+curl -Lo /usr/bin/tinet $tinet_binary_download_url
 chmod +x /usr/bin/tinet
 tinet --version
 ```
 
 for ubuntu user
+
 ```
 sudo apt update
 sudo apt install -y linux-image-extra-virtual
@@ -32,12 +49,14 @@ sudo reboot
 ```
 
 upgrading the kernel
+
 ```
 $ sudo apt list "linux-image-5.15.*-generic"
 linux-image-5.15.0-33-generic/focal-updates,focal-security 5.15.0-33.34~20.04.1 amd64
 $ sudo apt install linux-image-5.15.0-33-generic linux-modules-5.15.0-33-generic linux-modules-extra-5.15.0-33-generic
 $ sudo reboot
 ```
+
 ```
 $ sudo grep 'menuentry ' $(sudo find /boot -name "grub.cfg") | cut -f 2 -d "'" | nl -v 0
      0  Ubuntu
@@ -50,6 +69,7 @@ $ sudo reboot
 ```
 
 ## Build
+
 ```
 git clone https://github.com/tinynetwork/tinet tinet && cd $_
 docker run --rm -i -t -v $PWD:/v -w /v golang:1.12 go build
