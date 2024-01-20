@@ -1,6 +1,6 @@
 # tinet
 
-![test](https://github.com/tinynetwork/tinet/workflows/test/badge.svg) ![release](https://github.com/tinynetwork/tinet/workflows/release/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/tinynetwork/tinet)](https://goreportcard.com/report/github.com/tinynetwork/tinet)
+![test](https://github.com/tinynetwork/tinet/actions/workflows/test.yaml/badge.svg) ![release](https://github.com/tinynetwork/tinet/actions/workflows/release-tag.yaml/badge.svg) [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Go Report Card](https://goreportcard.com/badge/github.com/tinynetwork/tinet)](https://goreportcard.com/report/github.com/tinynetwork/tinet)
 
 An instant virtual network on your laptop with
 light-weight virtualization. Here we introduce the
