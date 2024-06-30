@@ -213,8 +213,8 @@ func (tnconfig *Tn) Exec(nodeName string, Cmds []string) (execCommand string) {
 		var cmdStr string
 		for _, cmd := range Cmds {
 			cmdStr += fmt.Sprintf(" %s", cmd)
-			execCommand += cmdStr
 		}
+		execCommand += cmdStr
 	}
 
 	return execCommand
