@@ -244,6 +244,13 @@ func CmdConf(c *cli.Context) error {
 		nodeinfo[node.Name] = node.Type
 	}
 
+	if len(tnconfig.PreConf) != 0 {
+		for _, preConf := range tnconfig.PreConf {
+			preConfCmds := shell.ExecCmd(preConf.Cmds)
+			utils.PrintCmds(os.Stdout, preConfCmds, verbose)
+		}
+	}
+
 	for _, nodeConfig := range tnconfig.NodeConfigs {
 		execConfCmds := nodeConfig.ExecConf(nodeinfo[nodeConfig.Name])
 		for _, execConfCmd := range execConfCmds {

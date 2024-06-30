@@ -229,6 +229,7 @@ func TestTn_Exec(t *testing.T) {
 	type fields struct {
 		PreCmd      []PreCmd
 		PreInit     []PreInit
+		PreConf     []PreConf
 		PostInit    []PostInit
 		PostFini    []PostFini
 		Nodes       []Node
@@ -253,6 +254,7 @@ func TestTn_Exec(t *testing.T) {
 			tnconfig := &Tn{
 				PreCmd:      tt.fields.PreCmd,
 				PreInit:     tt.fields.PreInit,
+				PreConf:     tt.fields.PreConf,
 				PostInit:    tt.fields.PostInit,
 				PostFini:    tt.fields.PostFini,
 				Nodes:       tt.fields.Nodes,
