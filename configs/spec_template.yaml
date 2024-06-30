@@ -4,6 +4,9 @@ precmd:
 preinit:
 - cmds:
   - cmd: ""
+preconf:
+- cmds:
+  - cmd: ""
 postinit:
 - cmds:
   - cmd: ""
