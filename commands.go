@@ -125,6 +125,11 @@ var commandExec = &cli.Command{
 			Usage:   "Specify the Config file.",
 			Value:   "spec.yaml",
 		},
+		&cli.BoolFlag{
+			Name:    "verbose",
+			Aliases: []string{"v"},
+			Usage:   "Verbose",
+		},
 	},
 }
 
