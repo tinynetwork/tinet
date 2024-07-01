@@ -1,0 +1,23 @@
+changelog:
+  categories:
+    - title: Features
+      labels:
+        - feature
+    - title: Fixes
+      labels:
+        - fix
+    - title: Examples
+      labels:
+        - examples
+    - title: GitHub Actions
+      labels:
+        - github_actions
+    - title: Dockerfile
+      labels:
+        - dockerfiles
+    - title: Docs
+      labels:
+        - docs
+    - title: Other Changes
+      labels:
+        - "*"
