@@ -145,6 +145,7 @@ node_configs:
   - cmd: ip link set net1 master vrf1
   - cmd: ip -6 addr add 2001:11::1/64 dev net1
   - cmd: ip sr tunsrc set 2001:db8:f:1::0
+  - cmd: ip -6 rule add to 2001:db8::/32 pref 1 table main
   - cmd: /usr/lib/frr/frrinit.sh start
   - cmd: >-
       vtysh -c "conf t"
@@ -216,6 +217,7 @@ node_configs:
   - cmd: ip link set net1 master vrf1
   - cmd: ip -6 addr add 2001:12::1/64 dev net1
   - cmd: ip sr tunsrc set 2001:db8:f:2::0
+  - cmd: ip -6 rule add to 2001:db8::/32 pref 1 table main
   - cmd: /usr/lib/frr/frrinit.sh start
   - cmd: >-
       vtysh -c "conf t"
@@ -287,6 +289,7 @@ node_configs:
   - cmd: ip link set net1 master vrf1
   - cmd: ip -6 addr add 2001:13::1/64 dev net1
   - cmd: ip sr tunsrc set 2001:db8:f:3::0
+  - cmd: ip -6 rule add to 2001:db8::/32 pref 1 table main
   - cmd: /usr/lib/frr/frrinit.sh start
   - cmd: >-
       vtysh -c "conf t"
